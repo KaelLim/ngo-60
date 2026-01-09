@@ -215,10 +215,25 @@ export class TopicPage extends LitElement {
     }
 
     .activity-card {
-      background: white;
-      border-radius: 20px;
-      padding: 20px 12px;
       position: relative;
+      overflow: visible;
+    }
+
+    .activity-card-shape {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+    }
+
+    .activity-card-shape svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .activity-card-bg {
+      position: relative;
+      padding: 20px 12px;
+      z-index: 1;
     }
 
     .activity-card-content {
@@ -308,13 +323,14 @@ export class TopicPage extends LitElement {
       width: 48px;
       height: 48px;
       border-radius: 50%;
-      background: #0e2669;
+      background: white;
       border: none;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       transition: transform 0.2s;
+      z-index: 1;
     }
 
     .link-button:active {
@@ -324,7 +340,7 @@ export class TopicPage extends LitElement {
     .link-button svg {
       width: 24px;
       height: 24px;
-      color: white;
+      color: #0E2669;
     }
 
     /* Footer */
@@ -431,27 +447,34 @@ export class TopicPage extends LitElement {
           <div class="activities-list">
             ${topic.activities.map(activity => html`
               <div class="activity-card">
+                <div class="activity-card-shape">
+                  <svg viewBox="0 0 351 317" fill="none" preserveAspectRatio="none">
+                    <path d="M273 0C284.046 0 293 8.95431 293 20V26C293 43.6731 307.327 58 325 58H331C342.046 58 351 66.9543 351 78V297C351 308.046 342.046 317 331 317H20C8.95431 317 0 308.046 0 297V20C0 8.9543 8.95431 0 20 0H273Z" fill="white"/>
+                  </svg>
+                </div>
                 <button class="link-button">
                   ${linkArrow}
                 </button>
-                <div class="activity-card-content">
-                  <div class="activity-info">
-                    <h3 class="activity-title">${activity.title}</h3>
-                    <div class="activity-items">
-                      <div class="activity-row">
-                        <span class="activity-icon">${calendarIcon}</span>
-                        <span class="activity-text">${activity.dateStart} - ${activity.dateEnd}</span>
-                      </div>
-                      <div class="activity-row">
-                        <span class="activity-icon">${personIcon}</span>
-                        <span class="activity-text">${activity.participation}</span>
+                <div class="activity-card-bg">
+                  <div class="activity-card-content">
+                    <div class="activity-info">
+                      <h3 class="activity-title">${activity.title}</h3>
+                      <div class="activity-items">
+                        <div class="activity-row">
+                          <span class="activity-icon">${calendarIcon}</span>
+                          <span class="activity-text">${activity.dateStart} - ${activity.dateEnd}</span>
+                        </div>
+                        <div class="activity-row">
+                          <span class="activity-icon">${personIcon}</span>
+                          <span class="activity-text">${activity.participation}</span>
+                        </div>
                       </div>
                     </div>
+                    <div class="activity-image">
+                      <img src="${activity.image}" alt="${activity.title}" />
+                    </div>
+                    <p class="activity-description">${activity.description}</p>
                   </div>
-                  <div class="activity-image">
-                    <img src="${activity.image}" alt="${activity.title}" />
-                  </div>
-                  <p class="activity-description">${activity.description}</p>
                 </div>
               </div>
             `)}
