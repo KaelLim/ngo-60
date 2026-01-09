@@ -1,0 +1,40 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+:root {
+  /* Poster colors (Figma design) */
+  --color-poster-bg: #0e2669;
+  --color-accent: #e4ddd4;
+
+  /* Light theme for sheet */
+  --color-sheet-bg: #e4ddd4;
+  --color-sheet-elevated: #ffffff;
+  --color-sheet-text: #121212;
+  --color-sheet-text-muted: #666666;
+  --color-sheet-border: rgba(0,0,0,0.08);
+
+  --font-display: 'Playfair Display', serif;
+  --font-body: 'Noto Sans TC', sans-serif;
+  --radius: 40px;
+  --radius-sm: 12px;
+
+  --vh: 1vh;
+}
+
+html, body {
+  height: 100%;
+  font-family: var(--font-body);
+  background: #0e2669;
+  color: var(--color-sheet-text);
+  overflow: hidden;
+  touch-action: none;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.3; transform: translate(-50%, -50%) scale(1); }
+  50% { opacity: 0.6; transform: translate(-50%, -50%) scale(1.05); }
+}

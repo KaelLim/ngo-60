@@ -1,0 +1,10 @@
+{
+  "tasks": {
+    "dev": "deno task dev:api & deno task dev:web",
+    "dev:api": "cd api && deno task dev",
+    "dev:web": "cd web && deno task dev",
+    "db:up": "docker-compose up -d",
+    "db:down": "docker-compose down",
+    "start": "deno task db:up && sleep 3 && deno task dev"
+  }
+}
