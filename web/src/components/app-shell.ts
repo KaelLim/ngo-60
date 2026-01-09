@@ -8,6 +8,7 @@ import { GestureController } from '../controllers/gesture-controller.js';
 
 import './app-poster.js';
 import './app-sheet.js';
+import './blessing-page.js';
 
 @customElement('app-shell')
 export class AppShell extends LitElement {
@@ -88,6 +89,7 @@ export class AppShell extends LitElement {
   render() {
     const containerStyle = `transform: translateY(${this.appStore.containerY}px)`;
     const isDragging = this.appStore.isDragging;
+    const currentPage = this.appStore.currentPage;
 
     return html`
       <div
@@ -101,6 +103,8 @@ export class AppShell extends LitElement {
         <app-poster></app-poster>
         <app-sheet></app-sheet>
       </div>
+
+      ${currentPage === 'blessing' ? html`<blessing-page></blessing-page>` : ''}
     `;
   }
 }

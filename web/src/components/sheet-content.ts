@@ -20,8 +20,12 @@ export class SheetContent extends LitElement {
   @state()
   private topicStyle: TopicStyle = 'v2';
 
+  @state()
+  private blessHighlightIndex: number = 2; // Start with index 2 (願醫護人員健康平安)
+
   private storeController!: StoreController;
   private dataStoreController!: StoreController;
+  private blessIntervalId: number | null = null;
 
   static styles = css`
     :host {
@@ -244,22 +248,25 @@ export class SheetContent extends LitElement {
       height: 351px;
       position: relative;
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
     .impact-graphic {
-      position: absolute;
-      top: 32px;
-      left: 28px;
+      position: relative;
       width: 303px;
       height: 220px;
+      margin-top: 32px;
     }
 
     .impact-triangle {
       position: absolute;
-      left: 57px;
-      top: 40px;
-      width: 180px;
-      height: 180px;
+      left: 50%;
+      transform: translateX(-50%);
+      top: 48px;
+      width: 160px;
+      height: 125px;
     }
 
     .impact-triangle svg {
@@ -278,7 +285,8 @@ export class SheetContent extends LitElement {
 
     .impact-node.top {
       top: 0;
-      left: 78px;
+      left: 50%;
+      transform: translateX(-50%);
       width: 138px;
     }
 
@@ -290,7 +298,7 @@ export class SheetContent extends LitElement {
 
     .impact-node.bottom-right {
       top: 149px;
-      left: 166px;
+      right: 0;
       width: 137px;
     }
 
@@ -346,7 +354,8 @@ export class SheetContent extends LitElement {
     .impact-buttons {
       position: absolute;
       bottom: 20px;
-      left: 20px;
+      left: 50%;
+      transform: translateX(-50%);
       display: flex;
       gap: 12px;
       align-items: center;
@@ -460,6 +469,7 @@ export class SheetContent extends LitElement {
       display: flex;
       align-items: center;
       justify-content: center;
+      transition: background-color 0.5s ease;
     }
 
     .bless-dialog-bubble.highlight {
@@ -472,10 +482,15 @@ export class SheetContent extends LitElement {
       font-weight: 400;
       color: black;
       line-height: 1.25;
+      transition: color 0.5s ease;
     }
 
     .bless-dialog-bubble.highlight span {
       color: white;
+    }
+
+    .bless-dialog-pointer svg path {
+      transition: fill 0.5s ease;
     }
 
     .bless-dialog-pointer {
@@ -705,6 +720,19 @@ export class SheetContent extends LitElement {
     super.connectedCallback();
     this.storeController = new StoreController(this, this.appStore);
     this.dataStoreController = new StoreController(this, this.dataStore);
+
+    // Start bless highlight rotation every 5 seconds
+    this.blessIntervalId = window.setInterval(() => {
+      this.blessHighlightIndex = (this.blessHighlightIndex + 1) % 5;
+    }, 5000);
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    if (this.blessIntervalId !== null) {
+      window.clearInterval(this.blessIntervalId);
+      this.blessIntervalId = null;
+    }
   }
 
   // Hardcoded topic data for UI (will be replaced with API data later)
@@ -743,6 +771,10 @@ export class SheetContent extends LitElement {
 
   private handleMonthClick(month: number) {
     this.appStore.setSelectedMonth(month);
+  }
+
+  private handleBlessingClick() {
+    this.appStore.openBlessing();
   }
 
   private toggleTopicStyle() {
@@ -879,18 +911,19 @@ export class SheetContent extends LitElement {
 
   // Hardcoded bless messages for UI
   private blessMessages = [
-    { text: '謝謝陪伴需要幫助的人', highlight: false },
-    { text: '陪災民找回希望', highlight: false },
-    { text: '願醫護人員健康平安', highlight: true },
-    { text: '讓善心善款都能化為溫暖', highlight: false },
-    { text: '持續守護台灣與世界', highlight: false }
+    '謝謝陪伴需要幫助的人',
+    '陪災民找回希望',
+    '願醫護人員健康平安',
+    '讓善心善款都能化為溫暖',
+    '持續守護台灣與世界'
   ];
 
   private renderImpact() {
-    // Triangle SVG connecting three nodes
+    // Triangle SVG: apex at top center, base connects to bottom nodes
+    // viewBox height must be >= bottom line Y value
     const triangleSvg = html`
-      <svg viewBox="0 0 150 133" fill="none">
-        <path d="M75 0 L150 133 L0 133 Z" stroke="#5fb7fa" stroke-width="2" fill="none"/>
+      <svg viewBox="0 0 160 125" fill="none">
+        <path d="M80 5 L155 120 L5 120 Z" stroke="#5fb7fa" stroke-width="2" fill="none"/>
       </svg>
     `;
 
@@ -901,10 +934,10 @@ export class SheetContent extends LitElement {
       </svg>
     `;
 
-    // Dialog pointer SVG (triangle)
+    // Dialog pointer SVG (triangle) - points right
     const pointerSvg = (highlight: boolean) => html`
       <svg viewBox="0 0 12 16" fill="none">
-        <path d="M0 8L12 0V16L0 8Z" fill="${highlight ? '#0e2669' : '#e4ddd4'}"/>
+        <path d="M12 8L0 0V16L12 8Z" fill="${highlight ? '#0e2669' : '#e4ddd4'}"/>
       </svg>
     `;
 
@@ -985,13 +1018,13 @@ export class SheetContent extends LitElement {
               <!-- Dialog bubbles card -->
               <div class="bless-card">
                 <div class="bless-dialogs">
-                  ${this.blessMessages.map(msg => html`
+                  ${this.blessMessages.map((msg, index) => html`
                     <div class="bless-dialog">
-                      <div class="bless-dialog-bubble ${msg.highlight ? 'highlight' : ''}">
-                        <span>${msg.text}</span>
+                      <div class="bless-dialog-bubble ${index === this.blessHighlightIndex ? 'highlight' : ''}">
+                        <span>${msg}</span>
                       </div>
                       <div class="bless-dialog-pointer">
-                        ${pointerSvg(msg.highlight)}
+                        ${pointerSvg(index === this.blessHighlightIndex)}
                       </div>
                     </div>
                   `)}
@@ -999,7 +1032,7 @@ export class SheetContent extends LitElement {
               </div>
 
               <!-- Photo card -->
-              <div class="bless-card bless-photo-card">
+              <div class="bless-card bless-photo-card" @click=${this.handleBlessingClick}>
                 <img src="https://images.unsplash.com/photo-1544027993-37dbfe43562a?w=600" alt="證嚴上人" />
                 <div class="bless-photo-overlay"></div>
                 <span class="bless-photo-text">證嚴上人</span>

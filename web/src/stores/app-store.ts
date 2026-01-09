@@ -1,6 +1,6 @@
 export type SheetState = 'peek' | 'preview' | 'full';
 export type TabType = 'topics' | 'schedule' | 'impact';
-export type PageType = 'category' | 'detail' | 'month' | null;
+export type PageType = 'category' | 'detail' | 'month' | 'blessing' | null;
 
 interface AppState {
   sheetState: SheetState;
@@ -119,6 +119,16 @@ export class AppStore {
     this.state.currentNewsId = null;
     this.notify();
     this.updateURL('/');
+  }
+
+  openBlessing() {
+    this.state.currentPage = 'blessing';
+    this.notify();
+  }
+
+  closeBlessing() {
+    this.state.currentPage = null;
+    this.notify();
   }
 
   backToCategory() {
