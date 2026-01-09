@@ -9,6 +9,7 @@ import { GestureController } from '../controllers/gesture-controller.js';
 import './app-poster.js';
 import './app-sheet.js';
 import './blessing-page.js';
+import './topic-page.js';
 
 @customElement('app-shell')
 export class AppShell extends LitElement {
@@ -105,6 +106,9 @@ export class AppShell extends LitElement {
       </div>
 
       ${currentPage === 'blessing' ? html`<blessing-page></blessing-page>` : ''}
+      ${currentPage === 'category' && this.appStore.activeTab === 'topics'
+        ? html`<topic-page .topicId=${this.appStore.currentCategoryId || 1}></topic-page>`
+        : ''}
     `;
   }
 }
