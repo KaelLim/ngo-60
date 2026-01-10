@@ -23,8 +23,8 @@ export class BlessingPage extends LitElement {
   @state()
   private loading = false;
 
-  @state()
-  private closing = false;
+  @property({ type: Boolean, reflect: true })
+  closing = false;
 
   private storeController!: StoreController<AppStore>;
 
@@ -190,7 +190,7 @@ export class BlessingPage extends LitElement {
     }
 
     /* Animation - Mobile slide out (exit) */
-    :host(.closing) {
+    :host([closing]) {
       animation: slideOutPage 0.35s cubic-bezier(0.4, 0, 1, 1) forwards;
     }
 
@@ -274,7 +274,7 @@ export class BlessingPage extends LitElement {
     }
 
     /* Animation - Desktop fade out (exit) */
-    :host([desktopMode]).closing {
+    :host([desktopMode][closing]) {
       animation: fadeOutPage 0.3s ease-in forwards;
     }
 
@@ -324,7 +324,6 @@ export class BlessingPage extends LitElement {
 
   private handleBack() {
     this.closing = true;
-    this.classList.add('closing');
     const duration = this.desktopMode ? 300 : 350;
     setTimeout(() => {
       this.appStore.closeBlessing();

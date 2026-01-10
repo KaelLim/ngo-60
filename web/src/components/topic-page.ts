@@ -23,8 +23,8 @@ export class TopicPage extends LitElement {
   @state()
   private loading = false;
 
-  @state()
-  private closing = false;
+  @property({ type: Boolean, reflect: true })
+  closing = false;
 
   private storeController!: StoreController<AppStore>;
 
@@ -341,7 +341,7 @@ export class TopicPage extends LitElement {
     }
 
     /* Animation - Mobile slide out (exit) */
-    :host(.closing) {
+    :host([closing]) {
       animation: slideOutPage 0.35s cubic-bezier(0.4, 0, 1, 1) forwards;
     }
 
@@ -373,7 +373,7 @@ export class TopicPage extends LitElement {
     }
 
     /* Animation - Desktop fade out (exit) */
-    :host([desktopMode]).closing {
+    :host([desktopMode][closing]) {
       animation: fadeOutPage 0.3s ease-in forwards;
     }
 
@@ -586,7 +586,6 @@ export class TopicPage extends LitElement {
   private handleBack() {
     // Trigger exit animation
     this.closing = true;
-    this.classList.add('closing');
 
     // Wait for animation to complete, then close
     const duration = this.desktopMode ? 300 : 350;
