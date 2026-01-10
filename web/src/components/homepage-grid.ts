@@ -42,6 +42,16 @@ export class HomepageGrid extends LitElement {
       grid-template-rows: repeat(5, 1fr);
       gap: 15px;
       height: 420px;
+      animation: gridFadeIn 0.5s ease-out forwards;
+    }
+
+    @keyframes gridFadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
     }
 
     /* Desktop grid container */
@@ -58,6 +68,7 @@ export class HomepageGrid extends LitElement {
       gap: 40px;
       justify-content: center;
       align-items: center;
+      animation: gridFadeIn 0.5s ease-out forwards;
     }
 
     .digit-grid {
@@ -75,6 +86,40 @@ export class HomepageGrid extends LitElement {
       align-self: center;
       overflow: hidden;
       position: relative;
+      animation: circlePopIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+    }
+
+    /* Staggered animation delays for circles */
+    .circle:nth-child(1) { animation-delay: 0.05s; }
+    .circle:nth-child(2) { animation-delay: 0.08s; }
+    .circle:nth-child(3) { animation-delay: 0.11s; }
+    .circle:nth-child(4) { animation-delay: 0.14s; }
+    .circle:nth-child(5) { animation-delay: 0.17s; }
+    .circle:nth-child(6) { animation-delay: 0.20s; }
+    .circle:nth-child(7) { animation-delay: 0.23s; }
+    .circle:nth-child(8) { animation-delay: 0.26s; }
+    .circle:nth-child(9) { animation-delay: 0.29s; }
+    .circle:nth-child(10) { animation-delay: 0.32s; }
+    .circle:nth-child(11) { animation-delay: 0.35s; }
+    .circle:nth-child(12) { animation-delay: 0.38s; }
+    .circle:nth-child(13) { animation-delay: 0.41s; }
+    .circle:nth-child(14) { animation-delay: 0.44s; }
+    .circle:nth-child(15) { animation-delay: 0.47s; }
+    .circle:nth-child(16) { animation-delay: 0.50s; }
+    .circle:nth-child(17) { animation-delay: 0.53s; }
+    .circle:nth-child(18) { animation-delay: 0.56s; }
+    .circle:nth-child(19) { animation-delay: 0.59s; }
+    .circle:nth-child(20) { animation-delay: 0.62s; }
+
+    @keyframes circlePopIn {
+      from {
+        opacity: 0;
+        transform: scale(0);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
     }
 
     .circle.empty {
@@ -92,7 +137,7 @@ export class HomepageGrid extends LitElement {
       object-position: center;
     }
 
-    /* 動畫效果 */
+    /* Hover 動畫效果 */
     .circle {
       transition:
         transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
