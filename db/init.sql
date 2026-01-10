@@ -74,6 +74,15 @@ CREATE TABLE homepage (
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
+-- Agent Sessions 對應表
+CREATE TABLE agent_sessions (
+    id SERIAL PRIMARY KEY,
+    client_session_id VARCHAR(255) UNIQUE NOT NULL,
+    sdk_session_id VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
 -- =============================================
 -- 種子資料 (Seed Data)
 -- =============================================

@@ -1,13 +1,41 @@
 /**
  * AI 聊天式管理後台 - Agent 路由
  * 使用 Claude Agent SDK (透過 Worker 執行)
+ * Session 儲存在 PostgreSQL
  */
 
 import { Hono } from "jsr:@hono/hono@^4.6.0";
 import { upgradeWebSocket } from "jsr:@hono/hono@^4.6.0/deno";
+import { query } from "../db.ts";
 
-// 儲存 SDK session ID 對應 (clientSessionId -> sdkSessionId)
-const sessionMap = new Map<string, string>();
+// Session 資料類型
+interface AgentSession {
+  id: number;
+  client_session_id: string;
+  sdk_session_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// 取得 SDK session ID
+async function getSdkSessionId(clientSessionId: string): Promise<string | null> {
+  const rows = await query<AgentSession>(
+    "SELECT sdk_session_id FROM agent_sessions WHERE client_session_id = $1",
+    [clientSessionId]
+  );
+  return rows[0]?.sdk_session_id || null;
+}
+
+// 儲存 session 對應
+async function saveSession(clientSessionId: string, sdkSessionId: string): Promise<void> {
+  await query(
+    `INSERT INTO agent_sessions (client_session_id, sdk_session_id)
+     VALUES ($1, $2)
+     ON CONFLICT (client_session_id)
+     DO UPDATE SET sdk_session_id = $2, updated_at = NOW()`,
+    [clientSessionId, sdkSessionId]
+  );
+}
 
 // 執行 Agent Worker
 async function runAgentWorker(prompt: string, resumeSessionId?: string): Promise<{ message: string; sessionId: string }> {
@@ -58,22 +86,22 @@ async function runAgentWorker(prompt: string, resumeSessionId?: string): Promise
       message: result.message || "",
       sessionId: result.sessionId || ""
     };
-  } catch (e) {
+  } catch {
     throw new Error(`Worker output parse error: ${output}`);
   }
 }
 
 // 處理聊天請求的核心邏輯
 async function processChat(clientSessionId: string, userMessage: string): Promise<{ message: string; sessionId: string }> {
-  // 查找是否有對應的 SDK session ID
-  const sdkSessionId = sessionMap.get(clientSessionId);
+  // 從資料庫查找對應的 SDK session ID
+  const sdkSessionId = await getSdkSessionId(clientSessionId);
 
   // 執行 Agent Worker，傳入 resume session ID
-  const result = await runAgentWorker(userMessage, sdkSessionId);
+  const result = await runAgentWorker(userMessage, sdkSessionId || undefined);
 
-  // 儲存 SDK session ID 對應
+  // 儲存 SDK session ID 到資料庫
   if (result.sessionId) {
-    sessionMap.set(clientSessionId, result.sessionId);
+    await saveSession(clientSessionId, result.sessionId);
   }
 
   return result;
@@ -92,8 +120,8 @@ agentRoutes.post("/chat", async (c) => {
     return c.json({
       success: true,
       message: result.message,
-      sessionId: clientSessionId,  // 回傳 client 使用的 session ID
-      sdkSessionId: result.sessionId,  // 也回傳 SDK 的 session ID (供除錯)
+      sessionId: clientSessionId,
+      sdkSessionId: result.sessionId,
     });
   } catch (error) {
     console.error("Agent error:", error);
@@ -140,27 +168,27 @@ agentRoutes.get("/ws", upgradeWebSocket((_c) => ({
 })));
 
 // 查看所有 sessions
-agentRoutes.get("/sessions", (c) => {
-  const sessionList = Array.from(sessionMap.entries()).map(([clientId, sdkId]) => ({
-    clientSessionId: clientId,
-    sdkSessionId: sdkId
-  }));
+agentRoutes.get("/sessions", async (c) => {
+  const rows = await query<AgentSession>(
+    "SELECT * FROM agent_sessions ORDER BY updated_at DESC"
+  );
   return c.json({
-    total: sessionMap.size,
-    sessions: sessionList
+    total: rows.length,
+    sessions: rows
   });
 });
 
 // 清除特定 session
-agentRoutes.delete("/session/:id", (c) => {
+agentRoutes.delete("/session/:id", async (c) => {
   const id = c.req.param("id");
-  sessionMap.delete(id);
+  await query("DELETE FROM agent_sessions WHERE client_session_id = $1", [id]);
   return c.json({ message: "Session cleared" });
 });
 
 // 清除所有 sessions
-agentRoutes.delete("/sessions", (c) => {
-  const count = sessionMap.size;
-  sessionMap.clear();
+agentRoutes.delete("/sessions", async (c) => {
+  const result = await query<{ count: number }>("SELECT COUNT(*) as count FROM agent_sessions");
+  const count = result[0]?.count || 0;
+  await query("DELETE FROM agent_sessions");
   return c.json({ message: `Cleared ${count} sessions` });
 });
