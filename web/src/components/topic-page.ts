@@ -240,7 +240,7 @@ export class TopicPage extends LitElement {
     .link-button {
       position: absolute;
       top: 0;
-      right: 0;
+      right: 2%;
       width: 48px;
       height: 48px;
       border-radius: 50%;
