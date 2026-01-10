@@ -85,7 +85,9 @@ export const agentRoutes = new Hono();
 
 // HTTP API endpoint for chat
 agentRoutes.post("/chat", async (c) => {
-  const { sessionId, message } = await c.req.json();
+  const body = await c.req.json();
+  const message = body.message;
+  const sessionId = body.sessionId || crypto.randomUUID();
 
   try {
     const response = await processChat(sessionId, message);
@@ -112,7 +114,8 @@ agentRoutes.get("/ws", upgradeWebSocket((_c) => ({
   onMessage: async (event, ws) => {
     try {
       const data = JSON.parse(event.data.toString());
-      const { sessionId, message } = data;
+      const message = data.message;
+      const sessionId = data.sessionId || crypto.randomUUID();
 
       // 發送處理中狀態
       ws.send(JSON.stringify({ type: "thinking", message: "思考中..." }));
