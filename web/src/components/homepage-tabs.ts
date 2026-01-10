@@ -19,9 +19,9 @@ export class HomepageTabs extends LitElement {
     .menu {
       display: flex;
       align-items: center;
+      justify-content: space-between;
       background-color: white;
       border-radius: 30px;
-      padding-right: 16px;
       overflow: hidden;
     }
 
@@ -29,9 +29,9 @@ export class HomepageTabs extends LitElement {
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 19px 40px;
+      flex: 1;
+      padding: 19px 0;
       border-radius: 30px;
-      margin-right: -16px;
       cursor: pointer;
       transition: all 0.3s ease;
       border: none;
@@ -42,10 +42,6 @@ export class HomepageTabs extends LitElement {
       line-height: 1.4;
       color: #121212;
       white-space: nowrap;
-    }
-
-    .tab:last-child {
-      margin-right: 0;
     }
 
     .tab.active {
