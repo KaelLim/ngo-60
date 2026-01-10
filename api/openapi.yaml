@@ -1,0 +1,653 @@
+openapi: 3.1.0
+info:
+  title: 慈濟 60 週年活動網站 API
+  description: |
+    慈濟基金會 60 週年活動網站的後端 API。
+    提供主題、活動、影響力、祝福語、圖片庫等資源的 CRUD 操作。
+  version: 1.0.0
+  contact:
+    name: API Support
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:8000
+    description: 開發環境
+  - url: https://api.example.com
+    description: 正式環境
+
+tags:
+  - name: Topics
+    description: 主題管理 (看主題 Tab)
+  - name: Events
+    description: 活動時程管理 (看時程 Tab)
+  - name: Impact
+    description: 影響力區塊 (看影響 Tab)
+  - name: Blessings
+    description: 祝福語管理
+  - name: Gallery
+    description: 圖片庫管理 (首頁 60 圖片網格)
+  - name: Homepage
+    description: 首頁內容管理
+  - name: Health
+    description: 健康檢查
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: 健康檢查
+      responses:
+        '200':
+          description: 服務正常運行
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+
+  /api/topics:
+    get:
+      tags:
+        - Topics
+      summary: 取得所有主題
+      description: 回傳所有主題列表，按 sort_order 排序
+      responses:
+        '200':
+          description: 成功取得主題列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Topic'
+
+  /api/topics/{id}:
+    get:
+      tags:
+        - Topics
+      summary: 取得單一主題詳情
+      description: 回傳主題詳情，包含該主題的所有相關活動
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: 主題 ID
+      responses:
+        '200':
+          description: 成功取得主題詳情
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TopicWithEvents'
+        '404':
+          description: 主題不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/events:
+    get:
+      tags:
+        - Events
+      summary: 取得活動列表
+      description: |
+        取得活動列表，支援多種篩選方式：
+        - 依月份和年份篩選: ?month=8&year=2026
+        - 依主題篩選: ?topic_id=1
+        - 僅依月份篩選: ?month=8
+      parameters:
+        - name: month
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+          description: 月份 (1-12)
+        - name: year
+          in: query
+          schema:
+            type: integer
+          description: 年份
+        - name: topic_id
+          in: query
+          schema:
+            type: integer
+          description: 主題 ID
+      responses:
+        '200':
+          description: 成功取得活動列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Event'
+
+  /api/events/{id}:
+    get:
+      tags:
+        - Events
+      summary: 取得單一活動詳情
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: 活動 ID
+      responses:
+        '200':
+          description: 成功取得活動詳情
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        '404':
+          description: 活動不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/impact:
+    get:
+      tags:
+        - Impact
+      summary: 取得所有影響力區塊
+      description: 回傳所有影響力區塊，用於「看影響」Tab 的三角形圖表
+      responses:
+        '200':
+          description: 成功取得影響力區塊列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ImpactSection'
+
+  /api/impact/{id}:
+    get:
+      tags:
+        - Impact
+      summary: 取得單一影響力區塊
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: 影響力區塊 ID
+      responses:
+        '200':
+          description: 成功取得影響力區塊
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImpactSection'
+        '404':
+          description: 影響力區塊不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/blessings:
+    get:
+      tags:
+        - Blessings
+      summary: 取得所有祝福語
+      description: 取得所有祝福語，可透過 ?featured=true 僅取得精選祝福語
+      parameters:
+        - name: featured
+          in: query
+          schema:
+            type: boolean
+          description: 是否僅取得精選祝福語
+      responses:
+        '200':
+          description: 成功取得祝福語列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Blessing'
+
+  /api/blessings/{id}:
+    get:
+      tags:
+        - Blessings
+      summary: 取得單一祝福語詳情
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: 祝福語 ID
+      responses:
+        '200':
+          description: 成功取得祝福語詳情
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Blessing'
+        '404':
+          description: 祝福語不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/gallery:
+    get:
+      tags:
+        - Gallery
+      summary: 取得所有圖片
+      description: 回傳所有已啟用的圖片，按上傳時間倒序排列
+      responses:
+        '200':
+          description: 成功取得圖片列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GalleryImage'
+    post:
+      tags:
+        - Gallery
+      summary: 上傳圖片
+      description: 上傳新圖片到圖片庫，支援 jpeg, png, webp, gif 格式
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: 圖片檔案
+              required:
+                - file
+      responses:
+        '201':
+          description: 圖片上傳成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GalleryImage'
+        '400':
+          description: 請求錯誤（無檔案或檔案類型不支援）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: 伺服器錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/gallery/random:
+    get:
+      tags:
+        - Gallery
+      summary: 隨機取得圖片
+      description: 隨機取得指定數量的圖片，用於首頁 60 圖片網格
+      parameters:
+        - name: count
+          in: query
+          schema:
+            type: integer
+            default: 15
+          description: 要取得的圖片數量
+      responses:
+        '200':
+          description: 成功取得隨機圖片列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GalleryImage'
+
+  /api/gallery/{id}:
+    get:
+      tags:
+        - Gallery
+      summary: 取得單張圖片資訊
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: 圖片 ID
+      responses:
+        '200':
+          description: 成功取得圖片資訊
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GalleryImage'
+        '404':
+          description: 圖片不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+        - Gallery
+      summary: 刪除圖片
+      description: 軟刪除圖片（將 is_active 設為 false）
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: 圖片 ID
+      responses:
+        '200':
+          description: 圖片刪除成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Deleted successfully
+        '404':
+          description: 圖片不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/homepage:
+    get:
+      tags:
+        - Homepage
+      summary: 取得首頁內容
+      description: 取得首頁的標語、標題和內容
+      responses:
+        '200':
+          description: 成功取得首頁內容
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Homepage'
+        '404':
+          description: 首頁內容不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      tags:
+        - Homepage
+      summary: 更新首頁內容
+      description: 更新首頁的標語、標題和內容（支援部分更新）
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                slogan:
+                  type: string
+                  description: 首頁標語
+                title:
+                  type: string
+                  description: 首頁標題
+                content:
+                  type: string
+                  description: 首頁內容
+      responses:
+        '200':
+          description: 首頁內容更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Homepage'
+        '500':
+          description: 伺服器錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /uploads/gallery/{filename}:
+    get:
+      tags:
+        - Gallery
+      summary: 取得圖片檔案
+      description: 取得已上傳的圖片靜態檔案
+      parameters:
+        - name: filename
+          in: path
+          required: true
+          schema:
+            type: string
+          description: 圖片檔名
+      responses:
+        '200':
+          description: 成功取得圖片檔案
+          content:
+            image/*:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: 圖片檔案不存在
+
+components:
+  schemas:
+    Topic:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: 主題 ID
+        name:
+          type: string
+          description: 主題名稱
+        subtitle:
+          type: string
+          nullable: true
+          description: 主題副標題
+        description:
+          type: string
+          nullable: true
+          description: 主題描述
+        icon:
+          type: string
+          description: 主題圖示 (emoji)
+        background_image:
+          type: string
+          nullable: true
+          description: 背景圖片 URL
+        sort_order:
+          type: integer
+          description: 排序順序
+
+    TopicWithEvents:
+      allOf:
+        - $ref: '#/components/schemas/Topic'
+        - type: object
+          properties:
+            events:
+              type: array
+              items:
+                $ref: '#/components/schemas/Event'
+              description: 該主題的相關活動列表
+
+    Event:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: 活動 ID
+        title:
+          type: string
+          description: 活動標題
+        description:
+          type: string
+          nullable: true
+          description: 活動描述
+        date_start:
+          type: string
+          format: date
+          description: 活動開始日期
+        date_end:
+          type: string
+          format: date
+          nullable: true
+          description: 活動結束日期
+        participation_type:
+          type: string
+          description: 參與方式 (線上參與/現場參與)
+        participation_fee:
+          type: string
+          nullable: true
+          description: 費用說明 (免費/需購票)
+        image_url:
+          type: string
+          nullable: true
+          description: 活動圖片 URL
+        topic_id:
+          type: integer
+          nullable: true
+          description: 所屬主題 ID
+        month:
+          type: integer
+          minimum: 1
+          maximum: 12
+          description: 月份
+        year:
+          type: integer
+          description: 年份
+        sort_order:
+          type: integer
+          description: 排序順序
+
+    ImpactSection:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: 影響力區塊 ID
+        name:
+          type: string
+          description: 區塊名稱
+        icon:
+          type: string
+          description: 圖示 (emoji)
+        stat_value:
+          type: string
+          nullable: true
+          description: 統計數值
+        stat_label:
+          type: string
+          nullable: true
+          description: 統計標籤
+        sort_order:
+          type: integer
+          description: 排序順序
+
+    Blessing:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: 祝福語 ID
+        author:
+          type: string
+          description: 作者
+        message:
+          type: string
+          description: 簡短祝福語
+        full_content:
+          type: string
+          nullable: true
+          description: 完整祝福內容
+        image_url:
+          type: string
+          nullable: true
+          description: 圖片 URL
+        is_featured:
+          type: boolean
+          description: 是否為精選
+        sort_order:
+          type: integer
+          description: 排序順序
+
+    GalleryImage:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: 圖片 ID
+        filename:
+          type: string
+          description: 儲存的檔名 (UUID)
+        original_name:
+          type: string
+          nullable: true
+          description: 原始檔名
+        mime_type:
+          type: string
+          nullable: true
+          description: MIME 類型
+        uploaded_at:
+          type: string
+          format: date-time
+          description: 上傳時間
+        is_active:
+          type: boolean
+          description: 是否啟用
+
+    Homepage:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID
+        slogan:
+          type: string
+          nullable: true
+          description: 首頁標語
+        title:
+          type: string
+          nullable: true
+          description: 首頁標題
+        content:
+          type: string
+          nullable: true
+          description: 首頁內容
+        updated_at:
+          type: string
+          format: date-time
+          description: 更新時間
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: 錯誤訊息

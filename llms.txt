@@ -1,0 +1,52 @@
+# 慈濟 60 週年活動網站
+
+> 慈濟基金會 60 週年紀念活動網站，使用 Lit Web Components + Deno + PostgreSQL 建構的現代化 SPA 應用程式。提供活動資訊瀏覽、主題探索、影響力報告等功能。
+
+本專案是一個完整的全端應用程式，前端採用 Lit Web Components 搭配 TypeScript，後端使用 Deno 搭配 Hono 框架，資料庫為 PostgreSQL。整體架構遵循現代 Web 開發最佳實踐，包含響應式設計（RWD）、流暢的 CSS 動畫效果，以及 RESTful API 設計。
+
+## 技術架構
+
+- [技術總覽](./CLAUDE.md): 專案技術棧、開發指令、架構說明
+- [API 規格文件](./api/openapi.yaml): OpenAPI 3.1 規格，定義所有 API 端點
+- [資料庫結構](./db/init.sql): PostgreSQL 資料表定義與種子資料
+
+## API 端點
+
+- [GET /api/topics](./api/routes/topics.ts): 取得所有主題列表，用於「看主題」Tab
+- [GET /api/topics/:id](./api/routes/topics.ts): 取得單一主題詳情與相關活動
+- [GET /api/events](./api/routes/events.ts): 取得活動列表，支援月份/年份/主題篩選
+- [GET /api/events/:id](./api/routes/events.ts): 取得單一活動詳情
+- [GET /api/impact](./api/routes/impact.ts): 取得影響力區塊，用於「看影響」Tab 三角圖表
+- [GET /api/blessings](./api/routes/blessings.ts): 取得祝福語列表，支援精選篩選
+- [GET /api/blessings/:id](./api/routes/blessings.ts): 取得單一祝福語完整內容
+- [GET /api/gallery](./api/routes/gallery.ts): 取得圖片庫列表
+- [GET /api/gallery/random](./api/routes/gallery.ts): 隨機取得圖片，用於首頁 60 圖片網格
+- [POST /api/gallery](./api/routes/gallery.ts): 上傳圖片到圖片庫
+- [GET /api/homepage](./api/routes/homepage.ts): 取得首頁內容（標語、標題、說明）
+- [PUT /api/homepage](./api/routes/homepage.ts): 更新首頁內容
+
+## 前端元件
+
+- [app-root.ts](./web/src/components/app-root.ts): 根元件，提供 Context 與路由控制
+- [app-homepage.ts](./web/src/components/app-homepage.ts): 首頁元件，包含圖片網格與標語
+- [homepage-grid.ts](./web/src/components/homepage-grid.ts): 60 圖片圓形網格，形成「60」數字造型
+- [homepage-tabs.ts](./web/src/components/homepage-tabs.ts): Tab 選單（看時程/看主題/看影響）
+- [app-sheet.ts](./web/src/components/app-sheet.ts): Bottom Sheet 容器
+- [sheet-content.ts](./web/src/components/sheet-content.ts): Tab 內容區（主題卡片、時程表、影響力報告）
+- [topic-page.ts](./web/src/components/topic-page.ts): 主題詳情頁面，顯示活動列表
+- [blessing-page.ts](./web/src/components/blessing-page.ts): 祝福語詳情頁面
+
+## 狀態管理
+
+- [app-store.ts](./web/src/stores/app-store.ts): UI 狀態（Tab 切換、頁面導航、Sheet 位置）
+- [data-store.ts](./web/src/stores/data-store.ts): API 資料快取
+- [app-context.ts](./web/src/contexts/app-context.ts): Lit Context 定義
+- [api.ts](./web/src/services/api.ts): API 客戶端封裝
+
+## Optional
+
+- [docker-compose.yml](./docker-compose.yml): PostgreSQL 容器配置
+- [deno.json](./deno.json): 根目錄 Deno 任務配置
+- [api/deno.json](./api/deno.json): API 專用 Deno 配置
+- [web/deno.json](./web/deno.json): 前端 Deno + Vite 配置
+- [web/vite.config.ts](./web/vite.config.ts): Vite 建置配置
