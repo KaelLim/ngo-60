@@ -6,23 +6,30 @@
 import { Hono } from "jsr:@hono/hono@^4.6.0";
 import { upgradeWebSocket } from "jsr:@hono/hono@^4.6.0/deno";
 
-// 儲存對話歷史
-const sessions = new Map<string, string[]>();
+// 儲存 SDK session ID 對應 (clientSessionId -> sdkSessionId)
+const sessionMap = new Map<string, string>();
 
 // 執行 Agent Worker
-async function runAgentWorker(prompt: string): Promise<string> {
+async function runAgentWorker(prompt: string, resumeSessionId?: string): Promise<{ message: string; sessionId: string }> {
   const workerPath = new URL("../agent-worker.ts", import.meta.url).pathname;
 
+  const args = [
+    "run",
+    "--allow-net",
+    "--allow-env",
+    "--allow-read",
+    "--allow-run",
+    workerPath,
+    prompt
+  ];
+
+  // 如果有 resume session ID，加入參數
+  if (resumeSessionId) {
+    args.push(resumeSessionId);
+  }
+
   const command = new Deno.Command("deno", {
-    args: [
-      "run",
-      "--allow-net",
-      "--allow-env",
-      "--allow-read",
-      "--allow-run",
-      workerPath,
-      prompt
-    ],
+    args,
     stdout: "piped",
     stderr: "piped",
   });
@@ -38,47 +45,38 @@ async function runAgentWorker(prompt: string): Promise<string> {
   }
 
   try {
-    const result = JSON.parse(output.trim().split('\n').pop() || '{}');
+    // 取得最後一行 JSON 輸出
+    const lines = output.trim().split('\n');
+    const lastLine = lines[lines.length - 1];
+    const result = JSON.parse(lastLine);
+
     if (result.error) {
       throw new Error(result.error);
     }
-    return result.message || "";
-  } catch {
-    // 如果 output 不是 JSON，可能是直接的文字回應
-    if (output.includes('"success":true')) {
-      const match = output.match(/"message":"([^"]+)"/);
-      return match ? match[1] : output;
-    }
+
+    return {
+      message: result.message || "",
+      sessionId: result.sessionId || ""
+    };
+  } catch (e) {
     throw new Error(`Worker output parse error: ${output}`);
   }
 }
 
 // 處理聊天請求的核心邏輯
-async function processChat(sessionId: string, userMessage: string): Promise<string> {
-  // 取得或建立 session 歷史
-  if (!sessions.has(sessionId)) {
-    sessions.set(sessionId, []);
-  }
-  const history = sessions.get(sessionId)!;
-  history.push(`User: ${userMessage}`);
+async function processChat(clientSessionId: string, userMessage: string): Promise<{ message: string; sessionId: string }> {
+  // 查找是否有對應的 SDK session ID
+  const sdkSessionId = sessionMap.get(clientSessionId);
 
-  // 組合 prompt
-  const prompt = history.length > 1
-    ? `對話歷史:\n${history.slice(0, -1).join('\n')}\n\n最新訊息: ${userMessage}\n\n請回覆用戶的最新訊息。`
-    : userMessage;
+  // 執行 Agent Worker，傳入 resume session ID
+  const result = await runAgentWorker(userMessage, sdkSessionId);
 
-  // 執行 Agent Worker
-  const response = await runAgentWorker(prompt);
-
-  // 儲存回覆
-  history.push(`Assistant: ${response}`);
-
-  // 限制歷史長度
-  if (history.length > 20) {
-    history.splice(0, history.length - 20);
+  // 儲存 SDK session ID 對應
+  if (result.sessionId) {
+    sessionMap.set(clientSessionId, result.sessionId);
   }
 
-  return response;
+  return result;
 }
 
 export const agentRoutes = new Hono();
@@ -87,14 +85,15 @@ export const agentRoutes = new Hono();
 agentRoutes.post("/chat", async (c) => {
   const body = await c.req.json();
   const message = body.message;
-  const sessionId = body.sessionId || crypto.randomUUID();
+  const clientSessionId = body.sessionId || crypto.randomUUID();
 
   try {
-    const response = await processChat(sessionId, message);
+    const result = await processChat(clientSessionId, message);
     return c.json({
       success: true,
-      message: response,
-      sessionId,
+      message: result.message,
+      sessionId: clientSessionId,  // 回傳 client 使用的 session ID
+      sdkSessionId: result.sessionId,  // 也回傳 SDK 的 session ID (供除錯)
     });
   } catch (error) {
     console.error("Agent error:", error);
@@ -115,17 +114,17 @@ agentRoutes.get("/ws", upgradeWebSocket((_c) => ({
     try {
       const data = JSON.parse(event.data.toString());
       const message = data.message;
-      const sessionId = data.sessionId || crypto.randomUUID();
+      const clientSessionId = data.sessionId || crypto.randomUUID();
 
       // 發送處理中狀態
       ws.send(JSON.stringify({ type: "thinking", message: "思考中..." }));
 
-      const response = await processChat(sessionId, message);
+      const result = await processChat(clientSessionId, message);
 
       ws.send(JSON.stringify({
         type: "response",
-        message: response,
-        sessionId,
+        message: result.message,
+        sessionId: clientSessionId,
       }));
     } catch (error) {
       console.error("Agent WebSocket error:", error);
@@ -140,9 +139,28 @@ agentRoutes.get("/ws", upgradeWebSocket((_c) => ({
   },
 })));
 
-// 清除 session
+// 查看所有 sessions
+agentRoutes.get("/sessions", (c) => {
+  const sessionList = Array.from(sessionMap.entries()).map(([clientId, sdkId]) => ({
+    clientSessionId: clientId,
+    sdkSessionId: sdkId
+  }));
+  return c.json({
+    total: sessionMap.size,
+    sessions: sessionList
+  });
+});
+
+// 清除特定 session
 agentRoutes.delete("/session/:id", (c) => {
   const id = c.req.param("id");
-  sessions.delete(id);
+  sessionMap.delete(id);
   return c.json({ message: "Session cleared" });
+});
+
+// 清除所有 sessions
+agentRoutes.delete("/sessions", (c) => {
+  const count = sessionMap.size;
+  sessionMap.clear();
+  return c.json({ message: `Cleared ${count} sessions` });
 });

@@ -186,10 +186,12 @@ const SYSTEM_PROMPT = `你是慈濟 60 週年活動網站的 AI 管理助手。
 請用繁體中文回覆，並且友善地引導用戶。
 當執行操作後，請清楚說明結果。`;
 
-// 主程式：讀取 stdin，執行查詢，輸出結果
+// 主程式：讀取參數，執行查詢，輸出結果
 async function main() {
-  // 從命令行參數獲取 prompt
+  // 從命令行參數獲取 prompt 和可選的 resumeSessionId
   const prompt = Deno.args[0];
+  const resumeSessionId = Deno.args[1] || undefined;
+
   if (!prompt) {
     console.error(JSON.stringify({ error: "No prompt provided" }));
     Deno.exit(1);
@@ -208,6 +210,7 @@ async function main() {
         systemPrompt: SYSTEM_PROMPT,
         permissionMode: "bypassPermissions",
         allowDangerouslySkipPermissions: true,
+        resume: resumeSessionId,  // 恢復既有 session
         mcpServers: {
           "tzu-chi-admin": mcpServer,
         },
@@ -215,7 +218,14 @@ async function main() {
     });
 
     let response = "";
+    let sessionId = "";
+
     for await (const event of result) {
+      // 從 system init 事件取得 session_id
+      if (event.type === "system" && event.subtype === "init") {
+        sessionId = event.session_id;
+      }
+
       if (event.type === "assistant" && event.message?.content) {
         for (const block of event.message.content) {
           if (block.type === "text") {
@@ -227,7 +237,8 @@ async function main() {
       }
     }
 
-    console.log(JSON.stringify({ success: true, message: response }));
+    // 回傳 session_id 供後續 resume 使用
+    console.log(JSON.stringify({ success: true, message: response, sessionId }));
   } catch (error) {
     console.error(JSON.stringify({ error: String(error) }));
     Deno.exit(1);
