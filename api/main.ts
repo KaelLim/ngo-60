@@ -1,10 +1,10 @@
 import { Hono } from "jsr:@hono/hono@^4.6.0";
 import { cors } from "jsr:@hono/hono@^4.6.0/cors";
 import { serveStatic } from "jsr:@hono/hono@^4.6.0/deno";
-import { categoriesRoutes } from "./routes/categories.ts";
+import { topicsRoutes } from "./routes/topics.ts";
 import { eventsRoutes } from "./routes/events.ts";
-import { newsRoutes } from "./routes/news.ts";
-import { activitiesRoutes } from "./routes/activities.ts";
+import { impactRoutes } from "./routes/impact.ts";
+import { blessingsRoutes } from "./routes/blessings.ts";
 import { galleryRoutes } from "./routes/gallery.ts";
 import { homepageRoutes } from "./routes/homepage.ts";
 
@@ -17,10 +17,10 @@ app.use("/*", cors());
 app.use("/uploads/*", serveStatic({ root: "./" }));
 
 // Routes
-app.route("/api/categories", categoriesRoutes);
+app.route("/api/topics", topicsRoutes);
 app.route("/api/events", eventsRoutes);
-app.route("/api/news", newsRoutes);
-app.route("/api/activities", activitiesRoutes);
+app.route("/api/impact", impactRoutes);
+app.route("/api/blessings", blessingsRoutes);
 app.route("/api/gallery", galleryRoutes);
 app.route("/api/homepage", homepageRoutes);
 

@@ -1,42 +1,55 @@
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
-export interface Category {
+// =============================================
+// 介面定義
+// =============================================
+
+export interface Topic {
   id: number;
   name: string;
+  subtitle: string | null;
+  description: string | null;
   icon: string;
-  type: 'topic' | 'impact';
+  background_image: string | null;
   sort_order: number;
+}
+
+export interface TopicWithEvents extends Topic {
+  events: Event[];
 }
 
 export interface Event {
   id: number;
   title: string;
+  description: string | null;
   date_start: string;
   date_end: string | null;
-  tag: string | null;
-  icon: string | null;
+  participation_type: 'online' | 'onsite';
+  participation_fee: string | null;
+  image_url: string | null;
+  topic_id: number | null;
   month: number;
   year: number;
-  image_url: string | null;
+  sort_order: number;
 }
 
-export interface News {
+export interface ImpactSection {
   id: number;
-  title: string;
-  excerpt: string | null;
-  content: string | null;
-  icon: string | null;
-  category_id: number | null;
-  published_at: string;
-  image_url: string | null;
+  name: string;
+  icon: string;
+  stat_value: string | null;
+  stat_label: string | null;
+  sort_order: number;
 }
 
-export interface Activity {
+export interface Blessing {
   id: number;
-  title: string;
-  date_label: string;
-  location: string | null;
-  month: number;
+  author: string;
+  message: string;
+  full_content: string | null;
+  image_url: string | null;
+  is_featured: boolean;
+  sort_order: number;
 }
 
 export interface GalleryImage {
@@ -44,6 +57,7 @@ export interface GalleryImage {
   filename: string;
   original_name: string | null;
   mime_type: string | null;
+  category: string | null;
   uploaded_at: string;
   is_active: boolean;
 }
@@ -56,47 +70,62 @@ export interface Homepage {
   updated_at: string;
 }
 
+// =============================================
+// API 方法
+// =============================================
+
 export const api = {
-  async getCategories(type: 'topic' | 'impact'): Promise<Category[]> {
-    const res = await fetch(`${API_BASE}/categories?type=${type}`);
+  // Topics (主題)
+  async getTopics(): Promise<Topic[]> {
+    const res = await fetch(`${API_BASE}/topics`);
     return res.json();
   },
 
-  async getCategoryById(id: number): Promise<Category | null> {
-    const res = await fetch(`${API_BASE}/categories/${id}`);
+  async getTopicById(id: number): Promise<TopicWithEvents | null> {
+    const res = await fetch(`${API_BASE}/topics/${id}`);
     if (!res.ok) return null;
     return res.json();
   },
 
-  async getEvents(month?: number, year?: number): Promise<Event[]> {
+  // Events (活動/時程)
+  async getEvents(params?: { month?: number; year?: number; topic_id?: number }): Promise<Event[]> {
     let url = `${API_BASE}/events`;
-    const params = new URLSearchParams();
-    if (month) params.set('month', month.toString());
-    if (year) params.set('year', year.toString());
-    if (params.toString()) url += `?${params}`;
+    const searchParams = new URLSearchParams();
+    if (params?.month) searchParams.set('month', params.month.toString());
+    if (params?.year) searchParams.set('year', params.year.toString());
+    if (params?.topic_id) searchParams.set('topic_id', params.topic_id.toString());
+    if (searchParams.toString()) url += `?${searchParams}`;
     const res = await fetch(url);
     return res.json();
   },
 
-  async getNewsByCategory(categoryId: number): Promise<News[]> {
-    const res = await fetch(`${API_BASE}/news?category_id=${categoryId}`);
-    return res.json();
-  },
-
-  async getNewsById(id: number): Promise<News | null> {
-    const res = await fetch(`${API_BASE}/news/${id}`);
+  async getEventById(id: number): Promise<Event | null> {
+    const res = await fetch(`${API_BASE}/events/${id}`);
     if (!res.ok) return null;
     return res.json();
   },
 
-  async getActivities(month?: number): Promise<Activity[]> {
-    let url = `${API_BASE}/activities`;
-    if (month) url += `?month=${month}`;
+  // Impact (影響力)
+  async getImpactSections(): Promise<ImpactSection[]> {
+    const res = await fetch(`${API_BASE}/impact`);
+    return res.json();
+  },
+
+  // Blessings (祝福語)
+  async getBlessings(featured?: boolean): Promise<Blessing[]> {
+    let url = `${API_BASE}/blessings`;
+    if (featured) url += '?featured=true';
     const res = await fetch(url);
     return res.json();
   },
 
-  // Gallery
+  async getBlessingById(id: number): Promise<Blessing | null> {
+    const res = await fetch(`${API_BASE}/blessings/${id}`);
+    if (!res.ok) return null;
+    return res.json();
+  },
+
+  // Gallery (圖庫)
   async getGalleryRandom(count: number = 15): Promise<GalleryImage[]> {
     const res = await fetch(`${API_BASE}/gallery/random?count=${count}`);
     return res.json();
@@ -125,7 +154,7 @@ export const api = {
     return `/uploads/gallery/${filename}`;
   },
 
-  // Homepage
+  // Homepage (首頁)
   async getHomepage(): Promise<Homepage | null> {
     const res = await fetch(`${API_BASE}/homepage`);
     if (!res.ok) return null;
