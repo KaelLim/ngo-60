@@ -10,6 +10,7 @@ interface AppState {
   selectedYear: number;
   currentCategoryId: number | null;
   currentNewsId: number | null;
+  currentBlessingId: number | null;
   containerY: number;
   isDragging: boolean;
 }
@@ -25,6 +26,7 @@ export class AppStore {
     selectedYear: new Date().getFullYear(),
     currentCategoryId: null,
     currentNewsId: null,
+    currentBlessingId: null,
     containerY: 0,
     isDragging: false
   };
@@ -39,6 +41,7 @@ export class AppStore {
   get selectedYear() { return this.state.selectedYear; }
   get currentCategoryId() { return this.state.currentCategoryId; }
   get currentNewsId() { return this.state.currentNewsId; }
+  get currentBlessingId() { return this.state.currentBlessingId; }
   get containerY() { return this.state.containerY; }
   get isDragging() { return this.state.isDragging; }
 
@@ -121,13 +124,15 @@ export class AppStore {
     this.updateURL('/');
   }
 
-  openBlessing() {
+  openBlessing(blessingId?: number) {
+    this.state.currentBlessingId = blessingId || null;
     this.state.currentPage = 'blessing';
     this.notify();
   }
 
   closeBlessing() {
     this.state.currentPage = null;
+    this.state.currentBlessingId = null;
     this.notify();
   }
 

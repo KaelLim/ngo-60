@@ -1,16 +1,26 @@
 import { LitElement, html, css } from 'lit';
-import { customElement } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 import { consume } from '@lit/context';
 import { appContext } from '../contexts/app-context.js';
 import { AppStore } from '../stores/app-store.js';
 import { StoreController } from '../controllers/store-controller.js';
+import { api, Blessing } from '../services/api.js';
 
 @customElement('blessing-page')
 export class BlessingPage extends LitElement {
   @consume({ context: appContext })
   appStore!: AppStore;
 
-  private storeController!: StoreController;
+  @property({ type: Number })
+  blessingId: number | null = null;
+
+  @state()
+  private blessingData: Blessing | null = null;
+
+  @state()
+  private loading = false;
+
+  private storeController!: StoreController<AppStore>;
 
   static styles = css`
     :host {
@@ -160,6 +170,33 @@ export class BlessingPage extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     this.storeController = new StoreController(this, this.appStore);
+    this.loadBlessingData();
+  }
+
+  updated(changedProperties: Map<string, unknown>) {
+    if (changedProperties.has('blessingId')) {
+      this.loadBlessingData();
+    }
+  }
+
+  private async loadBlessingData() {
+    // Use blessingId from property or from store
+    const id = this.blessingId || this.appStore.currentBlessingId;
+    if (!id) {
+      this.blessingData = null;
+      return;
+    }
+
+    this.loading = true;
+    try {
+      const data = await api.getBlessingById(id);
+      this.blessingData = data;
+    } catch (error) {
+      console.error('Failed to load blessing:', error);
+      this.blessingData = null;
+    } finally {
+      this.loading = false;
+    }
   }
 
   private handleBack() {
@@ -174,29 +211,53 @@ export class BlessingPage extends LitElement {
       </svg>
     `;
 
+    // Loading state
+    if (this.loading) {
+      return html`
+        <div class="page-container">
+          <div class="header">
+            <div class="header-overlay"></div>
+            <div class="header-content">
+              <button class="back-button" @click=${this.handleBack}>
+                ${backArrow}
+              </button>
+            </div>
+          </div>
+          <div class="body" style="display: flex; align-items: center; justify-content: center;">
+            <p>載入中...</p>
+          </div>
+        </div>
+      `;
+    }
+
+    // No data - show default message
+    const blessing = this.blessingData;
+    const author = blessing?.author || '證嚴上人';
+    const content = blessing?.full_content || blessing?.message || '';
+    const imageUrl = blessing?.image_url || 'https://images.unsplash.com/photo-1544027993-37dbfe43562a?w=800';
+
     return html`
       <div class="page-container">
         <!-- Header -->
         <div class="header">
           <div class="header-bg">
-            <img src="https://images.unsplash.com/photo-1544027993-37dbfe43562a?w=800" alt="" />
+            <img src="${imageUrl}" alt="" />
           </div>
           <div class="header-overlay"></div>
           <div class="header-content">
             <button class="back-button" @click=${this.handleBack}>
               ${backArrow}
             </button>
-            <h1 class="page-title">證嚴上人</h1>
+            <h1 class="page-title">${author}</h1>
           </div>
         </div>
 
         <!-- Body -->
         <div class="body">
           <div class="body-content">
-            <p>任新改統明措，記焉難張或、信頓，身奏在車種我，面。捶大不喀裹女連不以電，。的任新改統明措，記焉難張或、信頓，身奏在車種我，面。</p>
-            <p>捶大不喀裹女連不以電，。的任新改統明措，記焉難張或、信頓，身奏在車種我，面。捶大不喀裹女連不以電，。的任新改統明措，記焉難張或、信頓，身奏在車種我，面。捶大不喀裹女連不以電，。的任新改統明措，記焉難張或、信頓，身奏在車種我，面。捶大不喀裹女連不以</p>
-            <p>電，。的任新改統明措，記焉難張或、信頓，身奏在車種我，面。捶大不喀裹女連不以電，。的任新改統明措，記焉難張或、信頓，身奏在車種我，面。捶大不喀裹女連不以電，。的任新改統明措，記焉難張或、信頓，身奏在車種我，面。</p>
-            <p>捶大不喀裹女連不以電，。的身奏在車種我，面。捶大不喀裹女連不以電，。的任新改統明措，記焉難張或、信頓，身奏在車種我，面。捶大不喀裹女連不以電，。的身奏在車種我，面。捶大不喀裹女連不以電，。的任新改統明措，記焉難張或、信頓，身奏在車種我，面。捶大不喀裹女連不以電，。的身奏在車種我，面。捶大不喀裹女連不以電，。的任新改統明措，記焉難張或、信頓，身奏在車種我，面。捶大不喀裹女連不以電，。的</p>
+            ${content ? content.split('\n').map(paragraph =>
+              paragraph.trim() ? html`<p>${paragraph}</p>` : ''
+            ) : html`<p>暫無內容</p>`}
           </div>
         </div>
 

@@ -31,8 +31,7 @@ export class AppRoot extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     // 初始化載入資料
-    this.dataStore.loadCategories();
-    this.dataStore.loadEvents(this.appStore.selectedMonth, this.appStore.selectedYear);
+    this.dataStore.loadAllData(this.appStore.selectedMonth, this.appStore.selectedYear);
   }
 
   render() {

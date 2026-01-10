@@ -19,7 +19,7 @@ export class AppSheet extends LitElement {
   @consume({ context: dataContext })
   dataStore!: DataStore;
 
-  private storeController!: StoreController;
+  private storeController!: StoreController<AppStore>;
 
   @state()
   private homepage: Homepage | null = null;

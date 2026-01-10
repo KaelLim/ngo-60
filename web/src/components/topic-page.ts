@@ -1,28 +1,10 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 import { consume } from '@lit/context';
 import { appContext } from '../contexts/app-context.js';
 import { AppStore } from '../stores/app-store.js';
 import { StoreController } from '../controllers/store-controller.js';
-
-interface TopicActivity {
-  id: number;
-  title: string;
-  dateStart: string;
-  dateEnd: string;
-  participation: string;
-  image: string;
-  description: string;
-}
-
-interface TopicData {
-  id: number;
-  title: string;
-  subtitle: string;
-  description: string;
-  backgroundImage: string;
-  activities: TopicActivity[];
-}
+import { api, TopicWithEvents, Event } from '../services/api.js';
 
 @customElement('topic-page')
 export class TopicPage extends LitElement {
@@ -32,74 +14,13 @@ export class TopicPage extends LitElement {
   @property({ type: Number })
   topicId: number = 1;
 
-  private storeController!: StoreController;
+  @state()
+  private topicData: TopicWithEvents | null = null;
 
-  // Hardcoded topic data for UI
-  private topicsData: Record<number, TopicData> = {
-    1: {
-      id: 1,
-      title: '合作',
-      subtitle: '當行動成為力量',
-      description: '任新改統明措，記焉難張或、信頓，身奏在車種我，面。捶大不喀裹女連不以電，。的任新改統明措，記焉難張或、信頓，身奏在車種我，面。\n捶大不喀裹女連不以電。',
-      backgroundImage: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800',
-      activities: [
-        {
-          id: 1,
-          title: '友善蔬食旅店推動計畫',
-          dateStart: '2026.08.28',
-          dateEnd: '2026.09.05',
-          participation: '現場參與 - 以店家費用為準',
-          image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800',
-          description: '任新改統明措，記焉難張或、信頓，身奏在車種我，面。捶大不喀裹女連不以電。'
-        },
-        {
-          id: 2,
-          title: '哈佛沈浸式展覽',
-          dateStart: '2026.08.28',
-          dateEnd: '2026.09.05',
-          participation: '線上參與 - 免費',
-          image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800',
-          description: '任新改統明措，記焉難張或、信頓，身奏在車種我，面。捶大不喀裹女連不以電。'
-        }
-      ]
-    },
-    2: {
-      id: 2,
-      title: '人文',
-      subtitle: '讓歷史再翻新',
-      description: '任新改統明措，記焉難張或、信頓，身奏在車種我，面。捶大不喀裹女連不以電，。的任新改統明措，記焉難張或、信頓，身奏在車種我，面。\n捶大不喀裹女連不以電。',
-      backgroundImage: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800',
-      activities: [
-        {
-          id: 3,
-          title: '傳統文化節',
-          dateStart: '2026.09.10',
-          dateEnd: '2026.09.15',
-          participation: '現場參與 - 免費',
-          image: 'https://images.unsplash.com/photo-1513297887119-d46091b24bfa?w=800',
-          description: '重現在地傳統技藝與習俗，體驗文化的深度與廣度。'
-        }
-      ]
-    },
-    3: {
-      id: 3,
-      title: '祈福',
-      subtitle: '讓善念被積累',
-      description: '任新改統明措，記焉難張或、信頓，身奏在車種我，面。捶大不喀裹女連不以電，。的任新改統明措，記焉難張或、信頓，身奏在車種我，面。\n捶大不喀裹女連不以電。',
-      backgroundImage: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800',
-      activities: [
-        {
-          id: 4,
-          title: '線上浴佛',
-          dateStart: '2026.08.28',
-          dateEnd: '2026.09.05',
-          participation: '線上參與 - 免費',
-          image: 'https://images.unsplash.com/photo-1544027993-37dbfe43562a?w=800',
-          description: '透過線上平台參與浴佛儀式，淨化心靈。'
-        }
-      ]
-    }
-  };
+  @state()
+  private loading = false;
+
+  private storeController!: StoreController<AppStore>;
 
   static styles = css`
     :host {
@@ -381,19 +302,46 @@ export class TopicPage extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     this.storeController = new StoreController(this, this.appStore);
+    this.loadTopicData();
+  }
+
+  updated(changedProperties: Map<string, unknown>) {
+    if (changedProperties.has('topicId')) {
+      this.loadTopicData();
+    }
+  }
+
+  private async loadTopicData() {
+    if (!this.topicId) return;
+
+    this.loading = true;
+    try {
+      const data = await api.getTopicById(this.topicId);
+      this.topicData = data;
+    } catch (error) {
+      console.error('Failed to load topic:', error);
+      this.topicData = null;
+    } finally {
+      this.loading = false;
+    }
   }
 
   private handleBack() {
     this.appStore.closePage();
   }
 
-  private get currentTopic(): TopicData {
-    return this.topicsData[this.topicId] || this.topicsData[1];
+  private formatDate(dateStr: string): string {
+    const date = new Date(dateStr);
+    return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
+  }
+
+  private formatParticipation(event: Event): string {
+    const type = event.participation_type === 'online' ? '線上參與' : '現場參與';
+    const fee = event.participation_fee || '免費';
+    return `${type} - ${fee}`;
   }
 
   render() {
-    const topic = this.currentTopic;
-
     // Back arrow SVG
     const backArrow = html`
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -422,14 +370,42 @@ export class TopicPage extends LitElement {
       </svg>
     `;
 
+    // Loading state
+    if (this.loading) {
+      return html`
+        <div class="page-container">
+          <div class="page-content" style="display: flex; align-items: center; justify-content: center;">
+            <p style="color: white;">載入中...</p>
+          </div>
+        </div>
+      `;
+    }
+
+    // No data state
+    if (!this.topicData) {
+      return html`
+        <div class="page-container">
+          <div class="page-content">
+            <button class="back-button" @click=${this.handleBack}>
+              ${backArrow}
+            </button>
+            <p style="color: white; text-align: center; margin-top: 40px;">找不到主題資料</p>
+          </div>
+        </div>
+      `;
+    }
+
+    const topic = this.topicData;
+    const backgroundImage = topic.background_image || 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800';
+
     return html`
       <div class="page-container">
         <!-- Background -->
         <div class="page-bg">
-          <img src="${topic.backgroundImage}" alt="" />
-          <img src="${topic.backgroundImage}" alt="" />
-          <img src="${topic.backgroundImage}" alt="" />
-          <img src="${topic.backgroundImage}" alt="" />
+          <img src="${backgroundImage}" alt="" />
+          <img src="${backgroundImage}" alt="" />
+          <img src="${backgroundImage}" alt="" />
+          <img src="${backgroundImage}" alt="" />
         </div>
 
         <!-- Content -->
@@ -439,13 +415,13 @@ export class TopicPage extends LitElement {
           </button>
 
           <div class="title-section">
-            <h1 class="topic-title">${topic.title}</h1>
-            <p class="topic-subtitle">${topic.subtitle}</p>
-            <p class="topic-description">${topic.description}</p>
+            <h1 class="topic-title">${topic.name}</h1>
+            <p class="topic-subtitle">${topic.subtitle || ''}</p>
+            <p class="topic-description">${topic.description || ''}</p>
           </div>
 
           <div class="activities-list">
-            ${topic.activities.map(activity => html`
+            ${topic.events.map(event => html`
               <div class="activity-card">
                 <div class="activity-card-shape">
                   <svg viewBox="0 0 351 317" fill="none" preserveAspectRatio="none">
@@ -458,22 +434,26 @@ export class TopicPage extends LitElement {
                 <div class="activity-card-bg">
                   <div class="activity-card-content">
                     <div class="activity-info">
-                      <h3 class="activity-title">${activity.title}</h3>
+                      <h3 class="activity-title">${event.title}</h3>
                       <div class="activity-items">
                         <div class="activity-row">
                           <span class="activity-icon">${calendarIcon}</span>
-                          <span class="activity-text">${activity.dateStart} - ${activity.dateEnd}</span>
+                          <span class="activity-text">${this.formatDate(event.date_start)}${event.date_end ? ` - ${this.formatDate(event.date_end)}` : ''}</span>
                         </div>
                         <div class="activity-row">
                           <span class="activity-icon">${personIcon}</span>
-                          <span class="activity-text">${activity.participation}</span>
+                          <span class="activity-text">${this.formatParticipation(event)}</span>
                         </div>
                       </div>
                     </div>
-                    <div class="activity-image">
-                      <img src="${activity.image}" alt="${activity.title}" />
-                    </div>
-                    <p class="activity-description">${activity.description}</p>
+                    ${event.image_url ? html`
+                      <div class="activity-image">
+                        <img src="${event.image_url}" alt="${event.title}" />
+                      </div>
+                    ` : ''}
+                    ${event.description ? html`
+                      <p class="activity-description">${event.description}</p>
+                    ` : ''}
                   </div>
                 </div>
               </div>

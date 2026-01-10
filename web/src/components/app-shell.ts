@@ -16,7 +16,7 @@ export class AppShell extends LitElement {
   @consume({ context: appContext })
   appStore!: AppStore;
 
-  private storeController!: StoreController;
+  private storeController!: StoreController<AppStore>;
   private gestureController!: GestureController;
 
   @query('.main-container')

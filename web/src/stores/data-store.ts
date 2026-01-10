@@ -1,28 +1,24 @@
-import { api, Category, Event, News, Activity } from '../services/api.js';
+import { api, Topic, Event, ImpactSection, Blessing } from '../services/api.js';
 
-export type { Category, Event, News, Activity };
+export type { Topic, Event, ImpactSection, Blessing };
 
 type Listener = () => void;
 
 interface DataState {
-  topicCategories: Category[];
-  impactCategories: Category[];
+  topics: Topic[];
+  impactSections: ImpactSection[];
   events: Event[];
-  currentNews: News[];
-  currentNewsDetail: News | null;
-  activities: Activity[];
+  blessings: Blessing[];
   loading: boolean;
   error: string | null;
 }
 
 export class DataStore {
   private state: DataState = {
-    topicCategories: [],
-    impactCategories: [],
+    topics: [],
+    impactSections: [],
     events: [],
-    currentNews: [],
-    currentNewsDetail: null,
-    activities: [],
+    blessings: [],
     loading: false,
     error: null
   };
@@ -30,40 +26,47 @@ export class DataStore {
   private listeners = new Set<Listener>();
 
   // Getters
-  get topicCategories() { return this.state.topicCategories; }
-  get impactCategories() { return this.state.impactCategories; }
+  get topics() { return this.state.topics; }
+  get impactSections() { return this.state.impactSections; }
   get events() { return this.state.events; }
-  get currentNews() { return this.state.currentNews; }
-  get currentNewsDetail() { return this.state.currentNewsDetail; }
-  get activities() { return this.state.activities; }
+  get blessings() { return this.state.blessings; }
   get loading() { return this.state.loading; }
   get error() { return this.state.error; }
 
   // Fetch methods
-  async loadCategories() {
+  async loadTopics() {
     this.state.loading = true;
     this.notify();
     try {
-      const [topics, impacts] = await Promise.all([
-        api.getCategories('topic'),
-        api.getCategories('impact')
-      ]);
-      this.state.topicCategories = topics;
-      this.state.impactCategories = impacts;
+      this.state.topics = await api.getTopics();
       this.state.error = null;
     } catch (e) {
-      this.state.error = e instanceof Error ? e.message : 'Failed to load categories';
+      this.state.error = e instanceof Error ? e.message : 'Failed to load topics';
     } finally {
       this.state.loading = false;
       this.notify();
     }
   }
 
-  async loadEvents(month?: number, year?: number) {
+  async loadImpactSections() {
     this.state.loading = true;
     this.notify();
     try {
-      this.state.events = await api.getEvents(month, year);
+      this.state.impactSections = await api.getImpactSections();
+      this.state.error = null;
+    } catch (e) {
+      this.state.error = e instanceof Error ? e.message : 'Failed to load impact sections';
+    } finally {
+      this.state.loading = false;
+      this.notify();
+    }
+  }
+
+  async loadEvents(params?: { month?: number; year?: number; topic_id?: number }) {
+    this.state.loading = true;
+    this.notify();
+    try {
+      this.state.events = await api.getEvents(params);
       this.state.error = null;
     } catch (e) {
       this.state.error = e instanceof Error ? e.message : 'Failed to load events';
@@ -73,51 +76,45 @@ export class DataStore {
     }
   }
 
-  async loadNewsByCategory(categoryId: number) {
+  async loadBlessings(featured?: boolean) {
     this.state.loading = true;
     this.notify();
     try {
-      this.state.currentNews = await api.getNewsByCategory(categoryId);
+      this.state.blessings = await api.getBlessings(featured);
       this.state.error = null;
     } catch (e) {
-      this.state.error = e instanceof Error ? e.message : 'Failed to load news';
+      this.state.error = e instanceof Error ? e.message : 'Failed to load blessings';
     } finally {
       this.state.loading = false;
       this.notify();
     }
   }
 
-  async loadNewsDetail(id: number) {
+  async loadAllData(month?: number, year?: number) {
     this.state.loading = true;
     this.notify();
     try {
-      this.state.currentNewsDetail = await api.getNewsById(id);
+      const [topics, events, impactSections, blessings] = await Promise.all([
+        api.getTopics(),
+        api.getEvents({ month, year }),
+        api.getImpactSections(),
+        api.getBlessings(true)
+      ]);
+      this.state.topics = topics;
+      this.state.events = events;
+      this.state.impactSections = impactSections;
+      this.state.blessings = blessings;
       this.state.error = null;
     } catch (e) {
-      this.state.error = e instanceof Error ? e.message : 'Failed to load news detail';
+      this.state.error = e instanceof Error ? e.message : 'Failed to load data';
     } finally {
       this.state.loading = false;
       this.notify();
     }
   }
 
-  async loadActivities(month?: number) {
-    this.state.loading = true;
-    this.notify();
-    try {
-      this.state.activities = await api.getActivities(month);
-      this.state.error = null;
-    } catch (e) {
-      this.state.error = e instanceof Error ? e.message : 'Failed to load activities';
-    } finally {
-      this.state.loading = false;
-      this.notify();
-    }
-  }
-
-  getCategoryById(id: number): Category | undefined {
-    return [...this.state.topicCategories, ...this.state.impactCategories]
-      .find(c => c.id === id);
+  getTopicById(id: number): Topic | undefined {
+    return this.state.topics.find(t => t.id === id);
   }
 
   // Subscribe

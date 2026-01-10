@@ -2,10 +2,9 @@ import { LitElement, html, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { consume } from '@lit/context';
 import { appContext } from '../contexts/app-context.js';
-import { dataContext } from '../contexts/data-context.js';
 import { AppStore } from '../stores/app-store.js';
-import { DataStore, Category } from '../stores/data-store.js';
 import { StoreController } from '../controllers/store-controller.js';
+import { api, Topic, Event, ImpactSection, Blessing } from '../services/api.js';
 
 type TopicStyle = 'v1' | 'v2';
 
@@ -14,17 +13,29 @@ export class SheetContent extends LitElement {
   @consume({ context: appContext })
   appStore!: AppStore;
 
-  @consume({ context: dataContext })
-  dataStore!: DataStore;
-
   @state()
   private topicStyle: TopicStyle = 'v2';
 
   @state()
-  private blessHighlightIndex: number = 2; // Start with index 2 (願醫護人員健康平安)
+  private blessHighlightIndex: number = 2;
 
-  private storeController!: StoreController;
-  private dataStoreController!: StoreController;
+  // API Data
+  @state()
+  private topics: Topic[] = [];
+
+  @state()
+  private events: Event[] = [];
+
+  @state()
+  private impactSections: ImpactSection[] = [];
+
+  @state()
+  private blessings: Blessing[] = [];
+
+  @state()
+  private loading = false;
+
+  private storeController!: StoreController<AppStore>;
   private blessIntervalId: number | null = null;
 
   static styles = css`
@@ -32,6 +43,13 @@ export class SheetContent extends LitElement {
       display: block;
       padding: 0 12px;
       position: relative;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+      font-family: 'Noto Sans TC', sans-serif;
     }
 
     /* Style toggle button */
@@ -210,7 +228,6 @@ export class SheetContent extends LitElement {
       padding: 4px 0;
     }
 
-    /* Report Section */
     .impact-report {
       display: flex;
       flex-direction: column;
@@ -241,7 +258,6 @@ export class SheetContent extends LitElement {
       margin: 0;
     }
 
-    /* Report Card */
     .impact-report-card {
       background: #0e2669;
       border-radius: 20px;
@@ -274,7 +290,6 @@ export class SheetContent extends LitElement {
       height: 100%;
     }
 
-    /* Impact nodes */
     .impact-node {
       position: absolute;
       display: flex;
@@ -350,7 +365,6 @@ export class SheetContent extends LitElement {
       line-height: 1.2;
     }
 
-    /* Report buttons */
     .impact-buttons {
       position: absolute;
       bottom: 20px;
@@ -445,7 +459,6 @@ export class SheetContent extends LitElement {
       position: relative;
     }
 
-    /* Dialog bubbles card */
     .bless-dialogs {
       position: absolute;
       top: 17px;
@@ -504,7 +517,6 @@ export class SheetContent extends LitElement {
       height: 100%;
     }
 
-    /* Photo card */
     .bless-photo-card {
       border: none;
       cursor: pointer;
@@ -618,7 +630,6 @@ export class SheetContent extends LitElement {
       line-height: 1.2;
     }
 
-    /* Event cards */
     .schedule-events {
       display: flex;
       flex-direction: column;
@@ -716,15 +727,26 @@ export class SheetContent extends LitElement {
     { en: 'Sep.' }, { en: 'Oct.' }, { en: 'Nov.' }, { en: 'Dec.' }
   ];
 
+  // Hardcoded bless messages for dialog bubbles
+  private blessMessages = [
+    '謝謝陪伴需要幫助的人',
+    '陪災民找回希望',
+    '願醫護人員健康平安',
+    '讓善心善款都能化為溫暖',
+    '持續守護台灣與世界'
+  ];
+
   connectedCallback() {
     super.connectedCallback();
     this.storeController = new StoreController(this, this.appStore);
-    this.dataStoreController = new StoreController(this, this.dataStore);
 
     // Start bless highlight rotation every 5 seconds
     this.blessIntervalId = window.setInterval(() => {
-      this.blessHighlightIndex = (this.blessHighlightIndex + 1) % 5;
+      this.blessHighlightIndex = (this.blessHighlightIndex + 1) % this.blessMessages.length;
     }, 5000);
+
+    // Load initial data
+    this.loadData();
   }
 
   disconnectedCallback() {
@@ -735,34 +757,37 @@ export class SheetContent extends LitElement {
     }
   }
 
-  // Hardcoded topic data for UI (will be replaced with API data later)
-  private topicCards = [
-    {
-      id: 1,
-      title: '合作',
-      subtitle: '當行動成為力量',
-      description: '任新改統明措，記焉難張或、信頓，身奏在車種我，面。捶大不喀裹女連不以電',
-      image: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800'
-    },
-    {
-      id: 2,
-      title: '人文',
-      subtitle: '讓歷史再翻新',
-      description: '任新改統明措，記焉難張或、信頓，身奏在車種我，面。捶大不喀裹女連不以電',
-      image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800'
-    },
-    {
-      id: 3,
-      title: '祈福',
-      subtitle: '讓善念被積累',
-      description: '任新改統明措，記焉難張或、信頓，身奏在車種我，面。捶大不喀裹女連不以電',
-      image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800'
-    }
-  ];
+  private async loadData() {
+    this.loading = true;
+    try {
+      // Load all data in parallel
+      const [topics, events, impactSections, blessings] = await Promise.all([
+        api.getTopics(),
+        api.getEvents({ month: this.appStore.selectedMonth, year: this.appStore.selectedYear }),
+        api.getImpactSections(),
+        api.getBlessings(true) // Get featured blessings
+      ]);
 
-  private handleCategoryClick(category: Category) {
-    const type = category.type === 'topic' ? 'topics' : 'impact';
-    this.appStore.openCategory(category.id, type);
+      this.topics = topics;
+      this.events = events;
+      this.impactSections = impactSections;
+      this.blessings = blessings;
+    } catch (error) {
+      console.error('Failed to load data:', error);
+    } finally {
+      this.loading = false;
+    }
+  }
+
+  private async loadEvents() {
+    try {
+      this.events = await api.getEvents({
+        month: this.appStore.selectedMonth,
+        year: this.appStore.selectedYear
+      });
+    } catch (error) {
+      console.error('Failed to load events:', error);
+    }
   }
 
   private handleTopicClick(topicId: number) {
@@ -771,33 +796,59 @@ export class SheetContent extends LitElement {
 
   private handleMonthClick(month: number) {
     this.appStore.setSelectedMonth(month);
+    this.loadEvents();
   }
 
-  private handleBlessingClick() {
-    this.appStore.openBlessing();
+  private handleBlessingClick(blessingId: number) {
+    this.appStore.openBlessing(blessingId);
   }
 
   private toggleTopicStyle() {
     this.topicStyle = this.topicStyle === 'v1' ? 'v2' : 'v1';
   }
 
+  private formatDate(dateStr: string): string {
+    const date = new Date(dateStr);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}.${month}.${day}`;
+  }
+
+  private getParticipationText(event: Event): string {
+    const type = event.participation_type === 'online' ? '線上參與' : '現場參與';
+    const fee = event.participation_fee || '免費';
+    return `${type} - ${fee}`;
+  }
+
   private renderTopics() {
+    if (this.loading) {
+      return html`<div class="loading">載入中...</div>`;
+    }
+
+    // Fallback images for topics without images
+    const defaultImages = [
+      'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800',
+      'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800',
+      'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800'
+    ];
+
     return html`
       <div class="topic-list ${this.topicStyle}">
-        ${this.topicCards.map(topic => html`
+        ${this.topics.map((topic, index) => html`
           <div
             class="topic-card"
             @click=${() => this.handleTopicClick(topic.id)}
           >
             <div
               class="topic-card-bg"
-              style="background-image: url('${topic.image}')"
+              style="background-image: url('${topic.background_image || defaultImages[index % defaultImages.length]}')"
             ></div>
             <div class="topic-card-overlay">
               <div class="topic-card-header">
                 <div class="topic-card-titles">
-                  <p class="topic-card-title">${topic.title}</p>
-                  <p class="topic-card-subtitle">${topic.subtitle}</p>
+                  <p class="topic-card-title">${topic.name}</p>
+                  <p class="topic-card-subtitle">${topic.subtitle || ''}</p>
                 </div>
                 <div class="topic-card-arrow">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -805,7 +856,7 @@ export class SheetContent extends LitElement {
                   </svg>
                 </div>
               </div>
-              <p class="topic-card-desc">${topic.description}</p>
+              <p class="topic-card-desc">${topic.description || ''}</p>
             </div>
           </div>
         `)}
@@ -816,51 +867,24 @@ export class SheetContent extends LitElement {
     `;
   }
 
-  // Hardcoded schedule events for UI (will be replaced with API data later)
-  private scheduleEvents = [
-    {
-      id: 1,
-      title: '線上浴佛',
-      date_start: '2026.08.28',
-      date_end: '2026.09.05',
-      participation: '線上參與-免費',
-      image: 'https://images.unsplash.com/photo-1544027993-37dbfe43562a?w=400'
-    },
-    {
-      id: 2,
-      title: '亞太永續博覽會',
-      date_start: '2026.08.28',
-      date_end: '2026.09.05',
-      participation: '現場參與-需購票',
-      image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=400'
-    },
-    {
-      id: 3,
-      title: '精舍過新年',
-      date_start: '2026.08.28',
-      date_end: '2026.09.05',
-      participation: '現場參與-免費',
-      image: 'https://images.unsplash.com/photo-1513297887119-d46091b24bfa?w=400'
-    }
-  ];
-
   private renderSchedule() {
     const selectedMonth = this.appStore.selectedMonth;
     const selectedYear = this.appStore.selectedYear;
 
-    // Calendar icon SVG
     const calendarIcon = html`
       <svg viewBox="0 0 18 18" fill="none">
         <path d="M15.75 15V4.5C15.75 3.67275 15.0773 3 14.25 3H12.75V1.5H11.25V3H6.75V1.5H5.25V3H3.75C2.92275 3 2.25 3.67275 2.25 4.5V15C2.25 15.8273 2.92275 16.5 3.75 16.5H14.25C15.0773 16.5 15.75 15.8273 15.75 15ZM6.75 13.5H5.25V12H6.75V13.5ZM6.75 10.5H5.25V9H6.75V10.5ZM9.75 13.5H8.25V12H9.75V13.5ZM9.75 10.5H8.25V9H9.75V10.5ZM12.75 13.5H11.25V12H12.75V13.5ZM12.75 10.5H11.25V9H12.75V10.5ZM14.25 6.75H3.75V5.25H14.25V6.75Z" fill="#5FB7FA"/>
       </svg>
     `;
 
-    // Person/participation icon SVG
     const personIcon = html`
       <svg viewBox="0 0 18 18" fill="none">
         <path d="M9 1.5C9.825 1.5 10.5 2.175 10.5 3C10.5 3.825 9.825 4.5 9 4.5C8.175 4.5 7.5 3.825 7.5 3C7.5 2.175 8.175 1.5 9 1.5ZM11.925 6.075C11.625 5.775 11.1 5.25 10.125 5.25H8.25C6.15 5.25 4.5 3.6 4.5 1.5H3C3 3.9 4.575 5.85 6.75 6.525V16.5H8.25V12H9.75V16.5H11.25V7.575L14.25 10.5L15.3 9.45L11.925 6.075Z" fill="#5FB7FA"/>
       </svg>
     `;
+
+    // Fallback image
+    const defaultEventImage = 'https://images.unsplash.com/photo-1544027993-37dbfe43562a?w=400';
 
     return html`
       <div class="schedule-container">
@@ -882,64 +906,59 @@ export class SheetContent extends LitElement {
         </div>
 
         <div class="schedule-events">
-          ${this.scheduleEvents.length > 0 ? this.scheduleEvents.map(event => html`
-            <div class="event-card">
-              <div class="event-info">
-                <p class="event-title">${event.title}</p>
-                <div class="event-items">
-                  <div class="event-row">
-                    <span class="event-icon">${calendarIcon}</span>
-                    <span class="event-text">${event.date_start}${event.date_end ? ` - ${event.date_end}` : ''}</span>
-                  </div>
-                  <div class="event-row">
-                    <span class="event-icon">${personIcon}</span>
-                    <span class="event-text">${event.participation}</span>
+          ${this.loading ? html`<div class="loading">載入中...</div>` :
+            this.events.length > 0 ? this.events.map(event => html`
+              <div class="event-card">
+                <div class="event-info">
+                  <p class="event-title">${event.title}</p>
+                  <div class="event-items">
+                    <div class="event-row">
+                      <span class="event-icon">${calendarIcon}</span>
+                      <span class="event-text">
+                        ${this.formatDate(event.date_start)}${event.date_end ? ` - ${this.formatDate(event.date_end)}` : ''}
+                      </span>
+                    </div>
+                    <div class="event-row">
+                      <span class="event-icon">${personIcon}</span>
+                      <span class="event-text">${this.getParticipationText(event)}</span>
+                    </div>
                   </div>
                 </div>
+                <div class="event-image">
+                  <img src="${event.image_url || defaultEventImage}" alt="${event.title}" />
+                </div>
               </div>
-              <div class="event-image">
-                <img src="${event.image}" alt="${event.title}" />
-              </div>
-            </div>
-          `) : html`
-            <div class="empty-state">此月份暫無活動</div>
-          `}
+            `) : html`
+              <div class="empty-state">此月份暫無活動</div>
+            `
+          }
         </div>
       </div>
     `;
   }
 
-  // Hardcoded bless messages for UI
-  private blessMessages = [
-    '謝謝陪伴需要幫助的人',
-    '陪災民找回希望',
-    '願醫護人員健康平安',
-    '讓善心善款都能化為溫暖',
-    '持續守護台灣與世界'
-  ];
-
   private renderImpact() {
-    // Triangle SVG: apex at top center, base connects to bottom nodes
-    // viewBox height must be >= bottom line Y value
     const triangleSvg = html`
       <svg viewBox="0 0 160 125" fill="none">
         <path d="M80 5 L155 120 L5 120 Z" stroke="#5fb7fa" stroke-width="2" fill="none"/>
       </svg>
     `;
 
-    // Arrow icon for external link
     const arrowIcon = html`
       <svg viewBox="0 0 24 24" fill="none">
         <path d="M7 17L17 7M17 7H7M17 7V17" stroke="#121212" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     `;
 
-    // Dialog pointer SVG (triangle) - points right
     const pointerSvg = (highlight: boolean) => html`
       <svg viewBox="0 0 12 16" fill="none">
         <path d="M12 8L0 0V16L12 8Z" fill="${highlight ? '#0e2669' : '#e4ddd4'}"/>
       </svg>
     `;
+
+    // Get first featured blessing for photo card
+    const featuredBlessing = this.blessings[0];
+    const defaultBlessingImage = 'https://images.unsplash.com/photo-1544027993-37dbfe43562a?w=600';
 
     return html`
       <div class="impact-container">
@@ -952,7 +971,6 @@ export class SheetContent extends LitElement {
 
           <div class="impact-report-card">
             <div class="impact-graphic">
-              <!-- Triangle connecting three points -->
               <div class="impact-triangle">
                 ${triangleSvg}
               </div>
@@ -966,7 +984,7 @@ export class SheetContent extends LitElement {
                 </div>
                 <div class="impact-node-badge">
                   <div class="impact-node-inner">
-                    <span>永續環境</span>
+                    <span>${this.impactSections[0]?.name || '永續'}環境</span>
                   </div>
                 </div>
               </div>
@@ -975,7 +993,7 @@ export class SheetContent extends LitElement {
               <div class="impact-node bottom-left">
                 <div class="impact-node-badge">
                   <div class="impact-node-inner">
-                    <span>深耕共伴</span>
+                    <span>${this.impactSections[1]?.name || '深耕'}共伴</span>
                   </div>
                 </div>
                 <div class="impact-node-stat">
@@ -989,7 +1007,7 @@ export class SheetContent extends LitElement {
               <div class="impact-node bottom-right">
                 <div class="impact-node-badge">
                   <div class="impact-node-inner">
-                    <span>向光家園</span>
+                    <span>${this.impactSections[2]?.name || '向光'}家園</span>
                   </div>
                 </div>
                 <div class="impact-node-stat">
@@ -1031,12 +1049,14 @@ export class SheetContent extends LitElement {
                 </div>
               </div>
 
-              <!-- Photo card -->
-              <div class="bless-card bless-photo-card" @click=${this.handleBlessingClick}>
-                <img src="https://images.unsplash.com/photo-1544027993-37dbfe43562a?w=600" alt="證嚴上人" />
-                <div class="bless-photo-overlay"></div>
-                <span class="bless-photo-text">證嚴上人</span>
-              </div>
+              <!-- Photo cards from API -->
+              ${this.blessings.map(blessing => html`
+                <div class="bless-card bless-photo-card" @click=${() => this.handleBlessingClick(blessing.id)}>
+                  <img src="${blessing.image_url || defaultBlessingImage}" alt="${blessing.author}" />
+                  <div class="bless-photo-overlay"></div>
+                  <span class="bless-photo-text">${blessing.author}</span>
+                </div>
+              `)}
             </div>
           </div>
         </div>
