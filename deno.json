@@ -3,6 +3,8 @@
     "dev": "deno task dev:api & deno task dev:web",
     "dev:api": "cd api && deno task dev",
     "dev:web": "cd web && deno task dev",
+    "dev:agent": "cd agent && deno task dev",
+    "dev:all": "deno task dev:api & deno task dev:web & deno task dev:agent",
     "db:up": "docker-compose up -d",
     "db:down": "docker-compose down",
     "start": "deno task db:up && sleep 3 && deno task dev"
