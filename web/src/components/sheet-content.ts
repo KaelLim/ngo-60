@@ -422,12 +422,26 @@ export class SheetContent extends LitElement {
       flex-direction: column;
       gap: 24px;
       padding: 4px 0;
+      animation: contentFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
     .impact-report {
       display: flex;
       flex-direction: column;
       gap: 16px;
+      animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+      animation-delay: 0.1s;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .impact-title-section {
@@ -463,6 +477,19 @@ export class SheetContent extends LitElement {
       display: flex;
       flex-direction: column;
       align-items: center;
+      animation: cardScaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+      animation-delay: 0.2s;
+    }
+
+    @keyframes cardScaleIn {
+      from {
+        opacity: 0;
+        transform: scale(0.92);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
     }
 
     .impact-graphic {
@@ -479,6 +506,19 @@ export class SheetContent extends LitElement {
       top: 48px;
       width: 160px;
       height: 125px;
+      animation: triangleIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+      animation-delay: 0.4s;
+    }
+
+    @keyframes triangleIn {
+      from {
+        opacity: 0;
+        transform: translateX(-50%) scale(0.8);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(-50%) scale(1);
+      }
     }
 
     .impact-triangle svg {
@@ -492,6 +532,18 @@ export class SheetContent extends LitElement {
       flex-direction: column;
       align-items: center;
       gap: 2px;
+      animation: nodeIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+    }
+
+    @keyframes nodeIn {
+      from {
+        opacity: 0;
+        transform: scale(0.5);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
     }
 
     .impact-node.top {
@@ -499,18 +551,33 @@ export class SheetContent extends LitElement {
       left: 50%;
       transform: translateX(-50%);
       width: 138px;
+      animation: nodeTopIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+      animation-delay: 0.5s;
+    }
+
+    @keyframes nodeTopIn {
+      from {
+        opacity: 0;
+        transform: translateX(-50%) scale(0.5);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(-50%) scale(1);
+      }
     }
 
     .impact-node.bottom-left {
       top: 149px;
       left: 0;
       width: 120px;
+      animation-delay: 0.6s;
     }
 
     .impact-node.bottom-right {
       top: 149px;
       right: 0;
       width: 137px;
+      animation-delay: 0.7s;
     }
 
     .impact-node-badge {
@@ -569,6 +636,19 @@ export class SheetContent extends LitElement {
       display: flex;
       gap: 12px;
       align-items: center;
+      animation: buttonsIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+      animation-delay: 0.6s;
+    }
+
+    @keyframes buttonsIn {
+      from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(15px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
     }
 
     .impact-report-btn {
@@ -582,7 +662,14 @@ export class SheetContent extends LitElement {
       font-weight: 500;
       color: black;
       cursor: pointer;
-      transition: transform 0.2s;
+      transition:
+        transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow 0.2s ease;
+    }
+
+    .impact-report-btn:hover {
+      transform: scale(1.03);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     }
 
     .impact-report-btn:active {
@@ -599,7 +686,14 @@ export class SheetContent extends LitElement {
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: transform 0.2s;
+      transition:
+        transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow 0.2s ease;
+    }
+
+    .impact-link-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
 
     .impact-link-btn:active {
@@ -616,6 +710,8 @@ export class SheetContent extends LitElement {
       display: flex;
       flex-direction: column;
       gap: 12px;
+      animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+      animation-delay: 0.3s;
     }
 
     .bless-title {
@@ -653,6 +749,36 @@ export class SheetContent extends LitElement {
       border-radius: 20px;
       overflow: hidden;
       position: relative;
+      cursor: pointer;
+      transition:
+        transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow 0.25s ease;
+      animation: blessCardIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    }
+
+    .bless-card:nth-child(1) { animation-delay: 0.4s; }
+    .bless-card:nth-child(2) { animation-delay: 0.5s; }
+    .bless-card:nth-child(3) { animation-delay: 0.6s; }
+    .bless-card:nth-child(4) { animation-delay: 0.7s; }
+
+    @keyframes blessCardIn {
+      from {
+        opacity: 0;
+        transform: translateX(20px) scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+      }
+    }
+
+    .bless-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+    }
+
+    .bless-card:active {
+      transform: scale(0.98);
     }
 
     .bless-dialogs {

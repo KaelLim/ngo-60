@@ -156,23 +156,6 @@ export class BlessingPage extends LitElement {
       margin-bottom: 0;
     }
 
-    /* Footer */
-    .footer {
-      background: #121212;
-      padding: 8px 12px;
-      text-align: center;
-      flex-shrink: 0;
-    }
-
-    .footer p {
-      font-family: 'Noto Sans TC', sans-serif;
-      font-size: 14px;
-      font-weight: 400;
-      color: white;
-      line-height: 1.4;
-      margin: 0;
-    }
-
     /* Animation - Mobile slide in */
     :host {
       animation: slideInPage 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -388,10 +371,6 @@ export class BlessingPage extends LitElement {
           </div>
         </div>
 
-        <!-- Footer -->
-        <div class="footer">
-          <p>Copyright © 2020 Open Source Matters. 版權所有. Copyright, OOO Foundation.</p>
-        </div>
       </div>
     `;
   }

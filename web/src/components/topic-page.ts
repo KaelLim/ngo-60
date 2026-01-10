@@ -304,26 +304,6 @@ export class TopicPage extends LitElement {
       transform: translate(2px, -2px);
     }
 
-    /* Footer */
-    .footer {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: #121212;
-      padding: 8px 12px;
-      text-align: center;
-    }
-
-    .footer p {
-      font-family: 'Noto Sans TC', sans-serif;
-      font-size: 14px;
-      font-weight: 400;
-      color: white;
-      line-height: 1.4;
-      margin: 0;
-    }
-
     /* Animation - Mobile slide in */
     :host {
       animation: slideInPage 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -720,10 +700,6 @@ export class TopicPage extends LitElement {
           </div>
         </div>
 
-        <!-- Footer -->
-        <div class="footer">
-          <p>Copyright © 2020 Open Source Matters. 版權所有. Copyright, OOO Foundation.</p>
-        </div>
       </div>
     `;
   }
