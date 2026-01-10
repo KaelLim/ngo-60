@@ -109,6 +109,126 @@ export class SheetContent extends LitElement {
       }
     }
 
+    /* ========== Interactive Hover/Active Animations ========== */
+
+    /* Topic card hover */
+    .topic-card {
+      transition:
+        transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow 0.25s ease;
+    }
+
+    .topic-card:hover {
+      transform: translateY(-4px) scale(1.02);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+    }
+
+    .topic-card:active {
+      transform: translateY(-2px) scale(0.98);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Impact card hover */
+    .impact-card {
+      transition:
+        transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow 0.25s ease;
+    }
+
+    .impact-card:hover {
+      transform: translateY(-4px) scale(1.02);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+    }
+
+    .impact-card:active {
+      transform: translateY(-2px) scale(0.98);
+    }
+
+    /* Bless card hover */
+    .bless-card {
+      transition:
+        transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow 0.25s ease;
+    }
+
+    .bless-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    }
+
+    .bless-card:active {
+      transform: translateY(-1px) scale(0.98);
+    }
+
+    /* Month card hover */
+    .month-card {
+      transition:
+        transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+        background-color 0.2s ease,
+        box-shadow 0.2s ease;
+    }
+
+    .month-card:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .month-card:active {
+      transform: scale(0.95);
+    }
+
+    /* Event card hover */
+    .event-card {
+      transition:
+        transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow 0.25s ease;
+    }
+
+    .event-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    }
+
+    .event-card:active {
+      transform: translateY(-1px) scale(0.98);
+    }
+
+    /* Style toggle button */
+    .style-toggle {
+      transition:
+        transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow 0.2s ease;
+    }
+
+    .style-toggle:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    }
+
+    .style-toggle:active {
+      transform: scale(0.92);
+    }
+
+    /* Button hover effects */
+    .impact-report-btn,
+    .impact-link-btn {
+      transition:
+        transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+        background-color 0.2s ease,
+        box-shadow 0.2s ease;
+    }
+
+    .impact-report-btn:hover,
+    .impact-link-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .impact-report-btn:active,
+    .impact-link-btn:active {
+      transform: scale(0.95);
+    }
+
     .desktop-header {
       display: none;
     }

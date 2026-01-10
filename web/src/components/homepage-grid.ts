@@ -94,11 +94,25 @@ export class HomepageGrid extends LitElement {
 
     /* 動畫效果 */
     .circle {
-      transition: transform 0.3s ease;
+      transition:
+        transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow 0.25s ease,
+        filter 0.25s ease;
     }
 
-    .circle:hover {
-      transform: scale(1.1);
+    .circle.has-image:hover {
+      transform: scale(1.15);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+      z-index: 10;
+    }
+
+    .circle.has-image:active {
+      transform: scale(1.05);
+    }
+
+    .circle.empty:hover {
+      transform: scale(1.08);
+      background-color: rgba(255, 255, 255, 0.25);
     }
 
     /* Desktop larger circles */

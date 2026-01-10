@@ -23,6 +23,9 @@ export class BlessingPage extends LitElement {
   @state()
   private loading = false;
 
+  @state()
+  private closing = false;
+
   private storeController!: StoreController<AppStore>;
 
   static styles = css`
@@ -86,17 +89,32 @@ export class BlessingPage extends LitElement {
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: transform 0.2s;
+      transition:
+        transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+        background-color 0.2s ease,
+        box-shadow 0.2s ease;
+    }
+
+    .back-button:hover {
+      background: rgba(255, 255, 255, 0.3);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      transform: scale(1.05);
     }
 
     .back-button:active {
-      transform: scale(0.95);
+      transform: scale(0.92);
+      background: rgba(255, 255, 255, 0.25);
     }
 
     .back-button svg {
       width: 24px;
       height: 24px;
       color: white;
+      transition: transform 0.2s ease;
+    }
+
+    .back-button:hover svg {
+      transform: translateX(-2px);
     }
 
     .page-title {
@@ -171,6 +189,22 @@ export class BlessingPage extends LitElement {
       }
     }
 
+    /* Animation - Mobile slide out (exit) */
+    :host(.closing) {
+      animation: slideOutPage 0.35s cubic-bezier(0.4, 0, 1, 1) forwards;
+    }
+
+    @keyframes slideOutPage {
+      from {
+        transform: translateX(0);
+        opacity: 1;
+      }
+      to {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+    }
+
     /* Animation - Header content */
     .header-content {
       animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.15s backwards;
@@ -238,6 +272,22 @@ export class BlessingPage extends LitElement {
         transform: scale(1);
       }
     }
+
+    /* Animation - Desktop fade out (exit) */
+    :host([desktopMode]).closing {
+      animation: fadeOutPage 0.3s ease-in forwards;
+    }
+
+    @keyframes fadeOutPage {
+      from {
+        opacity: 1;
+        transform: scale(1);
+      }
+      to {
+        opacity: 0;
+        transform: scale(0.96);
+      }
+    }
   `;
 
   connectedCallback() {
@@ -273,7 +323,12 @@ export class BlessingPage extends LitElement {
   }
 
   private handleBack() {
-    this.appStore.closeBlessing();
+    this.closing = true;
+    this.classList.add('closing');
+    const duration = this.desktopMode ? 300 : 350;
+    setTimeout(() => {
+      this.appStore.closeBlessing();
+    }, duration);
   }
 
   render() {

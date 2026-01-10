@@ -23,6 +23,9 @@ export class TopicPage extends LitElement {
   @state()
   private loading = false;
 
+  @state()
+  private closing = false;
+
   private storeController!: StoreController<AppStore>;
 
   static styles = css`
@@ -87,18 +90,33 @@ export class TopicPage extends LitElement {
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: transform 0.2s;
+      transition:
+        transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+        background-color 0.2s ease,
+        box-shadow 0.2s ease;
       flex-shrink: 0;
     }
 
+    .back-button:hover {
+      background: rgba(255, 255, 255, 0.3);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      transform: scale(1.05);
+    }
+
     .back-button:active {
-      transform: scale(0.95);
+      transform: scale(0.92);
+      background: rgba(255, 255, 255, 0.25);
     }
 
     .back-button svg {
       width: 24px;
       height: 24px;
       color: white;
+      transition: transform 0.2s ease;
+    }
+
+    .back-button:hover svg {
+      transform: translateX(-2px);
     }
 
     /* Title section */
@@ -257,18 +275,33 @@ export class TopicPage extends LitElement {
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: transform 0.2s;
+      transition:
+        transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow 0.2s ease,
+        background-color 0.2s ease;
       z-index: 1;
+    }
+
+    .link-button:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+      background: #f8f8f8;
     }
 
     .link-button:active {
       transform: scale(0.95);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
 
     .link-button svg {
       width: 24px;
       height: 24px;
       color: #0E2669;
+      transition: transform 0.2s ease;
+    }
+
+    .link-button:hover svg {
+      transform: translate(2px, -2px);
     }
 
     /* Footer */
@@ -307,6 +340,22 @@ export class TopicPage extends LitElement {
       }
     }
 
+    /* Animation - Mobile slide out (exit) */
+    :host(.closing) {
+      animation: slideOutPage 0.35s cubic-bezier(0.4, 0, 1, 1) forwards;
+    }
+
+    @keyframes slideOutPage {
+      from {
+        transform: translateX(0);
+        opacity: 1;
+      }
+      to {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+    }
+
     /* Animation - Desktop fade in */
     :host([desktopMode]) {
       animation: fadeInPage 0.35s ease-out forwards;
@@ -320,6 +369,22 @@ export class TopicPage extends LitElement {
       to {
         opacity: 1;
         transform: scale(1);
+      }
+    }
+
+    /* Animation - Desktop fade out (exit) */
+    :host([desktopMode]).closing {
+      animation: fadeOutPage 0.3s ease-in forwards;
+    }
+
+    @keyframes fadeOutPage {
+      from {
+        opacity: 1;
+        transform: scale(1);
+      }
+      to {
+        opacity: 0;
+        transform: scale(0.96);
       }
     }
 
@@ -519,7 +584,15 @@ export class TopicPage extends LitElement {
   }
 
   private handleBack() {
-    this.appStore.closePage();
+    // Trigger exit animation
+    this.closing = true;
+    this.classList.add('closing');
+
+    // Wait for animation to complete, then close
+    const duration = this.desktopMode ? 300 : 350;
+    setTimeout(() => {
+      this.appStore.closePage();
+    }, duration);
   }
 
   private formatDate(dateStr: string): string {
