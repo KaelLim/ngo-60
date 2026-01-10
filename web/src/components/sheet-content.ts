@@ -353,6 +353,29 @@ export class SheetContent extends LitElement {
       display: flex;
       flex-direction: column;
       gap: 8px;
+      animation: contentFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .topic-list .topic-card {
+      animation: topicCardIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    }
+
+    .topic-list .topic-card:nth-child(1) { animation-delay: 0.1s; }
+    .topic-list .topic-card:nth-child(2) { animation-delay: 0.18s; }
+    .topic-list .topic-card:nth-child(3) { animation-delay: 0.26s; }
+    .topic-list .topic-card:nth-child(4) { animation-delay: 0.34s; }
+    .topic-list .topic-card:nth-child(5) { animation-delay: 0.42s; }
+    .topic-list .topic-card:nth-child(6) { animation-delay: 0.50s; }
+
+    @keyframes topicCardIn {
+      from {
+        opacity: 0;
+        transform: translateX(-20px) scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+      }
     }
 
     .topic-card:active {
@@ -393,12 +416,25 @@ export class SheetContent extends LitElement {
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
+      transition:
+        background-color 0.25s ease,
+        transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .topic-card:hover .topic-card-arrow {
+      background: rgba(255, 255, 255, 0.35);
+      transform: scale(1.1);
     }
 
     .topic-card-arrow svg {
       width: 24px;
       height: 24px;
       color: white;
+      transition: transform 0.25s ease;
+    }
+
+    .topic-card:hover .topic-card-arrow svg {
+      transform: translate(3px, -3px);
     }
 
     .topic-card-desc {
