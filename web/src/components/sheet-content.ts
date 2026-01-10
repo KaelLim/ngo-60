@@ -1,10 +1,12 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { customElement, state, property } from 'lit/decorators.js';
 import { consume } from '@lit/context';
 import { appContext } from '../contexts/app-context.js';
 import { AppStore } from '../stores/app-store.js';
 import { StoreController } from '../controllers/store-controller.js';
 import { api, Topic, Event, ImpactSection, Blessing } from '../services/api.js';
+
+import './homepage-tabs.js';
 
 type TopicStyle = 'v1' | 'v2';
 
@@ -12,6 +14,9 @@ type TopicStyle = 'v1' | 'v2';
 export class SheetContent extends LitElement {
   @consume({ context: appContext })
   appStore!: AppStore;
+
+  @property({ type: Boolean, reflect: true })
+  desktopMode = false;
 
   @state()
   private topicStyle: TopicStyle = 'v2';
@@ -45,6 +50,34 @@ export class SheetContent extends LitElement {
       position: relative;
     }
 
+    /* Desktop mode styles */
+    :host([desktopMode]) {
+      padding: 0;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    :host([desktopMode]) .desktop-header {
+      padding: 20px;
+      background: white;
+      border-bottom: 1px solid #eee;
+    }
+
+    :host([desktopMode]) .desktop-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+    }
+
+    .desktop-header {
+      display: none;
+    }
+
+    :host([desktopMode]) .desktop-header {
+      display: block;
+    }
+
     .loading {
       text-align: center;
       padding: 40px;
@@ -52,7 +85,7 @@ export class SheetContent extends LitElement {
       font-family: 'Noto Sans TC', sans-serif;
     }
 
-    /* Style toggle button */
+    /* Style toggle button - hide in desktop */
     .style-toggle {
       position: fixed;
       bottom: 100px;
@@ -68,6 +101,10 @@ export class SheetContent extends LitElement {
       cursor: pointer;
       box-shadow: 0 2px 8px rgba(0,0,0,0.2);
       transition: transform 0.2s;
+    }
+
+    :host([desktopMode]) .style-toggle {
+      display: none;
     }
 
     .style-toggle:active {
@@ -1064,7 +1101,7 @@ export class SheetContent extends LitElement {
     `;
   }
 
-  render() {
+  private renderContent() {
     const activeTab = this.appStore.activeTab;
 
     switch (activeTab) {
@@ -1077,6 +1114,28 @@ export class SheetContent extends LitElement {
       default:
         return this.renderTopics();
     }
+  }
+
+  render() {
+    if (this.desktopMode) {
+      return html`
+        <div class="desktop-header">
+          <homepage-tabs
+            .activeTab=${this.appStore.activeTab}
+            @tab-change=${this.handleTabChange}
+          ></homepage-tabs>
+        </div>
+        <div class="desktop-content">
+          ${this.renderContent()}
+        </div>
+      `;
+    }
+
+    return this.renderContent();
+  }
+
+  private handleTabChange(e: CustomEvent) {
+    this.appStore.setActiveTab(e.detail);
   }
 }
 

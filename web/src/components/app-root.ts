@@ -20,11 +20,18 @@ export class AppRoot extends LitElement {
     :host {
       display: block;
       height: 100%;
-      max-width: 430px;
-      margin: 0 auto;
+      width: 100%;
       position: relative;
       overflow: hidden;
       background: #0e2669;
+    }
+
+    /* Mobile: center with max-width */
+    @media (max-width: 767px) {
+      :host {
+        max-width: 430px;
+        margin: 0 auto;
+      }
     }
   `;
 

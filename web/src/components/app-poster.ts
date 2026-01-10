@@ -1,5 +1,5 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { customElement, state, property } from 'lit/decorators.js';
 import { consume } from '@lit/context';
 import { dataContext } from '../contexts/data-context.js';
 import { DataStore } from '../stores/data-store.js';
@@ -11,6 +11,9 @@ import './homepage-grid.js';
 export class AppPoster extends LitElement {
   @consume({ context: dataContext })
   dataStore!: DataStore;
+
+  @property({ type: Boolean, reflect: true })
+  desktopMode = false;
 
   @state()
   private galleryImages: GalleryImage[] = [];
@@ -94,6 +97,27 @@ export class AppPoster extends LitElement {
       0%, 100% { opacity: 0.3; transform: scale(1); }
       50% { opacity: 0.5; transform: scale(1.05); }
     }
+
+    /* Desktop mode styles */
+    :host([desktopMode]) .poster-section {
+      height: 100%;
+      min-height: 100vh;
+      justify-content: center;
+      align-items: center;
+      padding: 40px;
+    }
+
+    :host([desktopMode]) .grid-container {
+      margin-bottom: 40px;
+    }
+
+    :host([desktopMode]) .slogan {
+      text-align: center;
+    }
+
+    :host([desktopMode]) .slogan-text {
+      font-size: 64px;
+    }
   `;
 
   async connectedCallback() {
@@ -104,7 +128,7 @@ export class AppPoster extends LitElement {
   private async loadData() {
     try {
       const [images, homepage] = await Promise.all([
-        api.getGalleryRandom(15),
+        api.getGalleryRandom(30),
         api.getHomepage()
       ]);
       this.galleryImages = images;
@@ -133,7 +157,7 @@ export class AppPoster extends LitElement {
         <div class="decoration decoration-2"></div>
 
         <div class="grid-container">
-          <homepage-grid .images=${this.galleryImages}></homepage-grid>
+          <homepage-grid .images=${this.galleryImages} .desktopMode=${this.desktopMode}></homepage-grid>
         </div>
 
         <div class="slogan">

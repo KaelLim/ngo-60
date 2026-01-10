@@ -14,6 +14,9 @@ export class TopicPage extends LitElement {
   @property({ type: Number })
   topicId: number = 1;
 
+  @property({ type: Boolean, reflect: true })
+  desktopMode = false;
+
   @state()
   private topicData: TopicWithEvents | null = null;
 
@@ -30,6 +33,14 @@ export class TopicPage extends LitElement {
       z-index: 1000;
       background: #0e2669;
       overflow: hidden;
+    }
+
+    /* Desktop mode - embedded instead of fixed overlay */
+    :host([desktopMode]) {
+      position: relative;
+      inset: auto;
+      z-index: auto;
+      height: 100%;
     }
 
     .page-container {
@@ -287,6 +298,10 @@ export class TopicPage extends LitElement {
     /* Animation */
     :host {
       animation: slideIn 0.3s ease-out;
+    }
+
+    :host([desktopMode]) {
+      animation: none;
     }
 
     @keyframes slideIn {

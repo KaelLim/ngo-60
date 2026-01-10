@@ -14,6 +14,9 @@ export class BlessingPage extends LitElement {
   @property({ type: Number })
   blessingId: number | null = null;
 
+  @property({ type: Boolean, reflect: true })
+  desktopMode = false;
+
   @state()
   private blessingData: Blessing | null = null;
 
@@ -164,6 +167,18 @@ export class BlessingPage extends LitElement {
       to {
         transform: translateX(0);
       }
+    }
+
+    /* Desktop mode - embedded instead of fixed overlay */
+    :host([desktopMode]) {
+      position: relative;
+      inset: auto;
+      z-index: auto;
+      height: 100%;
+    }
+
+    :host([desktopMode]) {
+      animation: none;
     }
   `;
 
