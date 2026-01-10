@@ -50,18 +50,14 @@ export class TopicPage extends LitElement {
       flex-direction: column;
     }
 
-    /* Background with faded images */
+    /* Background with faded image */
     .page-bg {
       position: absolute;
       inset: 0;
       opacity: 0.1;
-      overflow: hidden;
-    }
-
-    .page-bg img {
-      width: 100%;
-      height: 212px;
-      object-fit: cover;
+      background-size: 100% auto;
+      background-repeat: repeat-y;
+      background-position: top center;
     }
 
     /* Content area */
@@ -312,6 +308,118 @@ export class TopicPage extends LitElement {
         transform: translateX(0);
       }
     }
+
+    /* Desktop mode - grid card layout */
+    :host([desktopMode]) .activities-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 12px;
+      max-width: 100%;
+    }
+
+    :host([desktopMode]) .activity-card {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      aspect-ratio: 1 / 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    :host([desktopMode]) .activity-card-shape {
+      display: none;
+    }
+
+    :host([desktopMode]) .activity-card-bg {
+      padding: 0;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    :host([desktopMode]) .activity-card-content {
+      flex-direction: column;
+      gap: 0;
+      height: 100%;
+    }
+
+    :host([desktopMode]) .activity-image {
+      width: 100%;
+      flex: 1;
+      min-height: 0;
+      border-radius: 0;
+      order: -1;
+    }
+
+    :host([desktopMode]) .activity-info {
+      padding: 0.75rem;
+      gap: 0.5rem;
+      flex-shrink: 0;
+    }
+
+    :host([desktopMode]) .activity-title {
+      font-size: 1.2rem;
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    :host([desktopMode]) .activity-items {
+      gap: 0.3rem;
+    }
+
+    :host([desktopMode]) .activity-row {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    :host([desktopMode]) .activity-icon {
+      width: 1rem;
+      height: 1rem;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    :host([desktopMode]) .activity-icon svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    :host([desktopMode]) .activity-text {
+      font-size: 1rem;
+      line-height: 1.3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    :host([desktopMode]) .activity-description {
+      display: none;
+    }
+
+    :host([desktopMode]) .link-button {
+      top: 6px;
+      right: 6px;
+      width: 28px;
+      height: 28px;
+      background: rgba(14, 38, 105, 0.9);
+      transform: none;
+    }
+
+    :host([desktopMode]) .link-button:active {
+      transform: scale(0.95);
+    }
+
+    :host([desktopMode]) .link-button svg {
+      width: 14px;
+      height: 14px;
+      color: white;
+    }
   `;
 
   connectedCallback() {
@@ -416,12 +524,7 @@ export class TopicPage extends LitElement {
     return html`
       <div class="page-container">
         <!-- Background -->
-        <div class="page-bg">
-          <img src="${backgroundImage}" alt="" />
-          <img src="${backgroundImage}" alt="" />
-          <img src="${backgroundImage}" alt="" />
-          <img src="${backgroundImage}" alt="" />
-        </div>
+        <div class="page-bg" style="background-image: url('${backgroundImage}')"></div>
 
         <!-- Content -->
         <div class="page-content">

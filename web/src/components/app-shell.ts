@@ -54,6 +54,13 @@ export class AppShell extends LitElement {
       display: none;
     }
 
+    /* Hide mobile-only elements on tablet/desktop */
+    @media (min-width: 768px) {
+      .mobile-only {
+        display: none !important;
+      }
+    }
+
     /* Desktop layout (1024px+) */
     @media (min-width: 1024px) {
       .main-container {
