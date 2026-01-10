@@ -291,21 +291,90 @@ export class TopicPage extends LitElement {
       margin: 0;
     }
 
-    /* Animation */
+    /* Animation - Mobile slide in */
     :host {
-      animation: slideIn 0.3s ease-out;
+      animation: slideInPage 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
-    :host([desktopMode]) {
-      animation: none;
-    }
-
-    @keyframes slideIn {
+    @keyframes slideInPage {
       from {
         transform: translateX(100%);
+        opacity: 0.5;
       }
       to {
         transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    /* Animation - Desktop fade in */
+    :host([desktopMode]) {
+      animation: fadeInPage 0.35s ease-out forwards;
+    }
+
+    @keyframes fadeInPage {
+      from {
+        opacity: 0;
+        transform: scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    /* Animation - Title section */
+    .title-section {
+      animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s backwards;
+    }
+
+    @keyframes slideUpFade {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Animation - Activity cards stagger */
+    .activity-card {
+      animation: cardEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    }
+
+    .activity-card:nth-child(1) { animation-delay: 0.15s; }
+    .activity-card:nth-child(2) { animation-delay: 0.2s; }
+    .activity-card:nth-child(3) { animation-delay: 0.25s; }
+    .activity-card:nth-child(4) { animation-delay: 0.3s; }
+    .activity-card:nth-child(5) { animation-delay: 0.35s; }
+    .activity-card:nth-child(6) { animation-delay: 0.4s; }
+
+    @keyframes cardEnter {
+      from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    /* Animation - Back button */
+    .back-button {
+      animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s backwards;
+    }
+
+    @keyframes scaleIn {
+      from {
+        opacity: 0;
+        transform: scale(0.5);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
       }
     }
 

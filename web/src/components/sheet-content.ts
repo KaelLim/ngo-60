@@ -70,6 +70,45 @@ export class SheetContent extends LitElement {
       padding: 20px;
     }
 
+    /* Content switch animation */
+    .content-section {
+      animation: contentFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes contentFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Card stagger animation */
+    .topic-card, .impact-card, .schedule-card, .bless-card {
+      animation: cardSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    }
+
+    .topic-card:nth-child(1), .impact-card:nth-child(1) { animation-delay: 0.05s; }
+    .topic-card:nth-child(2), .impact-card:nth-child(2) { animation-delay: 0.1s; }
+    .topic-card:nth-child(3), .impact-card:nth-child(3) { animation-delay: 0.15s; }
+    .topic-card:nth-child(4), .impact-card:nth-child(4) { animation-delay: 0.2s; }
+    .topic-card:nth-child(5), .impact-card:nth-child(5) { animation-delay: 0.25s; }
+    .topic-card:nth-child(6), .impact-card:nth-child(6) { animation-delay: 0.3s; }
+
+    @keyframes cardSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
     .desktop-header {
       display: none;
     }
@@ -1104,16 +1143,23 @@ export class SheetContent extends LitElement {
   private renderContent() {
     const activeTab = this.appStore.activeTab;
 
+    let content;
     switch (activeTab) {
       case 'topics':
-        return this.renderTopics();
+        content = this.renderTopics();
+        break;
       case 'schedule':
-        return this.renderSchedule();
+        content = this.renderSchedule();
+        break;
       case 'impact':
-        return this.renderImpact();
+        content = this.renderImpact();
+        break;
       default:
-        return this.renderTopics();
+        content = this.renderTopics();
     }
+
+    // Wrap content with animation class, use activeTab as key for re-animation
+    return html`<div class="content-section" key=${activeTab}>${content}</div>`;
   }
 
   render() {

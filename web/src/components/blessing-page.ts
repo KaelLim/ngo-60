@@ -155,17 +155,67 @@ export class BlessingPage extends LitElement {
       margin: 0;
     }
 
-    /* Animation */
+    /* Animation - Mobile slide in */
     :host {
-      animation: slideIn 0.3s ease-out;
+      animation: slideInPage 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
-    @keyframes slideIn {
+    @keyframes slideInPage {
       from {
         transform: translateX(100%);
+        opacity: 0.5;
       }
       to {
         transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    /* Animation - Header content */
+    .header-content {
+      animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.15s backwards;
+    }
+
+    @keyframes slideUpFade {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Animation - Body content */
+    .body {
+      animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.2s backwards;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Animation - Back button */
+    .back-button {
+      animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.25s backwards;
+    }
+
+    @keyframes scaleIn {
+      from {
+        opacity: 0;
+        transform: scale(0.5);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
       }
     }
 
@@ -175,10 +225,18 @@ export class BlessingPage extends LitElement {
       inset: auto;
       z-index: auto;
       height: 100%;
+      animation: fadeInPage 0.35s ease-out forwards;
     }
 
-    :host([desktopMode]) {
-      animation: none;
+    @keyframes fadeInPage {
+      from {
+        opacity: 0;
+        transform: scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
     }
   `;
 

@@ -33,7 +33,10 @@ export class HomepageTabs extends LitElement {
       padding: 19px 0;
       border-radius: 30px;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition:
+        background-color 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+        color 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
       border: none;
       background: transparent;
       font-family: 'Noto Sans TC', sans-serif;
@@ -51,6 +54,10 @@ export class HomepageTabs extends LitElement {
 
     .tab:hover:not(.active) {
       background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    .tab:active {
+      transform: scale(0.96);
     }
   `;
 

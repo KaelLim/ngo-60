@@ -36,7 +36,7 @@ export class AppSheet extends LitElement {
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      transition: border-radius 0.3s;
+      transition: border-radius 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .sheet-section.full {
@@ -52,7 +52,7 @@ export class AppSheet extends LitElement {
       padding: 32px 24px;
       box-sizing: border-box;
       opacity: 0;
-      transition: opacity 0.3s;
+      transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .preview-area.visible {
@@ -91,7 +91,7 @@ export class AppSheet extends LitElement {
       -webkit-overflow-scrolling: touch;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.3s;
+      transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .homepage-content.visible {
