@@ -48,6 +48,19 @@ export class AppHomepage extends LitElement {
 
     .slogan {
       padding: 0 12px;
+      animation: sloganFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+      animation-delay: 0.3s;
+    }
+
+    @keyframes sloganFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .slogan-text {
@@ -59,6 +72,26 @@ export class AppHomepage extends LitElement {
       color: #e4ddd4;
     }
 
+    .slogan-text div {
+      animation: wordSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    }
+
+    .slogan-text div:nth-child(1) { animation-delay: 0.4s; }
+    .slogan-text div:nth-child(2) { animation-delay: 0.5s; }
+    .slogan-text div:nth-child(3) { animation-delay: 0.6s; }
+    .slogan-text div:nth-child(4) { animation-delay: 0.7s; }
+
+    @keyframes wordSlideIn {
+      from {
+        opacity: 0;
+        transform: translateX(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
     .content {
       background-color: #e4ddd4;
       border-radius: 40px 40px 0 0;
@@ -67,6 +100,19 @@ export class AppHomepage extends LitElement {
       align-items: center;
       overflow: hidden;
       flex: 1;
+      animation: contentSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+      animation-delay: 0.5s;
+    }
+
+    @keyframes contentSlideUp {
+      from {
+        opacity: 0;
+        transform: translateY(40px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .text-section {
@@ -77,6 +123,19 @@ export class AppHomepage extends LitElement {
       width: 100%;
       box-sizing: border-box;
       color: #121212;
+      animation: textFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+      animation-delay: 0.7s;
+    }
+
+    @keyframes textFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(15px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .title {
@@ -105,6 +164,19 @@ export class AppHomepage extends LitElement {
       background-color: #121212;
       padding: 8px 12px;
       box-sizing: border-box;
+      animation: copyrightSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+      animation-delay: 0.9s;
+    }
+
+    @keyframes copyrightSlideUp {
+      from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(100%);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
     }
 
     .copyright-text {
