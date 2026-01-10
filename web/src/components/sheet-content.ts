@@ -749,12 +749,26 @@ export class SheetContent extends LitElement {
       display: flex;
       flex-direction: column;
       gap: 24px;
+      animation: contentFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
     .year-section {
       display: flex;
       flex-direction: column;
       gap: 12px;
+      animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+      animation-delay: 0.1s;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-15px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .year-header {
@@ -795,8 +809,42 @@ export class SheetContent extends LitElement {
       justify-content: center;
       gap: 4px;
       cursor: pointer;
-      transition: all 0.2s;
+      transition:
+        background-color 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow 0.2s ease;
       color: #121212;
+      animation: monthCardIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    }
+
+    .month-card:nth-child(1) { animation-delay: 0.05s; }
+    .month-card:nth-child(2) { animation-delay: 0.08s; }
+    .month-card:nth-child(3) { animation-delay: 0.11s; }
+    .month-card:nth-child(4) { animation-delay: 0.14s; }
+    .month-card:nth-child(5) { animation-delay: 0.17s; }
+    .month-card:nth-child(6) { animation-delay: 0.20s; }
+    .month-card:nth-child(7) { animation-delay: 0.23s; }
+    .month-card:nth-child(8) { animation-delay: 0.26s; }
+    .month-card:nth-child(9) { animation-delay: 0.29s; }
+    .month-card:nth-child(10) { animation-delay: 0.32s; }
+    .month-card:nth-child(11) { animation-delay: 0.35s; }
+    .month-card:nth-child(12) { animation-delay: 0.38s; }
+
+    @keyframes monthCardIn {
+      from {
+        opacity: 0;
+        transform: translateX(-10px) scale(0.9);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+      }
+    }
+
+    .month-card:hover {
+      transform: scale(1.08);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
 
     .month-card:active {
@@ -840,7 +888,32 @@ export class SheetContent extends LitElement {
       justify-content: space-between;
       align-items: flex-start;
       cursor: pointer;
-      transition: transform 0.2s;
+      transition:
+        transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow 0.2s ease;
+      animation: eventCardIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    }
+
+    .event-card:nth-child(1) { animation-delay: 0.15s; }
+    .event-card:nth-child(2) { animation-delay: 0.22s; }
+    .event-card:nth-child(3) { animation-delay: 0.29s; }
+    .event-card:nth-child(4) { animation-delay: 0.36s; }
+    .event-card:nth-child(5) { animation-delay: 0.43s; }
+
+    @keyframes eventCardIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .event-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
     }
 
     .event-card:active {
