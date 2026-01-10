@@ -1,31 +1,86 @@
 /**
- * 慈濟 60 週年活動網站 - AI 聊天式管理後台
- * 使用 Claude Agent SDK + Deno + Hono
+ * AI 聊天式管理後台 - Agent 路由
+ * 使用 Claude Agent SDK
  */
 
 import { Hono } from "jsr:@hono/hono@^4.6.0";
-import { cors } from "jsr:@hono/hono@^4.6.0/cors";
 import { upgradeWebSocket } from "jsr:@hono/hono@^4.6.0/deno";
 import {
   query as claudeQuery,
   tool,
 } from "npm:@anthropic-ai/claude-agent-sdk";
+import { query } from "../db.ts";
 
-const app = new Hono();
-app.use("/*", cors());
+// 定義資料類型
+interface Topic {
+  id: number;
+  name: string;
+  subtitle: string | null;
+  description: string | null;
+  icon: string;
+  background_image: string | null;
+  sort_order: number;
+}
 
-// API Base URL
-const API_BASE = "http://localhost:8000/api";
+interface Event {
+  id: number;
+  title: string;
+  description: string | null;
+  date_start: string;
+  date_end: string | null;
+  participation_type: string;
+  participation_fee: string | null;
+  image_url: string | null;
+  topic_id: number | null;
+  month: number;
+  year: number;
+}
 
-// 定義 Claude 可以使用的工具
+interface Blessing {
+  id: number;
+  author: string;
+  message: string;
+  full_content: string | null;
+  image_url: string | null;
+  is_featured: boolean;
+  sort_order: number;
+}
+
+interface ImpactSection {
+  id: number;
+  name: string;
+  icon: string;
+  stat_value: string | null;
+  stat_label: string | null;
+  sort_order: number;
+}
+
+interface Homepage {
+  id: number;
+  slogan: string | null;
+  title: string | null;
+  content: string | null;
+  updated_at: string;
+}
+
+interface GalleryImage {
+  id: number;
+  filename: string;
+  original_name: string | null;
+  mime_type: string | null;
+  uploaded_at: string;
+  is_active: boolean;
+}
+
+// 定義 Claude 可以使用的工具（直接操作資料庫）
 const tools = {
   // 查詢主題
   getTopics: tool({
     description: "取得所有主題列表",
     parameters: {},
     execute: async () => {
-      const res = await fetch(`${API_BASE}/topics`);
-      return await res.json();
+      const rows = await query<Topic>("SELECT * FROM topics ORDER BY sort_order");
+      return rows;
     },
   }),
 
@@ -35,9 +90,15 @@ const tools = {
     parameters: {
       id: { type: "number", description: "主題 ID" },
     },
-    execute: async ({ id }) => {
-      const res = await fetch(`${API_BASE}/topics/${id}`);
-      return await res.json();
+    execute: async ({ id }: { id: number }) => {
+      const topicRows = await query<Topic>("SELECT * FROM topics WHERE id = $1", [id]);
+      if (!topicRows[0]) return { error: "主題不存在" };
+
+      const eventRows = await query<Event>(
+        "SELECT * FROM events WHERE topic_id = $1 ORDER BY date_start",
+        [id]
+      );
+      return { ...topicRows[0], events: eventRows };
     },
   }),
 
@@ -49,13 +110,26 @@ const tools = {
       year: { type: "number", description: "年份", optional: true },
       topic_id: { type: "number", description: "主題 ID", optional: true },
     },
-    execute: async ({ month, year, topic_id }) => {
-      const params = new URLSearchParams();
-      if (month) params.set("month", String(month));
-      if (year) params.set("year", String(year));
-      if (topic_id) params.set("topic_id", String(topic_id));
-      const res = await fetch(`${API_BASE}/events?${params}`);
-      return await res.json();
+    execute: async ({ month, year, topic_id }: { month?: number; year?: number; topic_id?: number }) => {
+      if (topic_id) {
+        return await query<Event>(
+          "SELECT * FROM events WHERE topic_id = $1 ORDER BY date_start",
+          [topic_id]
+        );
+      }
+      if (month && year) {
+        return await query<Event>(
+          "SELECT * FROM events WHERE month = $1 AND year = $2 ORDER BY date_start",
+          [month, year]
+        );
+      }
+      if (month) {
+        return await query<Event>(
+          "SELECT * FROM events WHERE month = $1 ORDER BY date_start",
+          [month]
+        );
+      }
+      return await query<Event>("SELECT * FROM events ORDER BY date_start");
     },
   }),
 
@@ -65,10 +139,13 @@ const tools = {
     parameters: {
       featured: { type: "boolean", description: "是否只取精選", optional: true },
     },
-    execute: async ({ featured }) => {
-      const url = featured ? `${API_BASE}/blessings?featured=true` : `${API_BASE}/blessings`;
-      const res = await fetch(url);
-      return await res.json();
+    execute: async ({ featured }: { featured?: boolean }) => {
+      if (featured) {
+        return await query<Blessing>(
+          "SELECT * FROM blessings WHERE is_featured = true ORDER BY sort_order"
+        );
+      }
+      return await query<Blessing>("SELECT * FROM blessings ORDER BY sort_order");
     },
   }),
 
@@ -77,8 +154,7 @@ const tools = {
     description: "取得影響力區塊資料",
     parameters: {},
     execute: async () => {
-      const res = await fetch(`${API_BASE}/impact`);
-      return await res.json();
+      return await query<ImpactSection>("SELECT * FROM impact_sections ORDER BY sort_order");
     },
   }),
 
@@ -87,8 +163,8 @@ const tools = {
     description: "取得首頁內容（標語、標題、說明）",
     parameters: {},
     execute: async () => {
-      const res = await fetch(`${API_BASE}/homepage`);
-      return await res.json();
+      const rows = await query<Homepage>("SELECT * FROM homepage ORDER BY id LIMIT 1");
+      return rows[0] || { error: "首頁內容不存在" };
     },
   }),
 
@@ -100,13 +176,30 @@ const tools = {
       title: { type: "string", description: "首頁標題", optional: true },
       content: { type: "string", description: "首頁內容說明", optional: true },
     },
-    execute: async ({ slogan, title, content }) => {
-      const res = await fetch(`${API_BASE}/homepage`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slogan, title, content }),
-      });
-      return await res.json();
+    execute: async ({ slogan, title, content }: { slogan?: string; title?: string; content?: string }) => {
+      const existing = await query<Homepage>("SELECT id FROM homepage LIMIT 1");
+
+      if (existing.length > 0) {
+        const rows = await query<Homepage>(
+          `UPDATE homepage
+           SET slogan = COALESCE($1, slogan),
+               title = COALESCE($2, title),
+               content = COALESCE($3, content),
+               updated_at = NOW()
+           WHERE id = $4
+           RETURNING *`,
+          [slogan, title, content, existing[0].id]
+        );
+        return rows[0];
+      } else {
+        const rows = await query<Homepage>(
+          `INSERT INTO homepage (slogan, title, content)
+           VALUES ($1, $2, $3)
+           RETURNING *`,
+          [slogan, title, content]
+        );
+        return rows[0];
+      }
     },
   }),
 
@@ -117,12 +210,16 @@ const tools = {
       random: { type: "boolean", description: "是否隨機取得", optional: true },
       count: { type: "number", description: "隨機取得的數量", optional: true },
     },
-    execute: async ({ random, count }) => {
-      const url = random
-        ? `${API_BASE}/gallery/random?count=${count || 15}`
-        : `${API_BASE}/gallery`;
-      const res = await fetch(url);
-      return await res.json();
+    execute: async ({ random, count }: { random?: boolean; count?: number }) => {
+      if (random) {
+        return await query<GalleryImage>(
+          "SELECT * FROM gallery WHERE is_active = true ORDER BY RANDOM() LIMIT $1",
+          [count || 15]
+        );
+      }
+      return await query<GalleryImage>(
+        "SELECT * FROM gallery WHERE is_active = true ORDER BY uploaded_at DESC"
+      );
     },
   }),
 
@@ -132,11 +229,15 @@ const tools = {
     parameters: {
       id: { type: "number", description: "圖片 ID" },
     },
-    execute: async ({ id }) => {
-      const res = await fetch(`${API_BASE}/gallery/${id}`, {
-        method: "DELETE",
-      });
-      return await res.json();
+    execute: async ({ id }: { id: number }) => {
+      const rows = await query<GalleryImage>(
+        "UPDATE gallery SET is_active = false WHERE id = $1 RETURNING *",
+        [id]
+      );
+      if (rows.length === 0) {
+        return { error: "圖片不存在" };
+      }
+      return { message: "圖片已刪除", image: rows[0] };
     },
   }),
 };
@@ -159,8 +260,10 @@ const SYSTEM_PROMPT = `你是慈濟 60 週年活動網站的 AI 管理助手。
 // 儲存對話歷史
 const sessions = new Map<string, Array<{ role: string; content: string }>>();
 
+export const agentRoutes = new Hono();
+
 // HTTP API endpoint for chat
-app.post("/chat", async (c) => {
+agentRoutes.post("/chat", async (c) => {
   const { sessionId, message } = await c.req.json();
 
   // 取得或建立 session
@@ -199,9 +302,9 @@ app.post("/chat", async (c) => {
 });
 
 // WebSocket endpoint for real-time chat
-app.get("/ws", upgradeWebSocket((c) => ({
+agentRoutes.get("/ws", upgradeWebSocket((_c) => ({
   onOpen: (_event, ws) => {
-    console.log("WebSocket connected");
+    console.log("Agent WebSocket connected");
     ws.send(JSON.stringify({ type: "connected", message: "已連接到 AI 管理助手" }));
   },
   onMessage: async (event, ws) => {
@@ -237,7 +340,7 @@ app.get("/ws", upgradeWebSocket((c) => ({
         sessionId,
       }));
     } catch (error) {
-      console.error("WebSocket error:", error);
+      console.error("Agent WebSocket error:", error);
       ws.send(JSON.stringify({
         type: "error",
         message: String(error),
@@ -245,12 +348,13 @@ app.get("/ws", upgradeWebSocket((c) => ({
     }
   },
   onClose: () => {
-    console.log("WebSocket disconnected");
+    console.log("Agent WebSocket disconnected");
   },
 })));
 
-// 健康檢查
-app.get("/health", (c) => c.json({ status: "ok", service: "ai-agent" }));
-
-console.log("AI Agent Server running on http://localhost:8001");
-Deno.serve({ port: 8001 }, app.fetch);
+// 清除 session
+agentRoutes.delete("/session/:id", (c) => {
+  const id = c.req.param("id");
+  sessions.delete(id);
+  return c.json({ message: "Session cleared" });
+});

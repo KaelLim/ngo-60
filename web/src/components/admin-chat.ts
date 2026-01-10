@@ -259,7 +259,7 @@ export class AdminChat extends LitElement {
 
   private connectWebSocket() {
     try {
-      this.ws = new WebSocket('ws://localhost:8001/ws');
+      this.ws = new WebSocket('ws://localhost:8000/api/agent/ws');
 
       this.ws.onopen = () => {
         this.isConnected = true;
@@ -330,7 +330,7 @@ export class AdminChat extends LitElement {
       // Fallback to HTTP
       this.isLoading = true;
       try {
-        const res = await fetch('http://localhost:8001/chat', {
+        const res = await fetch('http://localhost:8000/api/agent/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

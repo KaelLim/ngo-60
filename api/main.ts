@@ -7,6 +7,7 @@ import { impactRoutes } from "./routes/impact.ts";
 import { blessingsRoutes } from "./routes/blessings.ts";
 import { galleryRoutes } from "./routes/gallery.ts";
 import { homepageRoutes } from "./routes/homepage.ts";
+import { agentRoutes } from "./routes/agent.ts";
 
 const app = new Hono();
 
@@ -16,13 +17,16 @@ app.use("/*", cors());
 // Static files for uploaded images
 app.use("/uploads/*", serveStatic({ root: "./" }));
 
-// Routes
+// API Routes
 app.route("/api/topics", topicsRoutes);
 app.route("/api/events", eventsRoutes);
 app.route("/api/impact", impactRoutes);
 app.route("/api/blessings", blessingsRoutes);
 app.route("/api/gallery", galleryRoutes);
 app.route("/api/homepage", homepageRoutes);
+
+// AI Agent Routes
+app.route("/api/agent", agentRoutes);
 
 // Health check
 app.get("/health", (c) => c.json({ status: "ok" }));
