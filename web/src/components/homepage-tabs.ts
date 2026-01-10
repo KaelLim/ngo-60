@@ -23,6 +23,33 @@ export class HomepageTabs extends LitElement {
       background-color: white;
       border-radius: 30px;
       overflow: hidden;
+      position: relative;
+      padding: 4px;
+    }
+
+    /* Sliding indicator */
+    .slider {
+      position: absolute;
+      top: 4px;
+      bottom: 4px;
+      left: 4px;
+      width: calc((100% - 8px) / 3);
+      background-color: #121212;
+      border-radius: 26px;
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 0;
+    }
+
+    .slider.pos-0 {
+      transform: translateX(0);
+    }
+
+    .slider.pos-1 {
+      transform: translateX(100%);
+    }
+
+    .slider.pos-2 {
+      transform: translateX(200%);
     }
 
     .tab {
@@ -30,11 +57,10 @@ export class HomepageTabs extends LitElement {
       align-items: center;
       justify-content: center;
       flex: 1;
-      padding: 19px 0;
-      border-radius: 30px;
+      padding: 15px 0;
+      border-radius: 26px;
       cursor: pointer;
       transition:
-        background-color 0.25s cubic-bezier(0.16, 1, 0.3, 1),
         color 0.25s cubic-bezier(0.16, 1, 0.3, 1),
         transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
       border: none;
@@ -45,10 +71,11 @@ export class HomepageTabs extends LitElement {
       line-height: 1.4;
       color: #121212;
       white-space: nowrap;
+      position: relative;
+      z-index: 1;
     }
 
     .tab.active {
-      background-color: #121212;
       color: white;
     }
 
@@ -70,9 +97,23 @@ export class HomepageTabs extends LitElement {
     }));
   }
 
+  private getSliderPosition(): number {
+    switch (this.activeTab) {
+      case 'schedule': return 0;
+      case 'topics': return 1;
+      case 'impact': return 2;
+      default: return 1;
+    }
+  }
+
   render() {
+    const sliderPos = this.getSliderPosition();
+
     return html`
       <div class="menu">
+        <!-- Sliding indicator -->
+        <div class="slider pos-${sliderPos}"></div>
+
         <button
           class="tab ${this.activeTab === 'schedule' ? 'active' : ''}"
           @click=${() => this.handleClick('schedule')}
