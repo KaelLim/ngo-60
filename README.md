@@ -93,38 +93,75 @@ deno task start
 
 ## 生產環境部署
 
-### Docker Compose 部署
+### 一鍵部署（推薦）
+
+只需要兩個指令即可部署：
 
 ```bash
-# 1. 設定環境變數
-cp .env.example .env
-# 編輯 .env 設定資料庫密碼等
+# 1. 下載 docker-compose.yml
+curl -O https://raw.githubusercontent.com/KaelLim/ngo-60/main/deploy/docker-compose.yml
 
-# 2. 建立並啟動所有服務
-docker-compose -f docker-compose.prod.yml up -d --build
-
-# 3. 查看服務狀態
-docker-compose -f docker-compose.prod.yml ps
+# 2. 啟動服務
+docker compose up -d
 ```
 
-### 生產環境端口
+部署完成後會自動：
+- 啟動 PostgreSQL 資料庫
+- 從 GitHub clone 專案並建置
+- 初始化資料庫 + 種子資料
+- 複製預設 gallery 圖片
+- 啟動 Nginx + Deno API
+
+### 自訂設定
+
+建立 `.env` 檔案可自訂帳密與 port：
+
+```bash
+# .env (與 docker-compose.yml 同目錄)
+ADMIN_USER=myadmin
+ADMIN_PASSWORD=mysecretpassword
+DB_PASSWORD=dbpassword
+PORT=8080
+```
+
+| 變數 | 預設值 | 說明 |
+|------|--------|------|
+| `ADMIN_USER` | admin | 後台帳號 |
+| `ADMIN_PASSWORD` | changeme | 後台密碼 |
+| `DB_USER` | postgres | 資料庫帳號 |
+| `DB_PASSWORD` | postgres | 資料庫密碼 |
+| `DB_NAME` | events_app | 資料庫名稱 |
+| `PORT` | 80 | 對外 Port |
+
+### 存取網址
 
 | 服務 | URL |
 |------|-----|
-| 網站 | http://localhost (port 80) |
-| 後台 | http://localhost/dashboard/ (需登入) |
+| 前台 | http://localhost/ |
+| 後台 | http://localhost/dashboard/ |
 
 ### 後台登入
 
-後台使用 Nginx Basic Auth 保護，預設帳密：
-- 帳號：`admin`
-- 密碼：`changeme`
+後台使用 Nginx Basic Auth 保護：
+- 預設帳號：`admin`
+- 預設密碼：`changeme`
 
-修改密碼：
+建議部署後立即透過 `.env` 修改密碼。
+
+### 進階部署（從原始碼建置）
+
+如需自行建置 Docker 映像：
+
 ```bash
-# 產生新的密碼雜湊
-docker run --rm httpd:alpine htpasswd -nb admin your_new_password
-# 將輸出貼到 nginx/nginx.conf 的 auth_basic_user_file 區塊
+# Clone 專案
+git clone https://github.com/KaelLim/ngo-60.git
+cd ngo-60
+
+# 設定環境變數
+cp .env.example .env
+
+# 建置並啟動
+docker compose -f docker-compose.prod.yml up -d --build
 ```
 
 ## API 端點
