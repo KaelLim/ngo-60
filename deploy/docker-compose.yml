@@ -60,6 +60,8 @@ services:
         ln -sf /root/.deno/bin/deno /usr/local/bin/deno
 
         echo "=== [4/6] Clone 專案並建置前端 ==="
+        # 設定 git safe.directory
+        git config --global --add safe.directory /app
         if [ -d /app/.git ]; then
           echo "專案已存在，更新中..."
           cd /app && git pull
@@ -89,23 +91,45 @@ services:
           cp /app/seed/gallery/* /uploads/gallery/ 2>/dev/null || true
         fi
 
-        echo "=== [6/7] 安裝 Claude Code CLI & SDK ==="
+        echo "=== [6/8] 安裝 Claude Code CLI & SDK ==="
         # 安裝 Node.js (for npm)
         curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-        apt-get install -y nodejs
+        apt-get install -y nodejs sudo
         # 安裝 Claude Code CLI (SDK 依賴此 CLI)
         npm install -g @anthropic-ai/claude-code
-        # 快取 Agent SDK 依賴
-        cd /app/api
-        $$DENO cache agent-worker.ts || echo "Agent worker cache failed (optional)"
 
-        echo "=== [7/7] 啟動服務 ==="
-        # 啟動 Nginx (背景)
+        echo "=== [7/8] 建立非 root 使用者 ==="
+        # 建立 appuser 使用者 (如果不存在)
+        id appuser &>/dev/null || useradd -m -s /bin/bash appuser
+        # 設定目錄權限
+        chown -R appuser:appuser /app /uploads
+        chown -R appuser:appuser /usr/share/nginx/html
+        # 複製完整的 deno 到 appuser
+        mkdir -p /home/appuser/.deno/bin
+        cp /root/.deno/bin/deno /home/appuser/.deno/bin/
+        # 複製 deno 快取 (包含 jsr, npm 等依賴)
+        cp -r /root/.cache/deno /home/appuser/.cache/ 2>/dev/null || mkdir -p /home/appuser/.cache/deno
+        chown -R appuser:appuser /home/appuser
+        ln -sf /home/appuser/.deno/bin/deno /usr/local/bin/deno
+        # 複製 Claude Code 憑證到 appuser (如果存在)
+        if [ -f /root/.claude/.credentials.json ]; then
+          mkdir -p /home/appuser/.claude
+          cp /root/.claude/.credentials.json /home/appuser/.claude/
+          chown -R appuser:appuser /home/appuser/.claude
+        fi
+        # 以 appuser 身份快取 API 依賴
+        cd /app/api
+        sudo -u appuser HOME=/home/appuser /home/appuser/.deno/bin/deno cache main.ts || echo "Main cache failed"
+        sudo -u appuser HOME=/home/appuser /home/appuser/.deno/bin/deno cache agent-worker.ts || echo "Agent worker cache failed"
+
+        echo "=== [8/8] 啟動服務 ==="
+        # 啟動 Nginx (背景，以 root 啟動但 worker 會降權)
         nginx
 
-        # 啟動 Deno API (前景)
+        # 啟動 Deno API (前景，以 appuser 身份執行)
+        # 使用 sudo -E 保留環境變數，設定 HOME
         cd /app/api
-        exec $$DENO run --allow-net --allow-env --allow-read --allow-write --allow-run main.ts
+        exec sudo -E -u appuser HOME=/home/appuser /home/appuser/.deno/bin/deno run --allow-net --allow-env --allow-read --allow-write --allow-run main.ts
     restart: unless-stopped
 
 volumes:

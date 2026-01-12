@@ -505,7 +505,10 @@ async function main() {
         mcpServers: {
           "tzu-chi-admin": mcpServer,
         },
-        // 明確允許 MCP 工具使用
+        // 以非 root 使用者執行時可使用 bypassPermissions
+        permissionMode: "bypassPermissions",
+        allowDangerouslySkipPermissions: true,
+        // 明確允許 MCP 工具使用 (備用)
         allowedTools,
       }
     });
