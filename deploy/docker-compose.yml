@@ -11,7 +11,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
       POSTGRES_DB: ${DB_NAME:-events_app}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
@@ -20,24 +20,21 @@ services:
       retries: 5
 
   init-db:
-    image: postgres:18
+    image: ubuntu:24.04
     depends_on:
       db:
         condition: service_healthy
     environment:
-      PGHOST: db
-      PGUSER: ${DB_USER:-postgres}
       PGPASSWORD: ${DB_PASSWORD:-postgres}
-      PGDATABASE: ${DB_NAME:-events_app}
-    entrypoint: ["/bin/sh", "-c"]
+    entrypoint: ["/bin/bash", "-c"]
     command:
       - |
-        apt-get update && apt-get install -y curl
-        curl -fsSL https://raw.githubusercontent.com/KaelLim/ngo-60/main/db/init.sql | psql
+        apt-get update && apt-get install -y postgresql-client curl
+        curl -fsSL https://raw.githubusercontent.com/KaelLim/ngo-60/main/db/init.sql | psql -h db -U postgres -d ${DB_NAME:-events_app}
     restart: "no"
 
   api:
-    image: denoland/deno:latest
+    image: ubuntu:24.04
     depends_on:
       db:
         condition: service_healthy
@@ -48,31 +45,62 @@ services:
       DB_USER: ${DB_USER:-postgres}
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
       DB_NAME: ${DB_NAME:-events_app}
+      DENO_INSTALL: /root/.deno
+      PATH: /root/.deno/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
     volumes:
-      - uploads_data:/app/api/uploads
-    entrypoint: ["/bin/sh", "-c"]
+      - uploads_data:/uploads
+    entrypoint: ["/bin/bash", "-c"]
     command:
       - |
-        apt-get update && apt-get install -y git
-        git clone https://github.com/KaelLim/ngo-60.git /app
+        apt-get update && apt-get install -y curl git unzip
+
+        # 安裝 Deno
+        if [ ! -f /root/.deno/bin/deno ]; then
+          curl -fsSL https://deno.land/install.sh | sh
+        fi
+
+        # Clone 專案
+        if [ ! -f /app/api/main.ts ]; then
+          rm -rf /app
+          git clone https://github.com/KaelLim/ngo-60.git /app
+        fi
+
         cd /app/api
-        mkdir -p uploads/gallery
-        deno run --allow-net --allow-env --allow-read --allow-write --allow-run main.ts
+        # 連結 uploads 目錄
+        rm -rf uploads
+        ln -sf /uploads uploads
+        mkdir -p /uploads/gallery
+
+        /root/.deno/bin/deno run --allow-net --allow-env --allow-read --allow-write --allow-run main.ts
     restart: unless-stopped
 
   web:
-    image: denoland/deno:latest
-    entrypoint: ["/bin/sh", "-c"]
+    image: ubuntu:24.04
+    environment:
+      DENO_INSTALL: /root/.deno
+      PATH: /root/.deno/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    volumes:
+      - web_dist:/dist
+    entrypoint: ["/bin/bash", "-c"]
     command:
       - |
-        apt-get update && apt-get install -y git
-        git clone https://github.com/KaelLim/ngo-60.git /app
-        cd /app/web
-        deno install --node-modules-dir --entrypoint npm:vite
-        deno run -A --node-modules-dir npm:vite build
+        if [ -f /dist/index.html ]; then
+          echo "Build already exists, skipping"
+          exit 0
+        fi
+
+        apt-get update && apt-get install -y curl git unzip
+
+        # 安裝 Deno
+        curl -fsSL https://deno.land/install.sh | sh
+
+        # Clone 並建置
+        git clone https://github.com/KaelLim/ngo-60.git /tmp/ngo60
+        cd /tmp/ngo60/web
+        /root/.deno/bin/deno install --node-modules-dir --entrypoint npm:vite
+        /root/.deno/bin/deno run -A --node-modules-dir npm:vite build
+        cp -r dist/* /dist/
         echo "Build complete"
-    volumes:
-      - web_dist:/app/web/dist
     restart: "no"
 
   nginx:
@@ -87,14 +115,14 @@ services:
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
+        # 安裝 htpasswd 工具
+        apk add --no-cache apache2-utils curl
+
         # 等待前端建置完成
         while [ ! -f /usr/share/nginx/html/index.html ]; do
           echo "Waiting for web build..."
           sleep 5
         done
-
-        # 安裝 htpasswd
-        apk add --no-cache apache2-utils curl
 
         # 下載 nginx 設定
         curl -fsSL https://raw.githubusercontent.com/KaelLim/ngo-60/main/nginx/nginx.conf -o /etc/nginx/conf.d/default.conf
