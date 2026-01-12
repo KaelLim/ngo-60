@@ -215,3 +215,12 @@ WHERE NOT EXISTS (SELECT 1 FROM gallery WHERE filename = 'gallery_16.jpg');
 INSERT INTO gallery (filename, original_name, mime_type, category, is_active)
 SELECT 'gallery_17.jpg', 'gallery_17.jpg', 'image/jpeg', 'homepage', true
 WHERE NOT EXISTS (SELECT 1 FROM gallery WHERE filename = 'gallery_17.jpg');
+INSERT INTO gallery (filename, original_name, mime_type, category, is_active)
+SELECT '2cd1a34d-0a9b-407c-8c68-226f034b7b3d.jpg', '2cd1a34d-0a9b-407c-8c68-226f034b7b3d.jpg', 'image/jpeg', 'homepage', true
+WHERE NOT EXISTS (SELECT 1 FROM gallery WHERE filename = '2cd1a34d-0a9b-407c-8c68-226f034b7b3d.jpg');
+INSERT INTO gallery (filename, original_name, mime_type, category, is_active)
+SELECT '92cf295e-db98-492b-9aa1-2fea4b4eecf4.jpg', '92cf295e-db98-492b-9aa1-2fea4b4eecf4.jpg', 'image/jpeg', 'homepage', true
+WHERE NOT EXISTS (SELECT 1 FROM gallery WHERE filename = '92cf295e-db98-492b-9aa1-2fea4b4eecf4.jpg');
+INSERT INTO gallery (filename, original_name, mime_type, category, is_active)
+SELECT 'aa397a6d-26de-40e6-be0a-79a9834209dc.jpg', 'aa397a6d-26de-40e6-be0a-79a9834209dc.jpg', 'image/jpeg', 'homepage', true
+WHERE NOT EXISTS (SELECT 1 FROM gallery WHERE filename = 'aa397a6d-26de-40e6-be0a-79a9834209dc.jpg');
