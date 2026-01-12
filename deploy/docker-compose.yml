@@ -56,6 +56,8 @@ services:
           curl -fsSL https://deno.land/install.sh | sh
         fi
         DENO=/root/.deno/bin/deno
+        # 建立 symlink 讓 Deno.Command 可以找到 deno
+        ln -sf /root/.deno/bin/deno /usr/local/bin/deno
 
         echo "=== [4/6] Clone 專案並建置前端 ==="
         if [ -d /app/.git ]; then
