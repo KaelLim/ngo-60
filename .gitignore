@@ -31,3 +31,9 @@ api/uploads/
 
 # Docker volumes
 postgres_data/
+
+# Backups
+backups/
+
+# Deploy local files
+deploy/.env

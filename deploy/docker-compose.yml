@@ -1,14 +1,10 @@
-# 生產環境 Docker Compose（建置用）
+# NGO60 部署用 Docker Compose
 # 使用方式：
-#   1. 設定環境變數：cp .env.example .env && vim .env
-#   2. 建置並推送：./scripts/build-push.sh
-#   3. 本地測試：docker compose -f docker-compose.prod.yml up -d
-#
-# 環境變數：
-#   - ADMIN_USER: 後台登入帳號 (預設: admin)
-#   - ADMIN_PASSWORD: 後台登入密碼 (預設: changeme)
-#   - DB_USER, DB_PASSWORD, DB_NAME: 資料庫設定
-#   - PORT: 對外 port (預設: 80)
+#   1. 複製環境變數：cp .env.example .env
+#   2. 編輯 .env 設定密碼等
+#   3. 啟動：docker compose up -d
+#   4. 查看狀態：docker compose ps
+#   5. 查看日誌：docker compose logs -f
 
 services:
   db:
@@ -18,7 +14,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
       POSTGRES_DB: ${DB_NAME:-events_app}
     volumes:
-      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
     healthcheck:
@@ -29,9 +25,6 @@ services:
 
   api:
     image: kaellim/ngo60-api:latest
-    build:
-      context: ./api
-      dockerfile: Dockerfile
     environment:
       DB_HOST: db
       DB_USER: ${DB_USER:-postgres}
@@ -46,12 +39,6 @@ services:
 
   nginx:
     image: kaellim/ngo60-nginx:latest
-    build:
-      context: .
-      dockerfile: nginx/Dockerfile.full
-      args:
-        ADMIN_USER: ${ADMIN_USER:-admin}
-        ADMIN_PASSWORD: ${ADMIN_PASSWORD:-changeme}
     ports:
       - "${PORT:-80}:80"
     depends_on:
