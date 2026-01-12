@@ -470,17 +470,43 @@ async function main() {
     tools,
   });
 
+  // 定義允許的 MCP 工具列表
+  const allowedTools = [
+    "mcp__tzu-chi-admin__getTopics",
+    "mcp__tzu-chi-admin__getTopic",
+    "mcp__tzu-chi-admin__createTopic",
+    "mcp__tzu-chi-admin__updateTopic",
+    "mcp__tzu-chi-admin__deleteTopic",
+    "mcp__tzu-chi-admin__getEvents",
+    "mcp__tzu-chi-admin__createEvent",
+    "mcp__tzu-chi-admin__updateEvent",
+    "mcp__tzu-chi-admin__deleteEvent",
+    "mcp__tzu-chi-admin__getBlessings",
+    "mcp__tzu-chi-admin__createBlessing",
+    "mcp__tzu-chi-admin__updateBlessing",
+    "mcp__tzu-chi-admin__deleteBlessing",
+    "mcp__tzu-chi-admin__getImpact",
+    "mcp__tzu-chi-admin__createImpact",
+    "mcp__tzu-chi-admin__updateImpact",
+    "mcp__tzu-chi-admin__deleteImpact",
+    "mcp__tzu-chi-admin__getHomepage",
+    "mcp__tzu-chi-admin__updateHomepage",
+    "mcp__tzu-chi-admin__getGallery",
+    "mcp__tzu-chi-admin__updateGalleryImage",
+    "mcp__tzu-chi-admin__deleteGalleryImage",
+  ];
+
   try {
     const result = claudeQuery({
       prompt,
       options: {
         systemPrompt: SYSTEM_PROMPT,
-        permissionMode: "bypassPermissions",
-        allowDangerouslySkipPermissions: true,
         resume: resumeSessionId,  // 恢復既有 session
         mcpServers: {
           "tzu-chi-admin": mcpServer,
         },
+        // 明確允許 MCP 工具使用
+        allowedTools,
       }
     });
 
