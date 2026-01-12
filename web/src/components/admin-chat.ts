@@ -953,9 +953,11 @@ export class AdminChat extends LitElement {
   }
 
   private connectHmrWebSocket() {
-    // 連接 Vite 的 HMR WebSocket
+    // 連接 Vite 的 HMR WebSocket (僅開發環境)
+    if (window.location.port !== '5173') return; // 生產環境不連接 HMR
+
     try {
-      this.hmrWs = new WebSocket('ws://localhost:5173/', 'vite-hmr');
+      this.hmrWs = new WebSocket(`ws://${window.location.host}/`, 'vite-hmr');
 
       this.hmrWs.onmessage = (event) => {
         try {
@@ -987,7 +989,7 @@ export class AdminChat extends LitElement {
 
   private async loadSessions() {
     try {
-      const res = await fetch('http://localhost:8000/api/agent/sessions');
+      const res = await fetch('/api/agent/sessions');
       const data = await res.json();
       this.sessions = data.sessions || [];
     } catch (e) {
@@ -1013,7 +1015,7 @@ export class AdminChat extends LitElement {
     this.showSidebar = false;
 
     try {
-      const res = await fetch(`http://localhost:8000/api/agent/session/${session.client_session_id}/history`);
+      const res = await fetch(`/api/agent/session/${session.client_session_id}/history`);
       const data = await res.json();
 
       if (data.messages?.length > 0) {
@@ -1041,7 +1043,7 @@ export class AdminChat extends LitElement {
     if (!confirm(`確定要刪除「${session.title || '未命名對話'}」嗎？`)) return;
 
     try {
-      await fetch(`http://localhost:8000/api/agent/session/${session.client_session_id}`, {
+      await fetch(`/api/agent/session/${session.client_session_id}`, {
         method: 'DELETE',
       });
       this.sessions = this.sessions.filter(s => s.id !== session.id);
@@ -1055,7 +1057,8 @@ export class AdminChat extends LitElement {
 
   private connectWebSocket() {
     try {
-      this.ws = new WebSocket('ws://localhost:8000/api/agent/ws');
+      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      this.ws = new WebSocket(`${wsProtocol}//${window.location.host}/api/agent/ws`);
 
       this.ws.onopen = () => { this.isConnected = true; };
 
@@ -1116,7 +1119,7 @@ export class AdminChat extends LitElement {
     } else {
       this.isLoading = true;
       try {
-        const res = await fetch('http://localhost:8000/api/agent/chat', {
+        const res = await fetch('/api/agent/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ sessionId: this.sessionId, message }),
@@ -1289,7 +1292,7 @@ export class AdminChat extends LitElement {
       formData.append('file', this.uploadFile);
       formData.append('category', this.uploadCategory);
 
-      const res = await fetch('http://localhost:8000/api/gallery', {
+      const res = await fetch('/api/gallery', {
         method: 'POST',
         body: formData,
       });
@@ -1299,7 +1302,7 @@ export class AdminChat extends LitElement {
       }
 
       const data = await res.json();
-      const imageUrl = `http://localhost:8000/uploads/gallery/${data.filename}`;
+      const imageUrl = `/uploads/gallery/${data.filename}`;
       const purpose = this.uploadPurpose.trim();
       const categoryLabel = this.uploadCategory === 'homepage' ? '首頁 60 Grid' :
                            this.uploadCategory === 'events' ? '活動封面' :
@@ -1470,7 +1473,7 @@ export class AdminChat extends LitElement {
           <div class="preview-content">
             <div class="preview-frame-container">
               <div class="preview-frame-wrapper ${this.previewDevice}">
-                <iframe src="http://localhost:5173/"></iframe>
+                <iframe src="/"></iframe>
               </div>
             </div>
           </div>
