@@ -1,4 +1,5 @@
 import { defineConfig } from 'npm:vite@^5.4.0';
+import { resolve } from 'node:path';
 
 export default defineConfig({
   server: {
@@ -15,6 +16,12 @@ export default defineConfig({
     }
   },
   build: {
-    target: 'esnext'
+    target: 'esnext',
+    rollupOptions: {
+      input: {
+        main: resolve(import.meta.dirname!, 'index.html'),
+        admin: resolve(import.meta.dirname!, 'admin.html')
+      }
+    }
   }
 });
