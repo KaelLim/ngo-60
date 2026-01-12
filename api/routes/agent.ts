@@ -89,8 +89,10 @@ async function runAgentWorker(prompt: string, resumeSessionId?: string): Promise
       message: result.message || "",
       sessionId: result.sessionId || ""
     };
-  } catch {
-    throw new Error(`Worker output parse error: ${output}`);
+  } catch (parseError) {
+    // 顯示更詳細的錯誤資訊
+    const errorDetail = errorOutput ? `\nStderr: ${errorOutput}` : "";
+    throw new Error(`Worker output parse error: ${output}${errorDetail}\nParse error: ${parseError}`);
   }
 }
 

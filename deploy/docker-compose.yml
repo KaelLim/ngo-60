@@ -89,7 +89,17 @@ services:
           cp /app/seed/gallery/* /uploads/gallery/ 2>/dev/null || true
         fi
 
-        echo "=== [6/6] 啟動服務 ==="
+        echo "=== [6/7] 安裝 Claude Code CLI & SDK ==="
+        # 安裝 Node.js (for npm)
+        curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+        apt-get install -y nodejs
+        # 安裝 Claude Code CLI (SDK 依賴此 CLI)
+        npm install -g @anthropic-ai/claude-code
+        # 快取 Agent SDK 依賴
+        cd /app/api
+        $$DENO cache agent-worker.ts || echo "Agent worker cache failed (optional)"
+
+        echo "=== [7/7] 啟動服務 ==="
         # 啟動 Nginx (背景)
         nginx
 
