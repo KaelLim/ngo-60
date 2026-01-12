@@ -1,0 +1,133 @@
+// Events Module
+import { api } from './api.js';
+import { showToast } from './toast.js';
+import { updateImagePreview } from './image-picker.js';
+import { getTopicsCache, loadTopics } from './topics.js';
+
+let eventsCache = [];
+
+export async function loadEvents() {
+  try {
+    // Ensure topics are loaded for the dropdown
+    let topicsCache = getTopicsCache();
+    if (topicsCache.length === 0) {
+      await loadTopics();
+      topicsCache = getTopicsCache();
+    }
+    updateEventTopicSelect(topicsCache);
+
+    eventsCache = await api.getEvents();
+    renderEventsTable(topicsCache);
+  } catch (e) {
+    console.error('Failed to load events:', e);
+  }
+}
+
+function updateEventTopicSelect(topicsCache) {
+  const select = document.getElementById('event-topic');
+  select.innerHTML = '<option value="">-- 無關聯 --</option>' +
+    topicsCache.map(t => `<option value="${t.id}">${t.icon} ${t.name}</option>`).join('');
+}
+
+function renderEventsTable(topicsCache) {
+  const tbody = document.getElementById('events-table');
+  tbody.innerHTML = eventsCache.map(e => {
+    const topic = topicsCache.find(t => t.id === e.topic_id);
+    return `
+      <tr>
+        <td>${e.month}月 / ${e.year}</td>
+        <td>${e.title}</td>
+        <td>${e.date_start}${e.date_end ? ' ~ ' + e.date_end : ''}</td>
+        <td>${e.participation_type === 'online' ? '線上' : '現場'}</td>
+        <td>${topic ? topic.icon + ' ' + topic.name : '-'}</td>
+        <td class="actions">
+          <button class="btn btn-secondary btn-sm" data-action="edit" data-id="${e.id}">編輯</button>
+          <button class="btn btn-danger btn-sm" data-action="delete" data-id="${e.id}">刪除</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  // Add event listeners
+  tbody.querySelectorAll('[data-action="edit"]').forEach(btn => {
+    btn.addEventListener('click', () => editEvent(parseInt(btn.dataset.id)));
+  });
+  tbody.querySelectorAll('[data-action="delete"]').forEach(btn => {
+    btn.addEventListener('click', () => deleteEvent(parseInt(btn.dataset.id)));
+  });
+}
+
+export function openEventModal(event = null) {
+  document.getElementById('event-modal-title').textContent = event ? '編輯活動' : '新增活動';
+  document.getElementById('event-id').value = event?.id || '';
+  document.getElementById('event-title').value = event?.title || '';
+  document.getElementById('event-description').value = event?.description || '';
+  document.getElementById('event-date-start').value = event?.date_start || '';
+  document.getElementById('event-date-end').value = event?.date_end || '';
+  document.getElementById('event-topic').value = event?.topic_id || '';
+  document.getElementById('event-month').value = event?.month || new Date().getMonth() + 1;
+  document.getElementById('event-year').value = event?.year || 2026;
+  document.getElementById('event-sort').value = event?.sort_order || 0;
+  document.getElementById('event-participation').value = event?.participation_type || 'onsite';
+  document.getElementById('event-fee').value = event?.participation_fee || '';
+  document.getElementById('event-image').value = event?.image_url || '';
+  updateImagePreview('event-image', event?.image_url);
+  document.getElementById('event-modal').classList.add('active');
+}
+
+export function closeEventModal() {
+  document.getElementById('event-modal').classList.remove('active');
+}
+
+function editEvent(id) {
+  const event = eventsCache.find(e => e.id === id);
+  openEventModal(event);
+}
+
+async function deleteEvent(id) {
+  if (!confirm('確定要刪除此活動？')) return;
+  try {
+    await api.deleteEvent(id);
+    showToast('活動已刪除');
+    loadEvents();
+  } catch (e) {
+    showToast('刪除失敗', 'error');
+  }
+}
+
+async function handleSubmit(e) {
+  e.preventDefault();
+  const id = document.getElementById('event-id').value;
+  const topicValue = document.getElementById('event-topic').value;
+  const data = {
+    title: document.getElementById('event-title').value,
+    description: document.getElementById('event-description').value,
+    date_start: document.getElementById('event-date-start').value,
+    date_end: document.getElementById('event-date-end').value || null,
+    topic_id: topicValue ? parseInt(topicValue) : null,
+    month: parseInt(document.getElementById('event-month').value),
+    year: parseInt(document.getElementById('event-year').value),
+    sort_order: parseInt(document.getElementById('event-sort').value),
+    participation_type: document.getElementById('event-participation').value,
+    participation_fee: document.getElementById('event-fee').value,
+    image_url: document.getElementById('event-image').value
+  };
+
+  try {
+    if (id) {
+      await api.updateEvent(id, data);
+      showToast('活動已更新');
+    } else {
+      await api.createEvent(data);
+      showToast('活動已新增');
+    }
+    closeEventModal();
+    loadEvents();
+  } catch (e) {
+    showToast('操作失敗', 'error');
+  }
+}
+
+export function initEvents() {
+  document.getElementById('event-form').addEventListener('submit', handleSubmit);
+}

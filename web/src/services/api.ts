@@ -126,22 +126,36 @@ export const api = {
   },
 
   // Gallery (圖庫)
-  async getGalleryRandom(count: number = 15): Promise<GalleryImage[]> {
-    const res = await fetch(`${API_BASE}/gallery/random?count=${count}`);
+  async getGalleryRandom(count: number = 15, category?: string): Promise<GalleryImage[]> {
+    let url = `${API_BASE}/gallery/random?count=${count}`;
+    if (category) url += `&category=${encodeURIComponent(category)}`;
+    const res = await fetch(url);
     return res.json();
   },
 
-  async getGalleryAll(): Promise<GalleryImage[]> {
-    const res = await fetch(`${API_BASE}/gallery`);
+  async getGalleryAll(category?: string): Promise<GalleryImage[]> {
+    let url = `${API_BASE}/gallery`;
+    if (category) url += `?category=${encodeURIComponent(category)}`;
+    const res = await fetch(url);
     return res.json();
   },
 
-  async uploadGalleryImage(file: File): Promise<GalleryImage> {
+  async uploadGalleryImage(file: File, category: string = 'general'): Promise<GalleryImage> {
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('category', category);
     const res = await fetch(`${API_BASE}/gallery`, {
       method: 'POST',
       body: formData
+    });
+    return res.json();
+  },
+
+  async updateGalleryImage(id: number, category: string): Promise<GalleryImage> {
+    const res = await fetch(`${API_BASE}/gallery/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ category })
     });
     return res.json();
   },

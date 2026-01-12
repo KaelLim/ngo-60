@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - 慈濟60週年後台</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1>慈濟60週年</h1>
+        <p>後台管理系統</p>
+      </div>
+      <nav>
+        <div class="nav-item active" data-section="homepage">
+          <span class="icon">🏠</span>
+          <span>首頁內容</span>
+        </div>
+        <div class="nav-item" data-section="topics">
+          <span class="icon">📂</span>
+          <span>主題管理</span>
+        </div>
+        <div class="nav-item" data-section="events">
+          <span class="icon">📅</span>
+          <span>活動管理</span>
+        </div>
+        <div class="nav-item" data-section="blessings">
+          <span class="icon">🙏</span>
+          <span>祝福語管理</span>
+        </div>
+        <div class="nav-item" data-section="impact">
+          <span class="icon">💫</span>
+          <span>影響力管理</span>
+        </div>
+        <div class="nav-item" data-section="gallery">
+          <span class="icon">🖼️</span>
+          <span>圖庫管理</span>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main">
+      <!-- Homepage Section -->
+      <section id="section-homepage" class="section active">
+        <div class="page-header">
+          <h2>首頁內容編輯</h2>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <form id="homepage-form">
+              <div class="form-group">
+                <label>Slogan（用空格分隔每行）</label>
+                <input type="text" id="homepage-slogan" placeholder="例：慈悲六十 大愛恆傳">
+              </div>
+              <div class="form-group">
+                <label>標題</label>
+                <input type="text" id="homepage-title" placeholder="感恩有您 攜手同行">
+              </div>
+              <div class="form-group">
+                <label>內容</label>
+                <textarea id="homepage-content" rows="5" placeholder="首頁主要內容..."></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary">儲存變更</button>
+            </form>
+            <div class="preview-box">
+              <h3 id="preview-slogan">慈悲六十 大愛恆傳</h3>
+              <div class="preview-content">
+                <h4 id="preview-title">標題</h4>
+                <p id="preview-content">內容預覽</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Topics Section -->
+      <section id="section-topics" class="section">
+        <div class="page-header">
+          <h2>主題管理</h2>
+          <button class="btn btn-primary" onclick="openTopicModal()">+ 新增主題</button>
+        </div>
+        <div class="card">
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>排序</th>
+                  <th>圖示</th>
+                  <th>名稱</th>
+                  <th>副標題</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="topics-table"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Events Section -->
+      <section id="section-events" class="section">
+        <div class="page-header">
+          <h2>活動管理</h2>
+          <button class="btn btn-primary" onclick="openEventModal()">+ 新增活動</button>
+        </div>
+        <div class="card">
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>月/年</th>
+                  <th>標題</th>
+                  <th>日期</th>
+                  <th>參與方式</th>
+                  <th>主題</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="events-table"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Blessings Section -->
+      <section id="section-blessings" class="section">
+        <div class="page-header">
+          <h2>祝福語管理</h2>
+          <button class="btn btn-primary" onclick="openBlessingModal()">+ 新增祝福語</button>
+        </div>
+        <div class="card">
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>排序</th>
+                  <th>作者</th>
+                  <th>訊息</th>
+                  <th>精選</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="blessings-table"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Impact Section -->
+      <section id="section-impact" class="section">
+        <div class="page-header">
+          <h2>影響力管理</h2>
+          <button class="btn btn-primary" onclick="openImpactModal()">+ 新增影響力區塊</button>
+        </div>
+        <div class="card">
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>排序</th>
+                  <th>圖示</th>
+                  <th>名稱</th>
+                  <th>數值</th>
+                  <th>標籤</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="impact-table"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Gallery Section -->
+      <section id="section-gallery" class="section">
+        <div class="page-header">
+          <h2>圖庫管理</h2>
+          <div class="gallery-toolbar">
+            <select id="gallery-filter">
+              <option value="">全部分類</option>
+              <option value="homepage">首頁 60 Grid</option>
+              <option value="events">活動封面</option>
+              <option value="topics">主題背景</option>
+              <option value="blessings">祝福語</option>
+              <option value="general">一般圖片</option>
+            </select>
+            <button class="btn btn-secondary btn-sm" id="gallery-select-mode-btn">多選模式</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <!-- Upload Zone with Category -->
+            <div class="upload-section">
+              <div class="upload-zone" id="upload-zone">
+                <p>點擊或拖放圖片上傳</p>
+                <input type="file" id="gallery-upload" accept="image/*" multiple style="display: none;">
+              </div>
+              <div class="upload-category">
+                <label>上傳至分類：</label>
+                <select id="upload-category">
+                  <option value="general">一般圖片</option>
+                  <option value="homepage">首頁 60 Grid</option>
+                  <option value="events">活動封面</option>
+                  <option value="topics">主題背景</option>
+                  <option value="blessings">祝福語</option>
+                </select>
+              </div>
+            </div>
+            <!-- Batch Actions (hidden by default) -->
+            <div class="batch-actions" id="gallery-batch-actions" style="display: none;">
+              <span id="gallery-selected-count">0 張已選</span>
+              <select id="batch-category">
+                <option value="">-- 選擇分類 --</option>
+                <option value="homepage">首頁 60 Grid</option>
+                <option value="events">活動封面</option>
+                <option value="topics">主題背景</option>
+                <option value="blessings">祝福語</option>
+                <option value="general">一般圖片</option>
+              </select>
+              <button class="btn btn-primary btn-sm" id="batch-update-btn">套用分類</button>
+              <button class="btn btn-danger btn-sm" id="batch-delete-btn">刪除選取</button>
+              <button class="btn btn-secondary btn-sm" id="gallery-cancel-select-btn">取消</button>
+            </div>
+            <div class="gallery-grid" id="gallery-grid"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Topic Modal -->
+  <div class="modal-overlay" id="topic-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="topic-modal-title">新增主題</h3>
+        <button class="modal-close" onclick="closeTopicModal()">&times;</button>
+      </div>
+      <form id="topic-form">
+        <div class="modal-body">
+          <input type="hidden" id="topic-id">
+          <div class="form-row">
+            <div class="form-group">
+              <label>名稱 *</label>
+              <input type="text" id="topic-name" required>
+            </div>
+            <div class="form-group">
+              <label>圖示 *</label>
+              <input type="text" id="topic-icon" placeholder="例：🤝" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>副標題</label>
+            <input type="text" id="topic-subtitle">
+          </div>
+          <div class="form-group">
+            <label>描述</label>
+            <textarea id="topic-description"></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>背景圖片</label>
+              <input type="hidden" id="topic-background">
+              <div class="image-picker-field">
+                <div class="image-picker-preview" id="topic-background-preview">
+                  <span class="placeholder">🖼️</span>
+                </div>
+                <div class="image-picker-actions">
+                  <button type="button" class="btn btn-outline btn-sm" onclick="openImagePicker('topic-background', 'topics')">選擇圖片</button>
+                  <button type="button" class="btn btn-outline btn-sm" onclick="clearImageField('topic-background')">清除</button>
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>排序</label>
+              <input type="number" id="topic-sort" value="0">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeTopicModal()">取消</button>
+          <button type="submit" class="btn btn-primary">儲存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Event Modal -->
+  <div class="modal-overlay" id="event-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="event-modal-title">新增活動</h3>
+        <button class="modal-close" onclick="closeEventModal()">&times;</button>
+      </div>
+      <form id="event-form">
+        <div class="modal-body">
+          <input type="hidden" id="event-id">
+          <div class="form-group">
+            <label>標題 *</label>
+            <input type="text" id="event-title" required>
+          </div>
+          <div class="form-group">
+            <label>描述</label>
+            <textarea id="event-description"></textarea>
+          </div>
+          <div class="form-row three">
+            <div class="form-group">
+              <label>開始日期 *</label>
+              <input type="date" id="event-date-start" required>
+            </div>
+            <div class="form-group">
+              <label>結束日期</label>
+              <input type="date" id="event-date-end">
+            </div>
+            <div class="form-group">
+              <label>關聯主題</label>
+              <select id="event-topic"></select>
+            </div>
+          </div>
+          <div class="form-row three">
+            <div class="form-group">
+              <label>月份 *</label>
+              <select id="event-month" required>
+                <option value="1">1月</option>
+                <option value="2">2月</option>
+                <option value="3">3月</option>
+                <option value="4">4月</option>
+                <option value="5">5月</option>
+                <option value="6">6月</option>
+                <option value="7">7月</option>
+                <option value="8">8月</option>
+                <option value="9">9月</option>
+                <option value="10">10月</option>
+                <option value="11">11月</option>
+                <option value="12">12月</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>年份</label>
+              <input type="number" id="event-year" value="2026" readonly>
+            </div>
+            <div class="form-group">
+              <label>排序</label>
+              <input type="number" id="event-sort" value="0">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>參與方式</label>
+              <select id="event-participation">
+                <option value="onsite">現場參與</option>
+                <option value="online">線上參與</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>費用說明</label>
+              <input type="text" id="event-fee" placeholder="例：免費 / 需購票">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>活動圖片</label>
+            <input type="hidden" id="event-image">
+            <div class="image-picker-field">
+              <div class="image-picker-preview" id="event-image-preview">
+                <span class="placeholder">🖼️</span>
+              </div>
+              <div class="image-picker-actions">
+                <button type="button" class="btn btn-outline btn-sm" onclick="openImagePicker('event-image', 'events')">選擇圖片</button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="clearImageField('event-image')">清除</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeEventModal()">取消</button>
+          <button type="submit" class="btn btn-primary">儲存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Blessing Modal -->
+  <div class="modal-overlay" id="blessing-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="blessing-modal-title">新增祝福語</h3>
+        <button class="modal-close" onclick="closeBlessingModal()">&times;</button>
+      </div>
+      <form id="blessing-form">
+        <div class="modal-body">
+          <input type="hidden" id="blessing-id">
+          <div class="form-row">
+            <div class="form-group">
+              <label>作者 *</label>
+              <input type="text" id="blessing-author" required>
+            </div>
+            <div class="form-group">
+              <label>排序</label>
+              <input type="number" id="blessing-sort" value="0">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>訊息 *</label>
+            <input type="text" id="blessing-message" required>
+          </div>
+          <div class="form-group">
+            <label>完整內容</label>
+            <textarea id="blessing-content"></textarea>
+          </div>
+          <div class="form-group">
+            <label>圖片</label>
+            <input type="hidden" id="blessing-image">
+            <div class="image-picker-field">
+              <div class="image-picker-preview" id="blessing-image-preview">
+                <span class="placeholder">🖼️</span>
+              </div>
+              <div class="image-picker-actions">
+                <button type="button" class="btn btn-outline btn-sm" onclick="openImagePicker('blessing-image', 'blessings')">選擇圖片</button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="clearImageField('blessing-image')">清除</button>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="checkbox-group">
+              <input type="checkbox" id="blessing-featured">
+              設為精選
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeBlessingModal()">取消</button>
+          <button type="submit" class="btn btn-primary">儲存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Impact Modal -->
+  <div class="modal-overlay" id="impact-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="impact-modal-title">新增影響力區塊</h3>
+        <button class="modal-close" onclick="closeImpactModal()">&times;</button>
+      </div>
+      <form id="impact-form">
+        <div class="modal-body">
+          <input type="hidden" id="impact-id">
+          <div class="form-row three">
+            <div class="form-group">
+              <label>名稱 *</label>
+              <input type="text" id="impact-name" required>
+            </div>
+            <div class="form-group">
+              <label>圖示 *</label>
+              <input type="text" id="impact-icon" placeholder="例：🌱" required>
+            </div>
+            <div class="form-group">
+              <label>排序</label>
+              <input type="number" id="impact-sort" value="0">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>數值</label>
+              <input type="text" id="impact-value" placeholder="例：7,000+">
+            </div>
+            <div class="form-group">
+              <label>標籤</label>
+              <input type="text" id="impact-label" placeholder="例：台志工">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeImpactModal()">取消</button>
+          <button type="submit" class="btn btn-primary">儲存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Gallery Edit Modal -->
+  <div class="modal-overlay" id="gallery-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>編輯圖片分類</h3>
+        <button class="modal-close" onclick="closeGalleryModal()">&times;</button>
+      </div>
+      <form id="gallery-form">
+        <div class="modal-body">
+          <input type="hidden" id="gallery-edit-id">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <img id="gallery-edit-preview" style="max-width: 100%; max-height: 200px; border-radius: 8px;">
+          </div>
+          <div class="form-group">
+            <label>分類</label>
+            <select id="gallery-edit-category">
+              <option value="homepage">首頁 60 Grid</option>
+              <option value="events">活動封面</option>
+              <option value="topics">主題背景</option>
+              <option value="blessings">祝福語</option>
+              <option value="general">一般圖片</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-danger" id="gallery-delete-btn">刪除圖片</button>
+          <button type="button" class="btn btn-secondary" onclick="closeGalleryModal()">取消</button>
+          <button type="submit" class="btn btn-primary">儲存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Image Picker Modal -->
+  <div class="modal-overlay" id="image-picker-modal">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h3>選擇圖片</h3>
+        <button class="modal-close" onclick="closeImagePicker()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="picker-category-tabs" id="picker-category-tabs">
+          <button type="button" class="picker-category-tab active" data-category="">全部</button>
+          <button type="button" class="picker-category-tab" data-category="homepage">首頁</button>
+          <button type="button" class="picker-category-tab" data-category="events">活動</button>
+          <button type="button" class="picker-category-tab" data-category="topics">主題</button>
+          <button type="button" class="picker-category-tab" data-category="blessings">祝福語</button>
+          <button type="button" class="picker-category-tab" data-category="general">一般</button>
+        </div>
+        <div class="picker-gallery-grid" id="picker-gallery-grid"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeImagePicker()">取消</button>
+        <button type="button" class="btn btn-primary" onclick="confirmImageSelection()">確認選擇</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

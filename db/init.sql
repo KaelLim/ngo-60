@@ -79,6 +79,7 @@ CREATE TABLE agent_sessions (
     id SERIAL PRIMARY KEY,
     client_session_id VARCHAR(255) UNIQUE NOT NULL,
     sdk_session_id VARCHAR(255) NOT NULL,
+    title VARCHAR(255),
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );

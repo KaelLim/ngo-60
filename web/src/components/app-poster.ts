@@ -128,7 +128,7 @@ export class AppPoster extends LitElement {
   private async loadData() {
     try {
       const [images, homepage] = await Promise.all([
-        api.getGalleryRandom(30),
+        api.getGalleryRandom(30, 'homepage'),  // 只取 homepage 類別的圖片
         api.getHomepage()
       ]);
       this.galleryImages = images;

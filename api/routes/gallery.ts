@@ -6,23 +6,44 @@ interface GalleryImage {
   filename: string;
   original_name: string | null;
   mime_type: string | null;
+  category: string;
   uploaded_at: string;
   is_active: boolean;
 }
 
 export const galleryRoutes = new Hono();
 
-// 取得所有圖片
+// 取得所有圖片 (可依 category 篩選)
 galleryRoutes.get("/", async (c) => {
+  const category = c.req.query("category");
+
+  if (category) {
+    const rows = await query<GalleryImage>(
+      "SELECT * FROM gallery WHERE is_active = true AND category = $1 ORDER BY uploaded_at DESC",
+      [category]
+    );
+    return c.json(rows);
+  }
+
   const rows = await query<GalleryImage>(
     "SELECT * FROM gallery WHERE is_active = true ORDER BY uploaded_at DESC"
   );
   return c.json(rows);
 });
 
-// 隨機取得指定數量的圖片
+// 隨機取得指定數量的圖片 (可依 category 篩選)
 galleryRoutes.get("/random", async (c) => {
   const count = parseInt(c.req.query("count") || "15");
+  const category = c.req.query("category");
+
+  if (category) {
+    const rows = await query<GalleryImage>(
+      "SELECT * FROM gallery WHERE is_active = true AND category = $1 ORDER BY RANDOM() LIMIT $2",
+      [category, count]
+    );
+    return c.json(rows);
+  }
+
   const rows = await query<GalleryImage>(
     "SELECT * FROM gallery WHERE is_active = true ORDER BY RANDOM() LIMIT $1",
     [count]
@@ -30,11 +51,12 @@ galleryRoutes.get("/random", async (c) => {
   return c.json(rows);
 });
 
-// 上傳圖片
+// 上傳圖片 (可指定 category)
 galleryRoutes.post("/", async (c) => {
   try {
     const formData = await c.req.formData();
     const file = formData.get("file") as File | null;
+    const category = formData.get("category") as string | null || "general";
 
     if (!file) {
       return c.json({ error: "No file provided" }, 400);
@@ -57,10 +79,10 @@ galleryRoutes.post("/", async (c) => {
 
     // 寫入資料庫
     const rows = await query<GalleryImage>(
-      `INSERT INTO gallery (filename, original_name, mime_type)
-       VALUES ($1, $2, $3)
+      `INSERT INTO gallery (filename, original_name, mime_type, category)
+       VALUES ($1, $2, $3, $4)
        RETURNING *`,
-      [filename, file.name, file.type]
+      [filename, file.name, file.type, category]
     );
 
     return c.json(rows[0], 201);
@@ -68,6 +90,28 @@ galleryRoutes.post("/", async (c) => {
     console.error("Upload error:", error);
     return c.json({ error: "Failed to upload file" }, 500);
   }
+});
+
+// 更新圖片資訊 (category)
+galleryRoutes.put("/:id", async (c) => {
+  const id = c.req.param("id");
+  const body = await c.req.json();
+  const { category } = body;
+
+  if (!category) {
+    return c.json({ error: "Category is required" }, 400);
+  }
+
+  const rows = await query<GalleryImage>(
+    "UPDATE gallery SET category = $1 WHERE id = $2 AND is_active = true RETURNING *",
+    [category, id]
+  );
+
+  if (rows.length === 0) {
+    return c.json({ error: "Not found" }, 404);
+  }
+
+  return c.json(rows[0]);
 });
 
 // 刪除圖片 (軟刪除)

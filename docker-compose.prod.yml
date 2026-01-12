@@ -1,0 +1,60 @@
+# 生產環境 Docker Compose
+# 使用方式：
+#   1. 設定環境變數：cp .env.example .env && vim .env
+#   2. 啟動：docker compose -f docker-compose.prod.yml up -d --build
+#
+# 環境變數：
+#   - ADMIN_USER: 後台登入帳號 (預設: admin)
+#   - ADMIN_PASSWORD: 後台登入密碼 (預設: changeme)
+#   - DB_USER, DB_PASSWORD, DB_NAME: 資料庫設定
+#   - PORT: 對外 port (預設: 80)
+
+services:
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-events_app}
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    environment:
+      DB_HOST: db
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_NAME: ${DB_NAME:-events_app}
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  nginx:
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile.full
+      args:
+        ADMIN_USER: ${ADMIN_USER:-admin}
+        ADMIN_PASSWORD: ${ADMIN_PASSWORD:-changeme}
+    ports:
+      - "${PORT:-80}:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  uploads_data:

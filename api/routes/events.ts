@@ -63,3 +63,93 @@ eventsRoutes.get("/:id", async (c) => {
   const rows = await query<Event>("SELECT * FROM events WHERE id = $1", [id]);
   return rows[0] ? c.json(rows[0]) : c.json({ error: "Not found" }, 404);
 });
+
+// POST /api/events - 新增活動
+eventsRoutes.post("/", async (c) => {
+  const body = await c.req.json();
+  const {
+    title,
+    description,
+    date_start,
+    date_end,
+    participation_type,
+    participation_fee,
+    image_url,
+    topic_id,
+    month,
+    year,
+    sort_order = 0
+  } = body;
+
+  if (!title || !date_start || !month || !year) {
+    return c.json({ error: "title, date_start, month, year are required" }, 400);
+  }
+
+  const rows = await query<Event>(
+    `INSERT INTO events (title, description, date_start, date_end, participation_type, participation_fee, image_url, topic_id, month, year, sort_order)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+     RETURNING *`,
+    [title, description || null, date_start, date_end || null, participation_type || null, participation_fee || null, image_url || null, topic_id || null, month, year, sort_order]
+  );
+
+  return c.json(rows[0], 201);
+});
+
+// PUT /api/events/:id - 更新活動
+eventsRoutes.put("/:id", async (c) => {
+  const id = c.req.param("id");
+  const body = await c.req.json();
+
+  // 先檢查活動是否存在
+  const existing = await query<Event>("SELECT * FROM events WHERE id = $1", [id]);
+  if (!existing[0]) {
+    return c.json({ error: "Event not found" }, 404);
+  }
+
+  const {
+    title = existing[0].title,
+    description = existing[0].description,
+    date_start = existing[0].date_start,
+    date_end = existing[0].date_end,
+    participation_type = existing[0].participation_type,
+    participation_fee = existing[0].participation_fee,
+    image_url = existing[0].image_url,
+    topic_id = existing[0].topic_id,
+    month = existing[0].month,
+    year = existing[0].year,
+    sort_order = existing[0].sort_order
+  } = body;
+
+  const rows = await query<Event>(
+    `UPDATE events SET
+      title = $1,
+      description = $2,
+      date_start = $3,
+      date_end = $4,
+      participation_type = $5,
+      participation_fee = $6,
+      image_url = $7,
+      topic_id = $8,
+      month = $9,
+      year = $10,
+      sort_order = $11
+     WHERE id = $12
+     RETURNING *`,
+    [title, description, date_start, date_end, participation_type, participation_fee, image_url, topic_id, month, year, sort_order, id]
+  );
+
+  return c.json(rows[0]);
+});
+
+// DELETE /api/events/:id - 刪除活動
+eventsRoutes.delete("/:id", async (c) => {
+  const id = c.req.param("id");
+
+  const existing = await query<Event>("SELECT * FROM events WHERE id = $1", [id]);
+  if (!existing[0]) {
+    return c.json({ error: "Event not found" }, 404);
+  }
+
+  await query("DELETE FROM events WHERE id = $1", [id]);
+  return c.json({ message: "Event deleted", id: parseInt(id) });
+});

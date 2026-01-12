@@ -83,6 +83,7 @@ interface GalleryImage {
   filename: string;
   original_name: string | null;
   mime_type: string | null;
+  category: string;
   uploaded_at: string;
   is_active: boolean;
 }
@@ -99,6 +100,54 @@ const tools = [
     if (!topicRows[0]) return { content: [{ type: "text" as const, text: JSON.stringify({ error: "主題不存在" }) }] };
     const eventRows = await query<Event>("SELECT * FROM events WHERE topic_id = $1 ORDER BY date_start", [input.id]);
     return { content: [{ type: "text" as const, text: JSON.stringify({ ...topicRows[0], events: eventRows }, null, 2) }] };
+  }),
+
+  tool("createTopic", "新增主題", {
+    name: z.string(),
+    icon: z.string(),
+    subtitle: z.string().optional(),
+    description: z.string().optional(),
+    background_image: z.string().optional(),
+    sort_order: z.number().optional()
+  }, async (input) => {
+    const rows = await query<Topic>(
+      `INSERT INTO topics (name, subtitle, description, icon, background_image, sort_order)
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [input.name, input.subtitle || null, input.description || null, input.icon, input.background_image || null, input.sort_order || 0]
+    );
+    return { content: [{ type: "text" as const, text: JSON.stringify({ message: "主題已新增", topic: rows[0] }, null, 2) }] };
+  }),
+
+  tool("updateTopic", "更新主題", {
+    id: z.number(),
+    name: z.string().optional(),
+    subtitle: z.string().optional(),
+    description: z.string().optional(),
+    icon: z.string().optional(),
+    background_image: z.string().optional(),
+    sort_order: z.number().optional()
+  }, async (input) => {
+    const existing = await query<Topic>("SELECT * FROM topics WHERE id = $1", [input.id]);
+    if (!existing[0]) return { content: [{ type: "text" as const, text: JSON.stringify({ error: "主題不存在" }) }] };
+    const e = existing[0];
+    const rows = await query<Topic>(
+      `UPDATE topics SET name = $1, subtitle = $2, description = $3, icon = $4, background_image = $5, sort_order = $6
+       WHERE id = $7 RETURNING *`,
+      [input.name ?? e.name, input.subtitle ?? e.subtitle, input.description ?? e.description, input.icon ?? e.icon, input.background_image ?? e.background_image, input.sort_order ?? e.sort_order, input.id]
+    );
+    return { content: [{ type: "text" as const, text: JSON.stringify({ message: "主題已更新", topic: rows[0] }, null, 2) }] };
+  }),
+
+  tool("deleteTopic", "刪除主題", { id: z.number() }, async (input) => {
+    const existing = await query<Topic>("SELECT * FROM topics WHERE id = $1", [input.id]);
+    if (!existing[0]) return { content: [{ type: "text" as const, text: JSON.stringify({ error: "主題不存在" }) }] };
+    // 檢查是否有關聯的活動
+    const relatedEvents = await query<Event>("SELECT id FROM events WHERE topic_id = $1", [input.id]);
+    if (relatedEvents.length > 0) {
+      return { content: [{ type: "text" as const, text: JSON.stringify({ error: "無法刪除此主題，因為還有 " + relatedEvents.length + " 個關聯活動" }) }] };
+    }
+    await query("DELETE FROM topics WHERE id = $1", [input.id]);
+    return { content: [{ type: "text" as const, text: JSON.stringify({ message: "主題已刪除", id: input.id }, null, 2) }] };
   }),
 
   tool("getEvents", "取得活動列表", {
@@ -119,6 +168,80 @@ const tools = [
     return { content: [{ type: "text" as const, text: JSON.stringify(rows, null, 2) }] };
   }),
 
+  tool("createEvent", "新增活動", {
+    title: z.string(),
+    date_start: z.string(),
+    month: z.number(),
+    year: z.number(),
+    description: z.string().optional(),
+    date_end: z.string().optional(),
+    participation_type: z.string().optional(),
+    participation_fee: z.string().optional(),
+    image_url: z.string().optional(),
+    topic_id: z.number().optional(),
+    sort_order: z.number().optional()
+  }, async (input) => {
+    const rows = await query<Event>(
+      `INSERT INTO events (title, description, date_start, date_end, participation_type, participation_fee, image_url, topic_id, month, year, sort_order)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+       RETURNING *`,
+      [input.title, input.description || null, input.date_start, input.date_end || null, input.participation_type || null, input.participation_fee || null, input.image_url || null, input.topic_id || null, input.month, input.year, input.sort_order || 0]
+    );
+    return { content: [{ type: "text" as const, text: JSON.stringify({ message: "活動已新增", event: rows[0] }, null, 2) }] };
+  }),
+
+  tool("updateEvent", "更新活動", {
+    id: z.number(),
+    title: z.string().optional(),
+    description: z.string().optional(),
+    date_start: z.string().optional(),
+    date_end: z.string().optional(),
+    participation_type: z.string().optional(),
+    participation_fee: z.string().optional(),
+    image_url: z.string().optional(),
+    topic_id: z.number().optional(),
+    month: z.number().optional(),
+    year: z.number().optional(),
+    sort_order: z.number().optional()
+  }, async (input) => {
+    const existing = await query<Event>("SELECT * FROM events WHERE id = $1", [input.id]);
+    if (!existing[0]) {
+      return { content: [{ type: "text" as const, text: JSON.stringify({ error: "活動不存在" }) }] };
+    }
+    const e = existing[0];
+    const rows = await query<Event>(
+      `UPDATE events SET
+        title = $1, description = $2, date_start = $3, date_end = $4,
+        participation_type = $5, participation_fee = $6, image_url = $7,
+        topic_id = $8, month = $9, year = $10, sort_order = $11
+       WHERE id = $12 RETURNING *`,
+      [
+        input.title ?? e.title,
+        input.description ?? e.description,
+        input.date_start ?? e.date_start,
+        input.date_end ?? e.date_end,
+        input.participation_type ?? e.participation_type,
+        input.participation_fee ?? e.participation_fee,
+        input.image_url ?? e.image_url,
+        input.topic_id ?? e.topic_id,
+        input.month ?? e.month,
+        input.year ?? e.year,
+        input.sort_order ?? e.sort_order,
+        input.id
+      ]
+    );
+    return { content: [{ type: "text" as const, text: JSON.stringify({ message: "活動已更新", event: rows[0] }, null, 2) }] };
+  }),
+
+  tool("deleteEvent", "刪除活動", { id: z.number() }, async (input) => {
+    const existing = await query<Event>("SELECT * FROM events WHERE id = $1", [input.id]);
+    if (!existing[0]) {
+      return { content: [{ type: "text" as const, text: JSON.stringify({ error: "活動不存在" }) }] };
+    }
+    await query("DELETE FROM events WHERE id = $1", [input.id]);
+    return { content: [{ type: "text" as const, text: JSON.stringify({ message: "活動已刪除", id: input.id }, null, 2) }] };
+  }),
+
   tool("getBlessings", "取得祝福語列表", { featured: z.boolean().optional() }, async (input) => {
     const rows = input.featured
       ? await query<Blessing>("SELECT * FROM blessings WHERE is_featured = true ORDER BY sort_order")
@@ -126,9 +249,93 @@ const tools = [
     return { content: [{ type: "text" as const, text: JSON.stringify(rows, null, 2) }] };
   }),
 
+  tool("createBlessing", "新增祝福語", {
+    author: z.string(),
+    message: z.string(),
+    full_content: z.string().optional(),
+    image_url: z.string().optional(),
+    is_featured: z.boolean().optional(),
+    sort_order: z.number().optional()
+  }, async (input) => {
+    const rows = await query<Blessing>(
+      `INSERT INTO blessings (author, message, full_content, image_url, is_featured, sort_order)
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [input.author, input.message, input.full_content || null, input.image_url || null, input.is_featured || false, input.sort_order || 0]
+    );
+    return { content: [{ type: "text" as const, text: JSON.stringify({ message: "祝福語已新增", blessing: rows[0] }, null, 2) }] };
+  }),
+
+  tool("updateBlessing", "更新祝福語", {
+    id: z.number(),
+    author: z.string().optional(),
+    message: z.string().optional(),
+    full_content: z.string().optional(),
+    image_url: z.string().optional(),
+    is_featured: z.boolean().optional(),
+    sort_order: z.number().optional()
+  }, async (input) => {
+    const existing = await query<Blessing>("SELECT * FROM blessings WHERE id = $1", [input.id]);
+    if (!existing[0]) return { content: [{ type: "text" as const, text: JSON.stringify({ error: "祝福語不存在" }) }] };
+    const e = existing[0];
+    const rows = await query<Blessing>(
+      `UPDATE blessings SET author = $1, message = $2, full_content = $3, image_url = $4, is_featured = $5, sort_order = $6
+       WHERE id = $7 RETURNING *`,
+      [input.author ?? e.author, input.message ?? e.message, input.full_content ?? e.full_content, input.image_url ?? e.image_url, input.is_featured ?? e.is_featured, input.sort_order ?? e.sort_order, input.id]
+    );
+    return { content: [{ type: "text" as const, text: JSON.stringify({ message: "祝福語已更新", blessing: rows[0] }, null, 2) }] };
+  }),
+
+  tool("deleteBlessing", "刪除祝福語", { id: z.number() }, async (input) => {
+    const existing = await query<Blessing>("SELECT * FROM blessings WHERE id = $1", [input.id]);
+    if (!existing[0]) return { content: [{ type: "text" as const, text: JSON.stringify({ error: "祝福語不存在" }) }] };
+    await query("DELETE FROM blessings WHERE id = $1", [input.id]);
+    return { content: [{ type: "text" as const, text: JSON.stringify({ message: "祝福語已刪除", id: input.id }, null, 2) }] };
+  }),
+
   tool("getImpact", "取得影響力區塊資料", {}, async () => {
     const rows = await query<ImpactSection>("SELECT * FROM impact_sections ORDER BY sort_order");
     return { content: [{ type: "text" as const, text: JSON.stringify(rows, null, 2) }] };
+  }),
+
+  tool("createImpact", "新增影響力區塊", {
+    name: z.string(),
+    icon: z.string(),
+    stat_value: z.string().optional(),
+    stat_label: z.string().optional(),
+    sort_order: z.number().optional()
+  }, async (input) => {
+    const rows = await query<ImpactSection>(
+      `INSERT INTO impact_sections (name, icon, stat_value, stat_label, sort_order)
+       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+      [input.name, input.icon, input.stat_value || null, input.stat_label || null, input.sort_order || 0]
+    );
+    return { content: [{ type: "text" as const, text: JSON.stringify({ message: "影響力區塊已新增", impact: rows[0] }, null, 2) }] };
+  }),
+
+  tool("updateImpact", "更新影響力區塊", {
+    id: z.number(),
+    name: z.string().optional(),
+    icon: z.string().optional(),
+    stat_value: z.string().optional(),
+    stat_label: z.string().optional(),
+    sort_order: z.number().optional()
+  }, async (input) => {
+    const existing = await query<ImpactSection>("SELECT * FROM impact_sections WHERE id = $1", [input.id]);
+    if (!existing[0]) return { content: [{ type: "text" as const, text: JSON.stringify({ error: "影響力區塊不存在" }) }] };
+    const e = existing[0];
+    const rows = await query<ImpactSection>(
+      `UPDATE impact_sections SET name = $1, icon = $2, stat_value = $3, stat_label = $4, sort_order = $5
+       WHERE id = $6 RETURNING *`,
+      [input.name ?? e.name, input.icon ?? e.icon, input.stat_value ?? e.stat_value, input.stat_label ?? e.stat_label, input.sort_order ?? e.sort_order, input.id]
+    );
+    return { content: [{ type: "text" as const, text: JSON.stringify({ message: "影響力區塊已更新", impact: rows[0] }, null, 2) }] };
+  }),
+
+  tool("deleteImpact", "刪除影響力區塊", { id: z.number() }, async (input) => {
+    const existing = await query<ImpactSection>("SELECT * FROM impact_sections WHERE id = $1", [input.id]);
+    if (!existing[0]) return { content: [{ type: "text" as const, text: JSON.stringify({ error: "影響力區塊不存在" }) }] };
+    await query("DELETE FROM impact_sections WHERE id = $1", [input.id]);
+    return { content: [{ type: "text" as const, text: JSON.stringify({ message: "影響力區塊已刪除", id: input.id }, null, 2) }] };
   }),
 
   tool("getHomepage", "取得首頁內容", {}, async () => {
@@ -159,11 +366,34 @@ const tools = [
     return { content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }] };
   }),
 
-  tool("getGallery", "取得圖片庫列表", { random: z.boolean().optional(), count: z.number().optional() }, async (input) => {
-    const rows = input.random
-      ? await query<GalleryImage>("SELECT * FROM gallery WHERE is_active = true ORDER BY RANDOM() LIMIT $1", [input.count || 15])
-      : await query<GalleryImage>("SELECT * FROM gallery WHERE is_active = true ORDER BY uploaded_at DESC");
+  tool("getGallery", "取得圖片庫列表", {
+    random: z.boolean().optional(),
+    count: z.number().optional(),
+    category: z.string().optional()
+  }, async (input) => {
+    let rows: GalleryImage[];
+    if (input.category) {
+      rows = input.random
+        ? await query<GalleryImage>("SELECT * FROM gallery WHERE is_active = true AND category = $1 ORDER BY RANDOM() LIMIT $2", [input.category, input.count || 15])
+        : await query<GalleryImage>("SELECT * FROM gallery WHERE is_active = true AND category = $1 ORDER BY uploaded_at DESC", [input.category]);
+    } else {
+      rows = input.random
+        ? await query<GalleryImage>("SELECT * FROM gallery WHERE is_active = true ORDER BY RANDOM() LIMIT $1", [input.count || 15])
+        : await query<GalleryImage>("SELECT * FROM gallery WHERE is_active = true ORDER BY uploaded_at DESC");
+    }
     return { content: [{ type: "text" as const, text: JSON.stringify(rows, null, 2) }] };
+  }),
+
+  tool("updateGalleryImage", "更新圖片分類", {
+    id: z.number(),
+    category: z.string()
+  }, async (input) => {
+    const rows = await query<GalleryImage>(
+      "UPDATE gallery SET category = $1 WHERE id = $2 AND is_active = true RETURNING *",
+      [input.category, input.id]
+    );
+    if (rows.length === 0) return { content: [{ type: "text" as const, text: JSON.stringify({ error: "圖片不存在" }) }] };
+    return { content: [{ type: "text" as const, text: JSON.stringify({ message: "圖片分類已更新", image: rows[0] }, null, 2) }] };
   }),
 
   tool("deleteGalleryImage", "刪除圖片庫中的圖片", { id: z.number() }, async (input) => {
@@ -176,12 +406,49 @@ const tools = [
 const SYSTEM_PROMPT = `你是慈濟 60 週年活動網站的 AI 管理助手。
 
 你可以幫助用戶：
-1. 查詢和管理主題 (Topics) - 使用 getTopics, getTopic
-2. 查詢和管理活動時程 (Events) - 使用 getEvents
-3. 查詢和管理祝福語 (Blessings) - 使用 getBlessings
-4. 查詢影響力數據 (Impact) - 使用 getImpact
+1. 管理主題 (Topics) - 使用 getTopics, getTopic, createTopic, updateTopic, deleteTopic
+2. 管理活動時程 (Events) - 使用 getEvents, createEvent, updateEvent, deleteEvent
+3. 管理祝福語 (Blessings) - 使用 getBlessings, createBlessing, updateBlessing, deleteBlessing
+4. 管理影響力數據 (Impact) - 使用 getImpact, createImpact, updateImpact, deleteImpact
 5. 更新首頁內容 (Homepage) - 使用 getHomepage, updateHomepage
-6. 管理圖片庫 (Gallery) - 使用 getGallery, deleteGalleryImage
+6. 管理圖片庫 (Gallery) - 使用 getGallery, updateGalleryImage, deleteGalleryImage
+
+主題 (Topics) 操作說明：
+- getTopics: 查詢所有主題列表
+- getTopic: 查詢單一主題詳情（含相關活動）
+- createTopic: 新增主題，必填 name, icon
+- updateTopic: 更新主題，必填 id，其他欄位可選
+- deleteTopic: 刪除主題，必填 id（如有關聯活動則無法刪除）
+
+活動 (Events) 操作說明：
+- getEvents: 查詢活動列表，可依 month, year, topic_id 篩選
+- createEvent: 新增活動，必填 title, date_start, month, year
+- updateEvent: 更新活動，必填 id，其他欄位可選
+- deleteEvent: 刪除活動，必填 id
+
+祝福語 (Blessings) 操作說明：
+- getBlessings: 查詢祝福語列表，可用 featured=true 篩選精選
+- createBlessing: 新增祝福語，必填 author, message
+- updateBlessing: 更新祝福語，必填 id，其他欄位可選
+- deleteBlessing: 刪除祝福語，必填 id
+
+影響力 (Impact) 操作說明：
+- getImpact: 查詢所有影響力區塊
+- createImpact: 新增影響力區塊，必填 name, icon
+- updateImpact: 更新影響力區塊，必填 id，其他欄位可選
+- deleteImpact: 刪除影響力區塊，必填 id
+
+圖片庫 (Gallery) 操作說明：
+- getGallery: 查詢圖片列表，可用 category 篩選類別，random=true 隨機排序
+- updateGalleryImage: 更新圖片分類，必填 id 和 category
+- deleteGalleryImage: 刪除圖片，必填 id
+
+圖片分類 (category) 說明：
+- homepage: 首頁 60 Grid 圖片
+- events: 活動封面圖
+- topics: 主題背景圖
+- blessings: 祝福語圖片
+- general: 一般圖片（預設）
 
 請用繁體中文回覆，並且友善地引導用戶。
 當執行操作後，請清楚說明結果。`;

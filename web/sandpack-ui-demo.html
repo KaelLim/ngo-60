@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sandpack 官方 UI Demo</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Noto Sans TC', system-ui, sans-serif;
+      background: #1a1a2e;
+      color: white;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    h1 { margin-bottom: 10px; color: #4ade80; }
+    p { margin-bottom: 20px; color: #888; }
+    .demo-container {
+      background: #2d2d44;
+      border-radius: 12px;
+      overflow: hidden;
+      height: 500px;
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    .note {
+      margin-top: 20px;
+      padding: 16px;
+      background: rgba(74, 222, 128, 0.1);
+      border-radius: 8px;
+      font-size: 14px;
+      color: #4ade80;
+    }
+  </style>
+</head>
+<body>
+  <h1>Sandpack 官方 UI Demo</h1>
+  <p>這是 @codesandbox/sandpack-react 提供的完整編輯器介面</p>
+
+  <div class="demo-container">
+    <!-- 使用 CodeSandbox 官方 embed 展示 Sandpack UI -->
+    <iframe
+      src="https://codesandbox.io/embed/sandpack-react-example-p9qvt?fontsize=14&hidenavigation=1&theme=dark&view=split"
+      allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking"
+      sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"
+    ></iframe>
+  </div>
+
+  <div class="note">
+    <strong>說明：</strong><br>
+    • 左側：程式碼編輯器（可直接編輯）<br>
+    • 右側：即時預覽<br>
+    • 這需要 React 才能使用 (@codesandbox/sandpack-react)<br>
+    • 我們目前用 Lit，所以用的是底層 sandpack-client
+  </div>
+
+  <h2 style="margin-top: 30px; margin-bottom: 10px;">另一個選擇：直接嵌入 CodeSandbox</h2>
+  <div class="demo-container" style="height: 600px;">
+    <iframe
+      src="https://codesandbox.io/embed/new?codemirror=1&fontsize=14&hidenavigation=1&theme=dark"
+      allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking"
+      sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"
+    ></iframe>
+  </div>
+</body>
+</html>
