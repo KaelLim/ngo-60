@@ -81,6 +81,12 @@ services:
         rm -rf /app/api/uploads
         ln -sf /uploads /app/api/uploads
 
+        # 複製預設圖片 (如果 gallery 是空的)
+        if [ -z "$(ls -A /uploads/gallery 2>/dev/null)" ]; then
+          echo "複製預設圖片..."
+          cp /app/seed/gallery/* /uploads/gallery/ 2>/dev/null || true
+        fi
+
         echo "=== [6/6] 啟動服務 ==="
         # 啟動 Nginx (背景)
         nginx

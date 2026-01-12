@@ -162,3 +162,56 @@ SELECT '慈悲六十 大愛恆傳', '感恩有您 攜手同行', '慈濟基金�
 
 讓我們一起回顧這六十年的足跡，展望未來的願景，繼續以大愛精神，為這個世界帶來更多的美善與光明。'
 WHERE NOT EXISTS (SELECT 1 FROM homepage LIMIT 1);
+
+-- Gallery 預設圖片 (只在資料表為空時插入)
+INSERT INTO gallery (filename, original_name, mime_type, category, is_active)
+SELECT 'gallery_01.jpg', 'gallery_01.jpg', 'image/jpeg', 'homepage', true
+WHERE NOT EXISTS (SELECT 1 FROM gallery LIMIT 1);
+INSERT INTO gallery (filename, original_name, mime_type, category, is_active)
+SELECT 'gallery_02.jpg', 'gallery_02.jpg', 'image/jpeg', 'homepage', true
+WHERE NOT EXISTS (SELECT 1 FROM gallery WHERE filename = 'gallery_02.jpg');
+INSERT INTO gallery (filename, original_name, mime_type, category, is_active)
+SELECT 'gallery_03.jpg', 'gallery_03.jpg', 'image/jpeg', 'homepage', true
+WHERE NOT EXISTS (SELECT 1 FROM gallery WHERE filename = 'gallery_03.jpg');
+INSERT INTO gallery (filename, original_name, mime_type, category, is_active)
+SELECT 'gallery_04.jpg', 'gallery_04.jpg', 'image/jpeg', 'homepage', true
+WHERE NOT EXISTS (SELECT 1 FROM gallery WHERE filename = 'gallery_04.jpg');
+INSERT INTO gallery (filename, original_name, mime_type, category, is_active)
+SELECT 'gallery_05.jpg', 'gallery_05.jpg', 'image/jpeg', 'homepage', true
+WHERE NOT EXISTS (SELECT 1 FROM gallery WHERE filename = 'gallery_05.jpg');
+INSERT INTO gallery (filename, original_name, mime_type, category, is_active)
+SELECT 'gallery_06.jpg', 'gallery_06.jpg', 'image/jpeg', 'homepage', true
+WHERE NOT EXISTS (SELECT 1 FROM gallery WHERE filename = 'gallery_06.jpg');
+INSERT INTO gallery (filename, original_name, mime_type, category, is_active)
+SELECT 'gallery_07.jpg', 'gallery_07.jpg', 'image/jpeg', 'homepage', true
+WHERE NOT EXISTS (SELECT 1 FROM gallery WHERE filename = 'gallery_07.jpg');
+INSERT INTO gallery (filename, original_name, mime_type, category, is_active)
+SELECT 'gallery_08.jpg', 'gallery_08.jpg', 'image/jpeg', 'homepage', true
+WHERE NOT EXISTS (SELECT 1 FROM gallery WHERE filename = 'gallery_08.jpg');
+INSERT INTO gallery (filename, original_name, mime_type, category, is_active)
+SELECT 'gallery_09.jpg', 'gallery_09.jpg', 'image/jpeg', 'homepage', true
+WHERE NOT EXISTS (SELECT 1 FROM gallery WHERE filename = 'gallery_09.jpg');
+INSERT INTO gallery (filename, original_name, mime_type, category, is_active)
+SELECT 'gallery_10.jpg', 'gallery_10.jpg', 'image/jpeg', 'homepage', true
+WHERE NOT EXISTS (SELECT 1 FROM gallery WHERE filename = 'gallery_10.jpg');
+INSERT INTO gallery (filename, original_name, mime_type, category, is_active)
+SELECT 'gallery_11.jpg', 'gallery_11.jpg', 'image/jpeg', 'homepage', true
+WHERE NOT EXISTS (SELECT 1 FROM gallery WHERE filename = 'gallery_11.jpg');
+INSERT INTO gallery (filename, original_name, mime_type, category, is_active)
+SELECT 'gallery_12.jpg', 'gallery_12.jpg', 'image/jpeg', 'homepage', true
+WHERE NOT EXISTS (SELECT 1 FROM gallery WHERE filename = 'gallery_12.jpg');
+INSERT INTO gallery (filename, original_name, mime_type, category, is_active)
+SELECT 'gallery_13.jpg', 'gallery_13.jpg', 'image/jpeg', 'homepage', true
+WHERE NOT EXISTS (SELECT 1 FROM gallery WHERE filename = 'gallery_13.jpg');
+INSERT INTO gallery (filename, original_name, mime_type, category, is_active)
+SELECT 'gallery_14.jpg', 'gallery_14.jpg', 'image/jpeg', 'homepage', true
+WHERE NOT EXISTS (SELECT 1 FROM gallery WHERE filename = 'gallery_14.jpg');
+INSERT INTO gallery (filename, original_name, mime_type, category, is_active)
+SELECT 'gallery_15.jpg', 'gallery_15.jpg', 'image/jpeg', 'homepage', true
+WHERE NOT EXISTS (SELECT 1 FROM gallery WHERE filename = 'gallery_15.jpg');
+INSERT INTO gallery (filename, original_name, mime_type, category, is_active)
+SELECT 'gallery_16.jpg', 'gallery_16.jpg', 'image/jpeg', 'homepage', true
+WHERE NOT EXISTS (SELECT 1 FROM gallery WHERE filename = 'gallery_16.jpg');
+INSERT INTO gallery (filename, original_name, mime_type, category, is_active)
+SELECT 'gallery_17.jpg', 'gallery_17.jpg', 'image/jpeg', 'homepage', true
+WHERE NOT EXISTS (SELECT 1 FROM gallery WHERE filename = 'gallery_17.jpg');
