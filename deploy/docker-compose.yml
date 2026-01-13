@@ -32,7 +32,7 @@ services:
       ADMIN_USER: ${ADMIN_USER:-admin}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-changeme}
     ports:
-      - "${PORT:-80}:80"
+      - "${PORT:-8937}:80"
     volumes:
       - uploads_data:/uploads
     entrypoint: ["/bin/bash", "-c"]
