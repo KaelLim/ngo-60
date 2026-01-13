@@ -212,7 +212,7 @@ export class AppShell extends LitElement {
       </div>
 
       <!-- Mobile: Fullscreen pages -->
-      ${currentPage === 'blessing' ? html`<blessing-page class="mobile-only"></blessing-page>` : ''}
+      ${currentPage === 'blessing' ? html`<blessing-page class="mobile-only" .blessingId=${this.appStore.currentBlessingId}></blessing-page>` : ''}
       ${currentPage === 'category' && this.appStore.activeTab === 'topics'
         ? html`<topic-page class="mobile-only" .topicId=${this.appStore.currentCategoryId || 1}></topic-page>`
         : ''}
@@ -227,7 +227,7 @@ export class AppShell extends LitElement {
           <!-- Desktop: Inner pages overlay on left area -->
           ${currentPage === 'blessing' ? html`
             <div class="desktop-inner-page">
-              <blessing-page .desktopMode=${true}></blessing-page>
+              <blessing-page .desktopMode=${true} .blessingId=${this.appStore.currentBlessingId}></blessing-page>
             </div>
           ` : ''}
           ${currentPage === 'category' && this.appStore.activeTab === 'topics' ? html`
