@@ -57,13 +57,20 @@ function renderEventsTable(topicsCache) {
   });
 }
 
+// 將 ISO 日期字串轉換為 YYYY-MM-DD 格式
+function formatDateForInput(dateStr) {
+  if (!dateStr) return '';
+  // 處理 ISO 格式 (2026-01-28T00:00:00.000Z) 或一般格式
+  return dateStr.split('T')[0];
+}
+
 export function openEventModal(event = null) {
   document.getElementById('event-modal-title').textContent = event ? '編輯活動' : '新增活動';
   document.getElementById('event-id').value = event?.id || '';
   document.getElementById('event-title').value = event?.title || '';
   document.getElementById('event-description').value = event?.description || '';
-  document.getElementById('event-date-start').value = event?.date_start || '';
-  document.getElementById('event-date-end').value = event?.date_end || '';
+  document.getElementById('event-date-start').value = formatDateForInput(event?.date_start);
+  document.getElementById('event-date-end').value = formatDateForInput(event?.date_end);
   document.getElementById('event-topic').value = event?.topic_id || '';
   document.getElementById('event-month').value = event?.month || new Date().getMonth() + 1;
   document.getElementById('event-year').value = event?.year || 2026;
