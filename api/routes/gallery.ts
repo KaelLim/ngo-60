@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { query } from "../db.ts";
-import sharp from "npm:sharp@0.33.5";
+// @deno-types="npm:@types/sharp"
+import sharp from "npm:sharp";
 
 // 圖片壓縮設定
 const IMAGE_CONFIG = {
