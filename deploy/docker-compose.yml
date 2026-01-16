@@ -44,7 +44,8 @@ services:
         echo "=== [1/6] 安裝系統套件 ==="
         apt-get update
         apt-get install -y --no-install-recommends \
-          curl git unzip nginx apache2-utils postgresql-client ca-certificates
+          curl git unzip nginx apache2-utils postgresql-client ca-certificates \
+          libvips-dev
 
         echo "=== [2/6] 初始化資料庫 ==="
         export PGPASSWORD=${DB_PASSWORD:-postgres}
