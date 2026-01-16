@@ -1,5 +1,13 @@
 import { Hono } from "hono";
 import { query } from "../db.ts";
+import sharp from "npm:sharp@0.33.5";
+
+// 圖片壓縮設定
+const IMAGE_CONFIG = {
+  maxWidth: 1920,
+  maxHeight: 1080,
+  quality: 85,  // JPEG 品質 (1-100)
+};
 
 interface GalleryImage {
   id: number;
@@ -68,21 +76,34 @@ galleryRoutes.post("/", async (c) => {
       return c.json({ error: "Invalid file type. Allowed: jpeg, png, webp, gif" }, 400);
     }
 
-    // 生成唯一檔名
-    const ext = file.name.split(".").pop();
-    const filename = `${crypto.randomUUID()}.${ext}`;
+    // 生成唯一檔名 (統一輸出為 jpg)
+    const filename = `${crypto.randomUUID()}.jpg`;
     const uploadPath = `./uploads/gallery/${filename}`;
 
-    // 儲存檔案
+    // 讀取原始檔案
     const arrayBuffer = await file.arrayBuffer();
-    await Deno.writeFile(uploadPath, new Uint8Array(arrayBuffer));
+    const inputBuffer = new Uint8Array(arrayBuffer);
+
+    // 使用 sharp 壓縮並調整尺寸
+    // - 最大 1920x1080，保持比例
+    // - 轉換為 JPEG，品質 85
+    const processedBuffer = await sharp(inputBuffer)
+      .resize(IMAGE_CONFIG.maxWidth, IMAGE_CONFIG.maxHeight, {
+        fit: 'inside',           // 保持比例，不超過指定尺寸
+        withoutEnlargement: true // 小圖不放大
+      })
+      .jpeg({ quality: IMAGE_CONFIG.quality })
+      .toBuffer();
+
+    // 儲存壓縮後的檔案
+    await Deno.writeFile(uploadPath, processedBuffer);
 
     // 寫入資料庫
     const rows = await query<GalleryImage>(
       `INSERT INTO gallery (filename, original_name, mime_type, category)
        VALUES ($1, $2, $3, $4)
        RETURNING *`,
-      [filename, file.name, file.type, category]
+      [filename, file.name, "image/jpeg", category]
     );
 
     return c.json(rows[0], 201);
