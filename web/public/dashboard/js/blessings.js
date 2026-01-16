@@ -16,18 +16,22 @@ export async function loadBlessings() {
 
 function renderBlessingsTable() {
   const tbody = document.getElementById('blessings-table');
-  tbody.innerHTML = blessingsCache.map(b => `
+  tbody.innerHTML = blessingsCache.map(b => {
+    const content = b.full_content || b.message || '';
+    const preview = content.substring(0, 30) + (content.length > 30 ? '...' : '');
+    return `
     <tr>
       <td>${b.sort_order}</td>
       <td>${b.author}</td>
-      <td>${b.message.substring(0, 30)}${b.message.length > 30 ? '...' : ''}</td>
+      <td>${preview}</td>
       <td>${b.is_featured ? '✓' : ''}</td>
       <td class="actions">
         <button class="btn btn-secondary btn-sm" data-action="edit" data-id="${b.id}">編輯</button>
         <button class="btn btn-danger btn-sm" data-action="delete" data-id="${b.id}">刪除</button>
       </td>
     </tr>
-  `).join('');
+  `;
+  }).join('');
 
   // Add event listeners
   tbody.querySelectorAll('[data-action="edit"]').forEach(btn => {
@@ -42,7 +46,6 @@ export function openBlessingModal(blessing = null) {
   document.getElementById('blessing-modal-title').textContent = blessing ? '編輯祝福語' : '新增祝福語';
   document.getElementById('blessing-id').value = blessing?.id || '';
   document.getElementById('blessing-author').value = blessing?.author || '';
-  document.getElementById('blessing-message').value = blessing?.message || '';
   document.getElementById('blessing-content').value = blessing?.full_content || '';
   document.getElementById('blessing-image').value = blessing?.image_url || '';
   document.getElementById('blessing-featured').checked = blessing?.is_featured || false;
@@ -74,10 +77,13 @@ async function deleteBlessing(id) {
 async function handleSubmit(e) {
   e.preventDefault();
   const id = document.getElementById('blessing-id').value;
+  const fullContent = document.getElementById('blessing-content').value;
+  // 自動從完整內容擷取前 50 字作為訊息摘要
+  const message = fullContent.substring(0, 50).replace(/\n/g, ' ');
   const data = {
     author: document.getElementById('blessing-author').value,
-    message: document.getElementById('blessing-message').value,
-    full_content: document.getElementById('blessing-content').value,
+    message: message,
+    full_content: fullContent,
     image_url: document.getElementById('blessing-image').value,
     is_featured: document.getElementById('blessing-featured').checked,
     sort_order: parseInt(document.getElementById('blessing-sort').value)

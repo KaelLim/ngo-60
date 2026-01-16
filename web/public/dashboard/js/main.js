@@ -3,7 +3,6 @@ import { loadHomepage, initHomepage } from './homepage.js';
 import { loadTopics, initTopics, openTopicModal, closeTopicModal } from './topics.js';
 import { loadEvents, initEvents, openEventModal, closeEventModal } from './events.js';
 import { loadBlessings, initBlessings, openBlessingModal, closeBlessingModal } from './blessings.js';
-import { loadImpact, initImpact, openImpactModal, closeImpactModal } from './impact.js';
 import { loadGallery, initGallery, closeGalleryModal } from './gallery.js';
 import { initImagePicker, openImagePicker, closeImagePicker, confirmImageSelection, clearImageField } from './image-picker.js';
 
@@ -13,7 +12,6 @@ const sectionLoaders = {
   topics: loadTopics,
   events: loadEvents,
   blessings: loadBlessings,
-  impact: loadImpact,
   gallery: loadGallery
 };
 
@@ -46,8 +44,6 @@ window.openEventModal = openEventModal;
 window.closeEventModal = closeEventModal;
 window.openBlessingModal = openBlessingModal;
 window.closeBlessingModal = closeBlessingModal;
-window.openImpactModal = openImpactModal;
-window.closeImpactModal = closeImpactModal;
 window.closeGalleryModal = closeGalleryModal;
 window.openImagePicker = openImagePicker;
 window.closeImagePicker = closeImagePicker;
@@ -61,7 +57,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initTopics();
   initEvents();
   initBlessings();
-  initImpact();
   initGallery();
   initImagePicker();
 

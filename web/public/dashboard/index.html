@@ -32,10 +32,6 @@
           <span class="icon">🙏</span>
           <span>祝福語管理</span>
         </div>
-        <div class="nav-item" data-section="impact">
-          <span class="icon">💫</span>
-          <span>影響力管理</span>
-        </div>
         <div class="nav-item" data-section="gallery">
           <span class="icon">🖼️</span>
           <span>圖庫管理</span>
@@ -139,38 +135,13 @@
               <thead>
                 <tr>
                   <th>排序</th>
-                  <th>作者</th>
-                  <th>訊息</th>
+                  <th>標題</th>
+                  <th>內容預覽</th>
                   <th>精選</th>
                   <th>操作</th>
                 </tr>
               </thead>
               <tbody id="blessings-table"></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- Impact Section -->
-      <section id="section-impact" class="section">
-        <div class="page-header">
-          <h2>影響力管理</h2>
-          <button class="btn btn-primary" onclick="openImpactModal()">+ 新增影響力區塊</button>
-        </div>
-        <div class="card">
-          <div class="table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>排序</th>
-                  <th>圖示</th>
-                  <th>名稱</th>
-                  <th>數值</th>
-                  <th>標籤</th>
-                  <th>操作</th>
-                </tr>
-              </thead>
-              <tbody id="impact-table"></tbody>
             </table>
           </div>
         </div>
@@ -395,7 +366,7 @@
           <input type="hidden" id="blessing-id">
           <div class="form-row">
             <div class="form-group">
-              <label>作者 *</label>
+              <label>標題 *</label>
               <input type="text" id="blessing-author" required>
             </div>
             <div class="form-group">
@@ -404,12 +375,8 @@
             </div>
           </div>
           <div class="form-group">
-            <label>訊息 *</label>
-            <input type="text" id="blessing-message" required>
-          </div>
-          <div class="form-group">
-            <label>完整內容</label>
-            <textarea id="blessing-content"></textarea>
+            <label>完整內容 *</label>
+            <textarea id="blessing-content" required></textarea>
           </div>
           <div class="form-group">
             <label>圖片</label>
@@ -433,49 +400,6 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" onclick="closeBlessingModal()">取消</button>
-          <button type="submit" class="btn btn-primary">儲存</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Impact Modal -->
-  <div class="modal-overlay" id="impact-modal">
-    <div class="modal">
-      <div class="modal-header">
-        <h3 id="impact-modal-title">新增影響力區塊</h3>
-        <button class="modal-close" onclick="closeImpactModal()">&times;</button>
-      </div>
-      <form id="impact-form">
-        <div class="modal-body">
-          <input type="hidden" id="impact-id">
-          <div class="form-row three">
-            <div class="form-group">
-              <label>名稱 *</label>
-              <input type="text" id="impact-name" required>
-            </div>
-            <div class="form-group">
-              <label>圖示 *</label>
-              <input type="text" id="impact-icon" placeholder="例：🌱" required>
-            </div>
-            <div class="form-group">
-              <label>排序</label>
-              <input type="number" id="impact-sort" value="0">
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>數值</label>
-              <input type="text" id="impact-value" placeholder="例：7,000+">
-            </div>
-            <div class="form-group">
-              <label>標籤</label>
-              <input type="text" id="impact-label" placeholder="例：台志工">
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" onclick="closeImpactModal()">取消</button>
           <button type="submit" class="btn btn-primary">儲存</button>
         </div>
       </form>
