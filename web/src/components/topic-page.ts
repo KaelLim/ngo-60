@@ -580,9 +580,7 @@ export class TopicPage extends LitElement {
   }
 
   private formatParticipation(event: Event): string {
-    const type = event.participation_type === 'online' ? '線上參與' : '現場參與';
-    const fee = event.participation_fee || '免費';
-    return `${type} - ${fee}`;
+    return event.participation_type || '';
   }
 
   render() {

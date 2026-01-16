@@ -76,7 +76,6 @@ export function openEventModal(event = null) {
   document.getElementById('event-year').value = event?.year || 2026;
   document.getElementById('event-sort').value = event?.sort_order || 0;
   document.getElementById('event-participation').value = event?.participation_type || '';
-  document.getElementById('event-fee').value = event?.participation_fee || '';
   document.getElementById('event-image').value = event?.image_url || '';
   updateImagePreview('event-image', event?.image_url);
   document.getElementById('event-modal').classList.add('active');
@@ -116,7 +115,6 @@ async function handleSubmit(e) {
     year: parseInt(document.getElementById('event-year').value),
     sort_order: parseInt(document.getElementById('event-sort').value),
     participation_type: document.getElementById('event-participation').value,
-    participation_fee: document.getElementById('event-fee').value,
     image_url: document.getElementById('event-image').value
   };
 

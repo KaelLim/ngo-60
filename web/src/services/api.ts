@@ -24,8 +24,7 @@ export interface Event {
   description: string | null;
   date_start: string;
   date_end: string | null;
-  participation_type: 'online' | 'onsite';
-  participation_fee: string | null;
+  participation_type: string | null;
   image_url: string | null;
   topic_id: number | null;
   month: number;
