@@ -44,8 +44,7 @@ services:
         echo "=== [1/6] 安裝系統套件 ==="
         apt-get update
         apt-get install -y --no-install-recommends \
-          curl git unzip nginx apache2-utils postgresql-client ca-certificates \
-          libvips-dev
+          curl git unzip nginx apache2-utils postgresql-client ca-certificates
 
         echo "=== [2/6] 初始化資料庫 ==="
         export PGPASSWORD=${DB_PASSWORD:-postgres}
@@ -118,12 +117,8 @@ services:
           cp /root/.claude/.credentials.json /home/appuser/.claude/
           chown -R appuser:appuser /home/appuser/.claude
         fi
-        # 安裝 sharp 原生模組 (圖片壓縮用)
-        cd /app/api
-        npm install sharp --no-save || echo "Sharp install failed"
-        chown -R appuser:appuser /app/api/node_modules
-
         # 以 appuser 身份快取 API 依賴
+        cd /app/api
         sudo -u appuser HOME=/home/appuser /home/appuser/.deno/bin/deno cache main.ts || echo "Main cache failed"
         sudo -u appuser HOME=/home/appuser /home/appuser/.deno/bin/deno cache agent-worker.ts || echo "Agent worker cache failed"
 

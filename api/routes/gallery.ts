@@ -1,7 +1,6 @@
 import { Hono } from "hono";
 import { query } from "../db.ts";
-// @deno-types="npm:@types/sharp"
-import sharp from "npm:sharp";
+import { Jimp } from "npm:jimp@1.6.0";
 
 // 圖片壓縮設定
 const IMAGE_CONFIG = {
@@ -83,18 +82,20 @@ galleryRoutes.post("/", async (c) => {
 
     // 讀取原始檔案
     const arrayBuffer = await file.arrayBuffer();
-    const inputBuffer = new Uint8Array(arrayBuffer);
+    const inputBuffer = Buffer.from(arrayBuffer);
 
-    // 使用 sharp 壓縮並調整尺寸
-    // - 最大 1920x1080，保持比例
-    // - 轉換為 JPEG，品質 85
-    const processedBuffer = await sharp(inputBuffer)
-      .resize(IMAGE_CONFIG.maxWidth, IMAGE_CONFIG.maxHeight, {
-        fit: 'inside',           // 保持比例，不超過指定尺寸
-        withoutEnlargement: true // 小圖不放大
-      })
-      .jpeg({ quality: IMAGE_CONFIG.quality })
-      .toBuffer();
+    // 使用 Jimp 壓縮並調整尺寸
+    const image = await Jimp.read(inputBuffer);
+
+    // 如果圖片超過最大尺寸，則縮小（保持比例）
+    if (image.width > IMAGE_CONFIG.maxWidth || image.height > IMAGE_CONFIG.maxHeight) {
+      image.scaleToFit({ w: IMAGE_CONFIG.maxWidth, h: IMAGE_CONFIG.maxHeight });
+    }
+
+    // 設定 JPEG 品質並輸出
+    const processedBuffer = await image
+      .quality(IMAGE_CONFIG.quality)
+      .getBuffer("image/jpeg");
 
     // 儲存壓縮後的檔案
     await Deno.writeFile(uploadPath, processedBuffer);
