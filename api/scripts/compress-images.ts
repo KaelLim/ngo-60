@@ -50,9 +50,9 @@ async function compressExistingImages() {
       }
 
       // 轉換為 JPEG 並壓縮
-      const processedBuffer = await image
-        .quality(IMAGE_CONFIG.quality)
-        .getBuffer("image/jpeg");
+      const processedBuffer = await image.getBuffer("image/jpeg", {
+        quality: IMAGE_CONFIG.quality
+      });
 
       // 產生新檔名 (如果原本不是 .jpg)
       let newFilename = img.filename;

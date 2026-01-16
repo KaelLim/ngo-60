@@ -93,9 +93,9 @@ galleryRoutes.post("/", async (c) => {
     }
 
     // 設定 JPEG 品質並輸出
-    const processedBuffer = await image
-      .quality(IMAGE_CONFIG.quality)
-      .getBuffer("image/jpeg");
+    const processedBuffer = await image.getBuffer("image/jpeg", {
+      quality: IMAGE_CONFIG.quality
+    });
 
     // 儲存壓縮後的檔案
     await Deno.writeFile(uploadPath, processedBuffer);
