@@ -521,11 +521,8 @@ components:
           description: 活動結束日期
         participation_type:
           type: string
-          description: 參與方式 (線上參與/現場參與)
-        participation_fee:
-          type: string
           nullable: true
-          description: 費用說明 (免費/需購票)
+          description: 參與方式
         image_url:
           type: string
           nullable: true

@@ -37,7 +37,7 @@ function renderEventsTable(topicsCache) {
       <tr>
         <td>${e.month}月 / ${e.year}</td>
         <td>${e.title}</td>
-        <td>${e.date_start}${e.date_end ? ' ~ ' + e.date_end : ''}</td>
+        <td>${formatDateForInput(e.date_start)}${e.date_end ? ' ~ ' + formatDateForInput(e.date_end) : ''}</td>
         <td>${e.participation_type || '-'}</td>
         <td>${topic ? topic.icon + ' ' + topic.name : '-'}</td>
         <td class="actions">

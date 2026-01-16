@@ -7,8 +7,7 @@ interface Event {
   description: string | null;
   date_start: string;
   date_end: string | null;
-  participation_type: string;
-  participation_fee: string | null;
+  participation_type: string | null;
   image_url: string | null;
   topic_id: number | null;
   month: number;
@@ -73,7 +72,6 @@ eventsRoutes.post("/", async (c) => {
     date_start,
     date_end,
     participation_type,
-    participation_fee,
     image_url,
     topic_id,
     month,
@@ -86,10 +84,10 @@ eventsRoutes.post("/", async (c) => {
   }
 
   const rows = await query<Event>(
-    `INSERT INTO events (title, description, date_start, date_end, participation_type, participation_fee, image_url, topic_id, month, year, sort_order)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+    `INSERT INTO events (title, description, date_start, date_end, participation_type, image_url, topic_id, month, year, sort_order)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
      RETURNING *`,
-    [title, description || null, date_start, date_end || null, participation_type || null, participation_fee || null, image_url || null, topic_id || null, month, year, sort_order]
+    [title, description || null, date_start, date_end || null, participation_type || null, image_url || null, topic_id || null, month, year, sort_order]
   );
 
   return c.json(rows[0], 201);
@@ -112,7 +110,6 @@ eventsRoutes.put("/:id", async (c) => {
     date_start = existing[0].date_start,
     date_end = existing[0].date_end,
     participation_type = existing[0].participation_type,
-    participation_fee = existing[0].participation_fee,
     image_url = existing[0].image_url,
     topic_id = existing[0].topic_id,
     month = existing[0].month,
@@ -127,15 +124,14 @@ eventsRoutes.put("/:id", async (c) => {
       date_start = $3,
       date_end = $4,
       participation_type = $5,
-      participation_fee = $6,
-      image_url = $7,
-      topic_id = $8,
-      month = $9,
-      year = $10,
-      sort_order = $11
-     WHERE id = $12
+      image_url = $6,
+      topic_id = $7,
+      month = $8,
+      year = $9,
+      sort_order = $10
+     WHERE id = $11
      RETURNING *`,
-    [title, description, date_start, date_end, participation_type, participation_fee, image_url, topic_id, month, year, sort_order, id]
+    [title, description, date_start, date_end, participation_type, image_url, topic_id, month, year, sort_order, id]
   );
 
   return c.json(rows[0]);
