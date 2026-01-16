@@ -1250,6 +1250,12 @@ export class SheetContent extends LitElement {
     return event.participation_type || '';
   }
 
+  private handleEventClick(event: Event) {
+    if (event.link_url) {
+      window.open(event.link_url, '_blank');
+    }
+  }
+
   private renderTopics() {
     if (this.loading) {
       return html`<div class="loading">載入中...</div>`;
@@ -1337,7 +1343,7 @@ export class SheetContent extends LitElement {
         <div class="schedule-events">
           ${this.loading ? html`<div class="loading">載入中...</div>` :
             this.events.length > 0 ? this.events.map(event => html`
-              <div class="event-card">
+              <div class="event-card" @click=${() => this.handleEventClick(event)} style="${event.link_url ? 'cursor: pointer;' : ''}">
                 <div class="event-info">
                   <p class="event-title">${event.title}</p>
                   <div class="event-items">
