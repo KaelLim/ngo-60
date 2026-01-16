@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS events (
     description TEXT,
     date_start DATE NOT NULL,
     date_end DATE,
-    participation_type VARCHAR(20) DEFAULT 'onsite' CHECK (participation_type IN ('online', 'onsite')),
+    participation_type VARCHAR(50),
     participation_fee VARCHAR(50),
     image_url TEXT,
     topic_id INT REFERENCES topics(id),
@@ -102,31 +102,31 @@ WHERE NOT EXISTS (SELECT 1 FROM topics WHERE name = '祈福');
 
 -- 活動 (只在資料表為空時插入)
 INSERT INTO events (title, description, date_start, date_end, participation_type, participation_fee, image_url, topic_id, month, year, sort_order)
-SELECT '友善蔬食旅店推動計畫', '任新改統明措，記焉難張或、信頓，身奏在車種我，面。捶大不喀裹女連不以電。', '2026-08-28', '2026-09-05', 'onsite', '以店家費用為準', '/uploads/gallery/gallery_04.jpg', 1, 8, 2026, 1
+SELECT '友善蔬食旅店推動計畫', '任新改統明措，記焉難張或、信頓，身奏在車種我，面。捶大不喀裹女連不以電。', '2026-08-28', '2026-09-05', '現場參與', '以店家費用為準', '/uploads/gallery/gallery_04.jpg', 1, 8, 2026, 1
 WHERE NOT EXISTS (SELECT 1 FROM events LIMIT 1);
 INSERT INTO events (title, description, date_start, date_end, participation_type, participation_fee, image_url, topic_id, month, year, sort_order)
-SELECT '亞太永續博覽會', '結合亞太地區各國力量，共同推動永續發展目標。展現慈濟在環保、教育、人道援助等領域的成果。', '2026-08-15', '2026-08-20', 'onsite', '需購票', '/uploads/gallery/gallery_05.jpg', 1, 8, 2026, 2
+SELECT '亞太永續博覽會', '結合亞太地區各國力量，共同推動永續發展目標。展現慈濟在環保、教育、人道援助等領域的成果。', '2026-08-15', '2026-08-20', '現場參與', '需購票', '/uploads/gallery/gallery_05.jpg', 1, 8, 2026, 2
 WHERE NOT EXISTS (SELECT 1 FROM events WHERE title = '亞太永續博覽會');
 INSERT INTO events (title, description, date_start, date_end, participation_type, participation_fee, image_url, topic_id, month, year, sort_order)
-SELECT '企業夥伴交流會', '與在地企業建立長期合作關係，共同探討如何透過企業資源回饋社會，創造共好價值。', '2026-09-10', '2026-09-10', 'onsite', '免費', '/uploads/gallery/gallery_06.jpg', 1, 9, 2026, 3
+SELECT '企業夥伴交流會', '與在地企業建立長期合作關係，共同探討如何透過企業資源回饋社會，創造共好價值。', '2026-09-10', '2026-09-10', '現場參與', '免費', '/uploads/gallery/gallery_06.jpg', 1, 9, 2026, 3
 WHERE NOT EXISTS (SELECT 1 FROM events WHERE title = '企業夥伴交流會');
 INSERT INTO events (title, description, date_start, date_end, participation_type, participation_fee, image_url, topic_id, month, year, sort_order)
-SELECT '傳統文化節', '重現在地傳統技藝與習俗，讓年輕一代認識並傳承珍貴的文化資產。', '2026-08-01', '2026-08-03', 'onsite', '免費', '/uploads/gallery/gallery_07.jpg', 2, 8, 2026, 1
+SELECT '傳統文化節', '重現在地傳統技藝與習俗，讓年輕一代認識並傳承珍貴的文化資產。', '2026-08-01', '2026-08-03', '現場參與', '免費', '/uploads/gallery/gallery_07.jpg', 2, 8, 2026, 1
 WHERE NOT EXISTS (SELECT 1 FROM events WHERE title = '傳統文化節');
 INSERT INTO events (title, description, date_start, date_end, participation_type, participation_fee, image_url, topic_id, month, year, sort_order)
-SELECT '藝文展覽', '集結30位在地藝術家的創作，展現社區豐富的藝術能量，以藝術傳遞人文關懷。', '2026-09-15', '2026-09-30', 'onsite', '免費', '/uploads/gallery/gallery_08.jpg', 2, 9, 2026, 2
+SELECT '藝文展覽', '集結30位在地藝術家的創作，展現社區豐富的藝術能量，以藝術傳遞人文關懷。', '2026-09-15', '2026-09-30', '現場參與', '免費', '/uploads/gallery/gallery_08.jpg', 2, 9, 2026, 2
 WHERE NOT EXISTS (SELECT 1 FROM events WHERE title = '藝文展覽');
 INSERT INTO events (title, description, date_start, date_end, participation_type, participation_fee, image_url, topic_id, month, year, sort_order)
-SELECT '人文講座系列', '邀請各領域專家學者，分享人文思想與生命故事，啟發聽眾對生命的深層思考。', '2026-10-01', '2026-10-31', 'online', '免費', '/uploads/gallery/gallery_09.jpg', 2, 10, 2026, 3
+SELECT '人文講座系列', '邀請各領域專家學者，分享人文思想與生命故事，啟發聽眾對生命的深層思考。', '2026-10-01', '2026-10-31', '線上參與', '免費', '/uploads/gallery/gallery_09.jpg', 2, 10, 2026, 3
 WHERE NOT EXISTS (SELECT 1 FROM events WHERE title = '人文講座系列');
 INSERT INTO events (title, description, date_start, date_end, participation_type, participation_fee, image_url, topic_id, month, year, sort_order)
-SELECT '線上浴佛', '透過線上平台，讓全球各地的民眾都能參與浴佛典禮，以虔誠的心洗滌心靈。', '2026-05-08', '2026-05-15', 'online', '免費', '/uploads/gallery/gallery_10.jpg', 3, 5, 2026, 1
+SELECT '線上浴佛', '透過線上平台，讓全球各地的民眾都能參與浴佛典禮，以虔誠的心洗滌心靈。', '2026-05-08', '2026-05-15', '線上參與', '免費', '/uploads/gallery/gallery_10.jpg', 3, 5, 2026, 1
 WHERE NOT EXISTS (SELECT 1 FROM events WHERE title = '線上浴佛');
 INSERT INTO events (title, description, date_start, date_end, participation_type, participation_fee, image_url, topic_id, month, year, sort_order)
-SELECT '精舍過新年', '在靜思精舍迎接新年，體驗清淨簡樸的生活，以感恩的心迎接新的開始。', '2026-01-28', '2026-02-02', 'onsite', '免費', '/uploads/gallery/gallery_11.jpg', 3, 1, 2026, 2
+SELECT '精舍過新年', '在靜思精舍迎接新年，體驗清淨簡樸的生活，以感恩的心迎接新的開始。', '2026-01-28', '2026-02-02', '現場參與', '免費', '/uploads/gallery/gallery_11.jpg', 3, 1, 2026, 2
 WHERE NOT EXISTS (SELECT 1 FROM events WHERE title = '精舍過新年');
 INSERT INTO events (title, description, date_start, date_end, participation_type, participation_fee, image_url, topic_id, month, year, sort_order)
-SELECT '歲末祝福感恩會', '歲末年終之際，齊聚一堂表達感恩，並為來年祈福，傳遞溫暖與祝福。', '2026-12-20', '2026-12-25', 'onsite', '免費', '/uploads/gallery/gallery_12.jpg', 3, 12, 2026, 3
+SELECT '歲末祝福感恩會', '歲末年終之際，齊聚一堂表達感恩，並為來年祈福，傳遞溫暖與祝福。', '2026-12-20', '2026-12-25', '現場參與', '免費', '/uploads/gallery/gallery_12.jpg', 3, 12, 2026, 3
 WHERE NOT EXISTS (SELECT 1 FROM events WHERE title = '歲末祝福感恩會');
 
 -- 影響力區塊 (只在資料表為空時插入)

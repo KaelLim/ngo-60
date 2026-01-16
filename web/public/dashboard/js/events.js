@@ -38,7 +38,7 @@ function renderEventsTable(topicsCache) {
         <td>${e.month}月 / ${e.year}</td>
         <td>${e.title}</td>
         <td>${e.date_start}${e.date_end ? ' ~ ' + e.date_end : ''}</td>
-        <td>${e.participation_type === 'online' ? '線上' : '現場'}</td>
+        <td>${e.participation_type || '-'}</td>
         <td>${topic ? topic.icon + ' ' + topic.name : '-'}</td>
         <td class="actions">
           <button class="btn btn-secondary btn-sm" data-action="edit" data-id="${e.id}">編輯</button>
@@ -75,7 +75,7 @@ export function openEventModal(event = null) {
   document.getElementById('event-month').value = event?.month || new Date().getMonth() + 1;
   document.getElementById('event-year').value = event?.year || 2026;
   document.getElementById('event-sort').value = event?.sort_order || 0;
-  document.getElementById('event-participation').value = event?.participation_type || 'onsite';
+  document.getElementById('event-participation').value = event?.participation_type || '';
   document.getElementById('event-fee').value = event?.participation_fee || '';
   document.getElementById('event-image').value = event?.image_url || '';
   updateImagePreview('event-image', event?.image_url);
