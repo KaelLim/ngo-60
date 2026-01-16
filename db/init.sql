@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS events (
     date_end DATE,
     participation_type VARCHAR(50),
     image_url TEXT,
+    link_url TEXT,
     topic_id INT REFERENCES topics(id),
     month INT NOT NULL CHECK (month BETWEEN 1 AND 12),
     year INT NOT NULL DEFAULT 2026,

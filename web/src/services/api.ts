@@ -26,6 +26,7 @@ export interface Event {
   date_end: string | null;
   participation_type: string | null;
   image_url: string | null;
+  link_url: string | null;
   topic_id: number | null;
   month: number;
   year: number;

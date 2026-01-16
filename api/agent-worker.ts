@@ -45,6 +45,7 @@ interface Event {
   date_end: string | null;
   participation_type: string | null;
   image_url: string | null;
+  link_url: string | null;
   topic_id: number | null;
   month: number;
   year: number;
@@ -176,14 +177,15 @@ const tools = [
     date_end: z.string().optional(),
     participation_type: z.string().optional(),
     image_url: z.string().optional(),
+    link_url: z.string().optional(),
     topic_id: z.number().optional(),
     sort_order: z.number().optional()
   }, async (input) => {
     const rows = await query<Event>(
-      `INSERT INTO events (title, description, date_start, date_end, participation_type, image_url, topic_id, month, year, sort_order)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      `INSERT INTO events (title, description, date_start, date_end, participation_type, image_url, link_url, topic_id, month, year, sort_order)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING *`,
-      [input.title, input.description || null, input.date_start, input.date_end || null, input.participation_type || null, input.image_url || null, input.topic_id || null, input.month, input.year, input.sort_order || 0]
+      [input.title, input.description || null, input.date_start, input.date_end || null, input.participation_type || null, input.image_url || null, input.link_url || null, input.topic_id || null, input.month, input.year, input.sort_order || 0]
     );
     return { content: [{ type: "text" as const, text: JSON.stringify({ message: "活動已新增", event: rows[0] }, null, 2) }] };
   }),
@@ -196,6 +198,7 @@ const tools = [
     date_end: z.string().optional(),
     participation_type: z.string().optional(),
     image_url: z.string().optional(),
+    link_url: z.string().optional(),
     topic_id: z.number().optional(),
     month: z.number().optional(),
     year: z.number().optional(),
@@ -209,9 +212,9 @@ const tools = [
     const rows = await query<Event>(
       `UPDATE events SET
         title = $1, description = $2, date_start = $3, date_end = $4,
-        participation_type = $5, image_url = $6, topic_id = $7,
-        month = $8, year = $9, sort_order = $10
-       WHERE id = $11 RETURNING *`,
+        participation_type = $5, image_url = $6, link_url = $7, topic_id = $8,
+        month = $9, year = $10, sort_order = $11
+       WHERE id = $12 RETURNING *`,
       [
         input.title ?? e.title,
         input.description ?? e.description,
@@ -219,6 +222,7 @@ const tools = [
         input.date_end ?? e.date_end,
         input.participation_type ?? e.participation_type,
         input.image_url ?? e.image_url,
+        input.link_url ?? e.link_url,
         input.topic_id ?? e.topic_id,
         input.month ?? e.month,
         input.year ?? e.year,
