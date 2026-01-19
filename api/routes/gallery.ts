@@ -62,9 +62,10 @@ galleryRoutes.get("/random", async (c) => {
 // 上傳圖片 (可指定 category)
 galleryRoutes.post("/", async (c) => {
   try {
-    const formData = await c.req.formData();
+    // 直接使用原生 Request API 解析 formData (避免 Hono 的記憶體限制)
+    const formData = await c.req.raw.formData();
     const file = formData.get("file") as File | null;
-    const category = formData.get("category") as string | null || "general";
+    const category = (formData.get("category") as string) || "general";
 
     if (!file) {
       return c.json({ error: "No file provided" }, 400);

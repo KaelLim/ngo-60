@@ -1,6 +1,7 @@
 import { Hono } from "jsr:@hono/hono@^4.6.0";
 import { cors } from "jsr:@hono/hono@^4.6.0/cors";
 import { serveStatic } from "jsr:@hono/hono@^4.6.0/deno";
+import { bodyLimit } from "jsr:@hono/hono@^4.6.0/body-limit";
 import { topicsRoutes } from "./routes/topics.ts";
 import { eventsRoutes } from "./routes/events.ts";
 import { impactRoutes } from "./routes/impact.ts";
@@ -22,6 +23,10 @@ app.route("/api/topics", topicsRoutes);
 app.route("/api/events", eventsRoutes);
 app.route("/api/impact", impactRoutes);
 app.route("/api/blessings", blessingsRoutes);
+
+// Gallery 路由 - 增加上傳大小限制至 50MB
+app.use("/api/gallery", bodyLimit({ maxSize: 50 * 1024 * 1024 }));
+app.use("/api/gallery/*", bodyLimit({ maxSize: 50 * 1024 * 1024 }));
 app.route("/api/gallery", galleryRoutes);
 app.route("/api/homepage", homepageRoutes);
 
