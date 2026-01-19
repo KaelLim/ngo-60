@@ -142,15 +142,48 @@ export const api = {
     return res.json();
   },
 
-  async uploadGalleryImage(file, category = 'general') {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('category', category);
-    const res = await fetch(`${API_BASE}/gallery`, {
-      method: 'POST',
-      body: formData
+  async uploadGalleryImage(file, category = 'general', onProgress = null) {
+    return new Promise((resolve, reject) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('category', category);
+
+      const xhr = new XMLHttpRequest();
+
+      // 進度追蹤
+      if (onProgress) {
+        xhr.upload.addEventListener('progress', (e) => {
+          if (e.lengthComputable) {
+            const percent = Math.round((e.loaded / e.total) * 100);
+            onProgress(percent);
+          }
+        });
+      }
+
+      xhr.addEventListener('load', () => {
+        try {
+          const response = JSON.parse(xhr.responseText);
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve(response);
+          } else {
+            reject(new Error(response.error || '上傳失敗'));
+          }
+        } catch (e) {
+          reject(new Error('伺服器回應錯誤'));
+        }
+      });
+
+      xhr.addEventListener('error', () => {
+        reject(new Error('網路錯誤'));
+      });
+
+      xhr.addEventListener('abort', () => {
+        reject(new Error('上傳已取消'));
+      });
+
+      xhr.open('POST', `${API_BASE}/gallery`);
+      xhr.send(formData);
     });
-    return res.json();
   },
 
   async updateGalleryImage(id, category) {

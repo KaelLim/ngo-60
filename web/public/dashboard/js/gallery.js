@@ -172,15 +172,48 @@ async function deleteGalleryImage() {
 
 async function uploadFiles(files) {
   const category = document.getElementById('upload-category').value || 'general';
+  const progressContainer = document.getElementById('upload-progress-container');
+  const progressBar = document.getElementById('upload-progress-bar');
+  const progressText = document.getElementById('upload-progress-text');
 
-  for (const file of files) {
+  let successCount = 0;
+  let failCount = 0;
+  const totalFiles = files.length;
+
+  // 顯示進度條
+  progressContainer.style.display = 'block';
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    progressText.textContent = `上傳中 (${i + 1}/${totalFiles}): ${file.name}`;
+
     try {
-      await api.uploadGalleryImage(file, category);
+      await api.uploadGalleryImage(file, category, (percent) => {
+        // 計算總體進度：已完成的檔案 + 當前檔案進度
+        const overallPercent = Math.round(((i + percent / 100) / totalFiles) * 100);
+        progressBar.style.width = `${overallPercent}%`;
+      });
+      successCount++;
     } catch (e) {
       console.error('Upload failed:', e);
+      failCount++;
+      showToast(`${file.name}: ${e.message}`, 'error');
     }
   }
-  showToast(`${files.length} 張圖片已上傳`);
+
+  // 隱藏進度條
+  progressContainer.style.display = 'none';
+  progressBar.style.width = '0%';
+
+  // 顯示結果
+  if (failCount === 0) {
+    showToast(`${successCount} 張圖片上傳成功`);
+  } else if (successCount === 0) {
+    showToast(`全部 ${failCount} 張圖片上傳失敗`, 'error');
+  } else {
+    showToast(`${successCount} 張成功，${failCount} 張失敗`, 'warning');
+  }
+
   loadGallery();
 }
 
