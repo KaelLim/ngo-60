@@ -1,0 +1,97 @@
+# NGO60 開發用部署 - 掛載本地程式碼
+# 使用方式：docker compose -f docker-compose.dev.yml up -d
+
+services:
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-events_app}
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    image: ubuntu:24.04
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_NAME: ${DB_NAME:-events_app}
+      ADMIN_USER: ${ADMIN_USER:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-changeme}
+    ports:
+      - "${PORT:-8937}:80"
+    volumes:
+      - uploads_data:/uploads
+      - ../api:/app/api:ro  # 掛載本地 api 目錄 (只讀)
+      - ../web:/app/web:ro  # 掛載本地 web 目錄 (只讀)
+      - ../nginx:/app/nginx:ro  # 掛載本地 nginx 目錄 (只讀)
+      - ../db:/app/db:ro  # 掛載本地 db 目錄 (只讀)
+      - ../seed:/app/seed:ro  # 掛載本地 seed 目錄 (只讀)
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        set -e
+        export DEBIAN_FRONTEND=noninteractive
+
+        echo "=== [1/6] 安裝系統套件 ==="
+        apt-get update
+        apt-get install -y --no-install-recommends \
+          curl git unzip nginx apache2-utils postgresql-client ca-certificates
+
+        echo "=== [2/6] 初始化資料庫 ==="
+        export PGPASSWORD=${DB_PASSWORD:-postgres}
+        cat /app/db/init.sql | psql -h db -U ${DB_USER:-postgres} -d ${DB_NAME:-events_app}
+
+        echo "=== [3/6] 安裝 Deno ==="
+        if [ ! -f /root/.deno/bin/deno ]; then
+          curl -fsSL https://deno.land/install.sh | sh
+        fi
+        ln -sf /root/.deno/bin/deno /usr/local/bin/deno
+
+        echo "=== [4/6] 建置前端 ==="
+        # 複製 web 到可寫目錄
+        cp -r /app/web /tmp/web
+        cd /tmp/web
+        /root/.deno/bin/deno install --node-modules-dir --entrypoint npm:vite
+        /root/.deno/bin/deno run -A --node-modules-dir npm:vite build
+
+        echo "=== [5/6] 設定 Nginx ==="
+        cp /app/nginx/nginx.conf /etc/nginx/sites-available/default
+        sed -i 's/api:8000/localhost:8000/g' /etc/nginx/sites-available/default
+        cp -r /tmp/web/dist/* /usr/share/nginx/html/
+        htpasswd -bc /etc/nginx/.htpasswd ${ADMIN_USER:-admin} ${ADMIN_PASSWORD:-changeme}
+
+        # 連結 uploads 目錄
+        mkdir -p /uploads/gallery
+        mkdir -p /tmp/api
+        # 排除 uploads 目錄進行複製
+        cd /app/api && find . -maxdepth 1 ! -name uploads ! -name . -exec cp -r {} /tmp/api/ \;
+        ln -sf /uploads /tmp/api/uploads
+
+        # 複製預設圖片
+        if [ -z "$(ls -A /uploads/gallery 2>/dev/null)" ]; then
+          echo "複製預設圖片..."
+          cp /app/seed/gallery/* /uploads/gallery/ 2>/dev/null || true
+        fi
+
+        echo "=== [6/6] 啟動服務 ==="
+        nginx
+
+        cd /tmp/api
+        exec /root/.deno/bin/deno run --allow-net --allow-env --allow-read --allow-write --allow-run --allow-ffi main.ts
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  uploads_data:

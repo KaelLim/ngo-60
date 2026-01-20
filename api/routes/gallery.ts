@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { query } from "../db.ts";
-import { Jimp } from "npm:jimp@1.6.0";
+import sharp from "npm:sharp@0.33.5";
 
 // 圖片壓縮設定
 const IMAGE_CONFIG = {
@@ -77,28 +77,25 @@ galleryRoutes.post("/", async (c) => {
       return c.json({ error: "Invalid file type. Allowed: jpeg, png, webp, gif" }, 400);
     }
 
-    // 生成唯一檔名 (統一輸出為 jpg)
-    const filename = `${crypto.randomUUID()}.jpg`;
-    const uploadPath = `./uploads/gallery/${filename}`;
-
     // 讀取原始檔案
     const arrayBuffer = await file.arrayBuffer();
     const inputBuffer = Buffer.from(arrayBuffer);
 
-    // 使用 Jimp 壓縮並調整尺寸
-    const image = await Jimp.read(inputBuffer);
+    // 使用 Sharp 處理圖片（高效處理大型圖片）
+    const filename = `${crypto.randomUUID()}.jpg`;
 
-    // 如果圖片超過最大尺寸，則縮小（保持比例）
-    if (image.width > IMAGE_CONFIG.maxWidth || image.height > IMAGE_CONFIG.maxHeight) {
-      image.scaleToFit({ w: IMAGE_CONFIG.maxWidth, h: IMAGE_CONFIG.maxHeight });
-    }
+    // Sharp 會自動處理大型圖片，使用串流方式不會佔用過多記憶體
+    const processedBuffer = await sharp(inputBuffer)
+      .resize(IMAGE_CONFIG.maxWidth, IMAGE_CONFIG.maxHeight, {
+        fit: 'inside',  // 保持比例，確保圖片在指定尺寸內
+        withoutEnlargement: true  // 不放大小於目標尺寸的圖片
+      })
+      .jpeg({ quality: IMAGE_CONFIG.quality })
+      .toBuffer();
 
-    // 設定 JPEG 品質並輸出
-    const processedBuffer = await image.getBuffer("image/jpeg", {
-      quality: IMAGE_CONFIG.quality
-    });
+    const uploadPath = `./uploads/gallery/${filename}`;
 
-    // 儲存壓縮後的檔案
+    // 儲存檔案
     await Deno.writeFile(uploadPath, processedBuffer);
 
     // 寫入資料庫

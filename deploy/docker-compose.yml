@@ -129,7 +129,7 @@ services:
         # 啟動 Deno API (前景，以 appuser 身份執行)
         # 使用 sudo -E 保留環境變數，設定 HOME
         cd /app/api
-        exec sudo -E -u appuser HOME=/home/appuser /home/appuser/.deno/bin/deno run --allow-net --allow-env --allow-read --allow-write --allow-run main.ts
+        exec sudo -E -u appuser HOME=/home/appuser /home/appuser/.deno/bin/deno run --allow-net --allow-env --allow-read --allow-write --allow-run --allow-ffi main.ts
     restart: unless-stopped
 
 volumes:
