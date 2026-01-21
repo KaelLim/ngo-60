@@ -8,8 +8,6 @@ import { api, Topic, Event, ImpactSection, Blessing } from '../services/api.js';
 
 import './homepage-tabs.js';
 
-type TopicStyle = 'v1' | 'v2';
-
 @customElement('sheet-content')
 export class SheetContent extends LitElement {
   @consume({ context: appContext })
@@ -17,9 +15,6 @@ export class SheetContent extends LitElement {
 
   @property({ type: Boolean, reflect: true })
   desktopMode = false;
-
-  @state()
-  private topicStyle: TopicStyle = 'v2';
 
   @state()
   private blessHighlightIndex: number = 2;
@@ -193,22 +188,6 @@ export class SheetContent extends LitElement {
       transform: translateY(-1px) scale(0.98);
     }
 
-    /* Style toggle button */
-    .style-toggle {
-      transition:
-        transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
-        box-shadow 0.2s ease;
-    }
-
-    .style-toggle:hover {
-      transform: scale(1.05);
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
-    }
-
-    .style-toggle:active {
-      transform: scale(0.92);
-    }
-
     /* Button hover effects */
     .impact-report-btn,
     .impact-link-btn {
@@ -244,111 +223,7 @@ export class SheetContent extends LitElement {
       font-family: 'Noto Sans TC', sans-serif;
     }
 
-    /* Style toggle button - hide in desktop */
-    .style-toggle {
-      position: fixed;
-      bottom: 100px;
-      left: 20px;
-      z-index: 100;
-      background: #121212;
-      color: white;
-      border: none;
-      border-radius: 20px;
-      padding: 8px 16px;
-      font-family: 'Noto Sans TC', sans-serif;
-      font-size: 12px;
-      cursor: pointer;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-      transition: transform 0.2s;
-    }
-
-    :host([desktopMode]) .style-toggle {
-      display: none;
-    }
-
-    .style-toggle:active {
-      transform: scale(0.95);
-    }
-
-    /* ========== V1: Full overlay style ========== */
-    .topic-list.v1 .topic-card {
-      height: 208px;
-      border-radius: 20px;
-      position: relative;
-      overflow: hidden;
-      cursor: pointer;
-      transition: transform 0.2s;
-    }
-
-    .topic-list.v1 .topic-card-bg {
-      position: absolute;
-      inset: 0;
-      background-size: cover;
-      background-position: center;
-    }
-
-    .topic-list.v1 .topic-card-overlay {
-      position: absolute;
-      inset: 0;
-      background: rgba(29, 49, 111, 0.9);
-      display: flex;
-      padding: 20px 12px;
-      flex-direction: column;
-      justify-content: space-between;
-      align-items: flex-start;
-    }
-
-    .topic-list.v1 .topic-card-title {
-      font-size: 28px;
-    }
-
-    .topic-list.v1 .topic-card-subtitle {
-      font-size: 28px;
-    }
-
-    /* ========== V2: Split layout style ========== */
-    .topic-list.v2 .topic-card {
-      height: 208px;
-      border-radius: 20px;
-      position: relative;
-      overflow: hidden;
-      cursor: pointer;
-      transition: transform 0.2s;
-      background: #0e2669;
-    }
-
-    .topic-list.v2 .topic-card-bg {
-      position: absolute;
-      inset: 0;
-      background-size: cover;
-      background-position: center;
-      opacity: 0.8;
-    }
-
-    .topic-list.v2 .topic-card-overlay {
-      position: absolute;
-      top: 0;
-      right: 0;
-      width: 258px;
-      height: 208px;
-      background: rgba(14, 38, 105, 0.9);
-      display: flex;
-      padding: 20px 16px;
-      flex-direction: column;
-      gap: 48px;
-      align-items: flex-end;
-      overflow: hidden;
-    }
-
-    .topic-list.v2 .topic-card-title {
-      font-size: 24px;
-    }
-
-    .topic-list.v2 .topic-card-subtitle {
-      font-size: 24px;
-    }
-
-    /* ========== Shared topic card styles ========== */
+    /* ========== Topic card styles (Bottom overlay) ========== */
     .topic-list {
       display: flex;
       flex-direction: column;
@@ -378,38 +253,94 @@ export class SheetContent extends LitElement {
       }
     }
 
+    .topic-card {
+      height: 208px;
+      border-radius: 20px;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
     .topic-card:active {
       transform: scale(0.98);
     }
 
-    .topic-card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      width: 100%;
+    .topic-card-bg {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
     }
 
-    .topic-card-titles {
-      color: white;
+    .topic-card-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(14, 38, 105, 0.9);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 12px;
+      border-radius: 20px;
+    }
+
+    .topic-card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .topic-card-title {
       font-family: 'Noto Sans TC', sans-serif;
-      font-weight: 500;
+      font-weight: 700;
+      font-size: 20px;
       line-height: 1.2;
+      color: white;
       margin: 0;
+    }
+
+    .topic-card-divider {
+      width: 1px;
+      height: 19px;
+      background: white;
     }
 
     .topic-card-subtitle {
       font-family: 'Noto Sans TC', sans-serif;
-      font-weight: 400;
+      font-weight: 500;
+      font-size: 20px;
       line-height: 1.2;
+      color: white;
       margin: 0;
     }
 
+    .topic-card-body {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .topic-card-desc {
+      font-family: 'Noto Sans TC', sans-serif;
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 1.4;
+      color: white;
+      margin: 0;
+      width: 244px;
+      height: 40px;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      text-overflow: ellipsis;
+    }
+
     .topic-card-arrow {
-      width: 48px;
-      height: 48px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
       background: rgba(255, 255, 255, 0.2);
       display: flex;
@@ -427,29 +358,14 @@ export class SheetContent extends LitElement {
     }
 
     .topic-card-arrow svg {
-      width: 24px;
-      height: 24px;
+      width: 20px;
+      height: 20px;
       color: white;
       transition: transform 0.25s ease;
     }
 
     .topic-card:hover .topic-card-arrow svg {
-      transform: translate(3px, -3px);
-    }
-
-    .topic-card-desc {
-      font-family: 'Noto Sans TC', sans-serif;
-      font-weight: 400;
-      font-size: 15px;
-      line-height: 1.4;
-      color: rgba(255, 255, 255, 0.7);
-      margin: 0;
-      text-align: left;
-      width: 100%;
-      overflow: hidden;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
+      transform: translate(2px, -2px);
     }
 
     /* ========== Impact Tab Styles ========== */
@@ -1234,10 +1150,6 @@ export class SheetContent extends LitElement {
     this.appStore.openBlessing(blessingId);
   }
 
-  private toggleTopicStyle() {
-    this.topicStyle = this.topicStyle === 'v1' ? 'v2' : 'v1';
-  }
-
   private formatDate(dateStr: string): string {
     const date = new Date(dateStr);
     const year = date.getFullYear();
@@ -1261,44 +1173,35 @@ export class SheetContent extends LitElement {
       return html`<div class="loading">載入中...</div>`;
     }
 
-    // Fallback images for topics without images
-    const defaultImages = [
-      'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800',
-      'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800',
-      'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800'
-    ];
-
     return html`
-      <div class="topic-list ${this.topicStyle}">
-        ${this.topics.map((topic, index) => html`
+      <div class="topic-list">
+        ${this.topics.map((topic) => html`
           <div
             class="topic-card"
             @click=${() => this.handleTopicClick(topic.id)}
           >
             <div
               class="topic-card-bg"
-              style="background-image: url('${topic.background_image || defaultImages[index % defaultImages.length]}')"
+              style="background-image: url('${topic.background_image || ''}')"
             ></div>
             <div class="topic-card-overlay">
               <div class="topic-card-header">
-                <div class="topic-card-titles">
-                  <p class="topic-card-title">${topic.name}</p>
-                  <p class="topic-card-subtitle">${topic.subtitle || ''}</p>
-                </div>
+                <p class="topic-card-title">${topic.name}</p>
+                <div class="topic-card-divider"></div>
+                <p class="topic-card-subtitle">${topic.subtitle || ''}</p>
+              </div>
+              <div class="topic-card-body">
+                <p class="topic-card-desc">${topic.description || ''}</p>
                 <div class="topic-card-arrow">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                    <path d="M7 17L17 7M17 7H7M17 7V17"/>
                   </svg>
                 </div>
               </div>
-              <p class="topic-card-desc">${topic.description || ''}</p>
             </div>
           </div>
         `)}
       </div>
-      <button class="style-toggle" @click=${this.toggleTopicStyle}>
-        風格: ${this.topicStyle === 'v1' ? '全覆蓋' : '分割式'}
-      </button>
     `;
   }
 
