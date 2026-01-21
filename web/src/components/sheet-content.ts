@@ -1194,7 +1194,7 @@ export class SheetContent extends LitElement {
                 <p class="topic-card-desc">${topic.description || ''}</p>
                 <div class="topic-card-arrow">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M7 17L17 7M17 7H7M17 7V17"/>
+                    <path d="M5 12h14M14 5l5 7-5 7"/>
                   </svg>
                 </div>
               </div>
