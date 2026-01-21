@@ -671,7 +671,7 @@ export class TopicPage extends LitElement {
                     <path d="M273 0C284.046 0 293 8.95431 293 20V26C293 43.6731 307.327 58 325 58H331C342.046 58 351 66.9543 351 78V297C351 308.046 342.046 317 331 317H20C8.95431 317 0 308.046 0 297V20C0 8.9543 8.95431 0 20 0H273Z" fill="white"/>
                   </svg>
                 </div>
-                <button class="link-button" @click=${() => this.handleEventClick(event)} style="${event.link_url ? '' : 'display: none;'}">
+                <button class="link-button" @click=${() => this.handleEventClick(event)}>
                   ${linkArrow}
                 </button>
                 <div class="activity-card-bg">
