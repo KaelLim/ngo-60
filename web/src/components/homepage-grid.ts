@@ -27,12 +27,12 @@ export class HomepageGrid extends LitElement {
   private sixEmptyPositions = [0, 3, 5, 6, 7, 8, 11, 13, 14, 16, 19];
 
   // Desktop "0" shape empty positions (4x5 grid)
-  // Row 0: o x x o   (middle 2 empty)
-  // Row 1: o . . o   (middle 2 empty)
+  // Row 0: o o o o   (all filled)
+  // Row 1: o x x o   (middle 2 empty)
   // Row 2: o x x o   (middle 2 empty)
   // Row 3: o x x o   (middle 2 empty)
-  // Row 4: o x x o   (middle 2 empty)
-  private zeroEmptyPositions = [1, 2, 5, 6, 9, 10, 13, 14, 17, 18];
+  // Row 4: o o o o   (all filled)
+  private zeroEmptyPositions = [5, 6, 9, 10, 13, 14];
 
   static styles = css`
     :host {
