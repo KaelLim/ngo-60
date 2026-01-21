@@ -11,6 +11,7 @@ import './app-sheet.js';
 import './blessing-page.js';
 import './topic-page.js';
 import './sheet-content.js';
+import './desktop-layout.js';
 
 @customElement('app-shell')
 export class AppShell extends LitElement {
@@ -50,7 +51,8 @@ export class AppShell extends LitElement {
       transition: none;
     }
 
-    .desktop-layout {
+    /* Desktop/Tablet: New vertical scroll layout */
+    desktop-layout {
       display: none;
     }
 
@@ -59,96 +61,36 @@ export class AppShell extends LitElement {
       .mobile-only {
         display: none !important;
       }
-    }
 
-    /* Desktop layout (1024px+) */
-    @media (min-width: 1024px) {
       .main-container {
         display: none;
       }
 
-      .desktop-layout {
-        display: grid;
-        grid-template-columns: 1fr 400px;
+      desktop-layout {
+        display: block;
         height: 100%;
         width: 100%;
-      }
-
-      .desktop-left {
-        position: relative;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-      }
-
-      .desktop-left-content {
-        flex: 1;
         overflow-y: auto;
-        display: flex;
-        flex-direction: column;
       }
+    }
 
-      .desktop-right {
-        background: #f5f5f5;
-        border-left: 1px solid rgba(0,0,0,0.1);
-        overflow-y: auto;
-        display: flex;
-        flex-direction: column;
-      }
+    /* Inner pages overlay for desktop */
+    .desktop-inner-page {
+      display: none;
+    }
 
-      /* Inner pages in desktop mode */
+    @media (min-width: 768px) {
       .desktop-inner-page {
-        position: absolute;
+        display: block;
+        position: fixed;
         inset: 0;
-        z-index: 10;
+        z-index: 100;
         animation: fadeIn 0.3s ease-out;
       }
 
       @keyframes fadeIn {
         from { opacity: 0; }
         to { opacity: 1; }
-      }
-    }
-
-    /* Tablet layout (768px - 1023px) */
-    @media (min-width: 768px) and (max-width: 1023px) {
-      .desktop-layout {
-        display: grid;
-        grid-template-columns: 1fr 360px;
-        height: 100%;
-        width: 100%;
-      }
-
-      .main-container {
-        display: none;
-      }
-
-      .desktop-left {
-        position: relative;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-      }
-
-      .desktop-left-content {
-        flex: 1;
-        overflow-y: auto;
-        display: flex;
-        flex-direction: column;
-      }
-
-      .desktop-right {
-        background: #f5f5f5;
-        border-left: 1px solid rgba(0,0,0,0.1);
-        overflow-y: auto;
-        display: flex;
-        flex-direction: column;
-      }
-
-      .desktop-inner-page {
-        position: absolute;
-        inset: 0;
-        z-index: 10;
       }
     }
   `;
@@ -217,30 +159,20 @@ export class AppShell extends LitElement {
         ? html`<topic-page class="mobile-only" .topicId=${this.appStore.currentCategoryId || 1}></topic-page>`
         : ''}
 
-      <!-- Desktop/Tablet Layout -->
-      <div class="desktop-layout">
-        <div class="desktop-left">
-          <div class="desktop-left-content">
-            <app-poster .desktopMode=${true}></app-poster>
-          </div>
+      <!-- Desktop/Tablet: New vertical scroll layout -->
+      <desktop-layout></desktop-layout>
 
-          <!-- Desktop: Inner pages overlay on left area -->
-          ${currentPage === 'blessing' ? html`
-            <div class="desktop-inner-page">
-              <blessing-page .desktopMode=${true} .blessingId=${this.appStore.currentBlessingId}></blessing-page>
-            </div>
-          ` : ''}
-          ${currentPage === 'category' && this.appStore.activeTab === 'topics' ? html`
-            <div class="desktop-inner-page">
-              <topic-page .desktopMode=${true} .topicId=${this.appStore.currentCategoryId || 1}></topic-page>
-            </div>
-          ` : ''}
+      <!-- Desktop: Inner pages overlay -->
+      ${currentPage === 'blessing' ? html`
+        <div class="desktop-inner-page">
+          <blessing-page .desktopMode=${true} .blessingId=${this.appStore.currentBlessingId}></blessing-page>
         </div>
-
-        <div class="desktop-right">
-          <sheet-content .desktopMode=${true}></sheet-content>
+      ` : ''}
+      ${currentPage === 'category' && this.appStore.activeTab === 'topics' ? html`
+        <div class="desktop-inner-page">
+          <topic-page .desktopMode=${true} .topicId=${this.appStore.currentCategoryId || 1}></topic-page>
         </div>
-      </div>
+      ` : ''}
     `;
   }
 }
