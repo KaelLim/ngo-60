@@ -1365,7 +1365,7 @@ export class SheetContent extends LitElement {
 
         <!-- Bless Section -->
         <div class="bless-section">
-          <h3 class="bless-title">祝福與期許</h3>
+          <h3 class="bless-title">祝福慈濟60</h3>
           <div class="bless-cards-wrapper">
             <div class="bless-cards">
               <!-- Dialog bubbles card -->
