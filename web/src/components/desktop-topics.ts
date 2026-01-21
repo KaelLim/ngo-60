@@ -13,9 +13,6 @@ export class DesktopTopics extends LitElement {
   @state()
   private topicEvents: Event[] = [];
 
-  @state()
-  private eventCarouselIndex = 0;
-
   static styles = css`
     :host {
       display: block;
@@ -125,7 +122,7 @@ export class DesktopTopics extends LitElement {
       margin: 0;
     }
 
-    /* Right: Activity cards - using mobile style */
+    /* Right: Activity cards - horizontal layout */
     .events-section {
       display: flex;
       flex-direction: column;
@@ -134,16 +131,24 @@ export class DesktopTopics extends LitElement {
 
     .events-list {
       display: flex;
-      flex-direction: column;
-      gap: 12px;
+      flex-direction: row;
+      gap: 16px;
+      overflow-x: auto;
+      padding-bottom: 8px;
     }
 
-    /* Mobile-style activity card */
+    .events-list::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* Activity card - fixed width 328px */
     .activity-card {
       position: relative;
       overflow: visible;
       cursor: pointer;
       transition: transform 0.3s, box-shadow 0.3s;
+      width: 328px;
+      flex-shrink: 0;
     }
 
     .activity-card:hover {
@@ -293,43 +298,6 @@ export class DesktopTopics extends LitElement {
       transform: translate(2px, -2px);
     }
 
-    /* Navigation arrows */
-    .nav-arrows {
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-      margin-top: 8px;
-    }
-
-    .nav-button {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      border: 1px solid #ddd;
-      background: white;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.2s, border-color 0.2s;
-    }
-
-    .nav-button:hover {
-      background: #f5f5f5;
-      border-color: #ccc;
-    }
-
-    .nav-button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .nav-button svg {
-      width: 20px;
-      height: 20px;
-      color: #333;
-    }
-
     .empty-message {
       font-family: 'Noto Sans TC', sans-serif;
       font-size: 14px;
@@ -360,7 +328,6 @@ export class DesktopTopics extends LitElement {
 
   private handleTopicSelect(index: number) {
     this.selectedTopicIndex = index;
-    this.eventCarouselIndex = 0;
     if (this.topics[index]) {
       this.loadTopicEvents(this.topics[index].id);
     }
@@ -374,19 +341,6 @@ export class DesktopTopics extends LitElement {
     }));
   }
 
-  private handlePrevEvents() {
-    if (this.eventCarouselIndex > 0) {
-      this.eventCarouselIndex--;
-    }
-  }
-
-  private handleNextEvents() {
-    const maxIndex = Math.max(0, this.topicEvents.length - 2);
-    if (this.eventCarouselIndex < maxIndex) {
-      this.eventCarouselIndex++;
-    }
-  }
-
   private formatDate(dateStr: string): string {
     const date = new Date(dateStr);
     return `${date.getMonth() + 1}.${date.getDate().toString().padStart(2, '0')}`;
@@ -397,10 +351,6 @@ export class DesktopTopics extends LitElement {
   }
 
   render() {
-    const visibleEvents = this.topicEvents.slice(this.eventCarouselIndex, this.eventCarouselIndex + 2);
-    const canPrev = this.eventCarouselIndex > 0;
-    const canNext = this.eventCarouselIndex < this.topicEvents.length - 2;
-
     const calendarIcon = html`
       <svg viewBox="0 0 18 18" fill="none">
         <path d="M15.75 15V4.5C15.75 3.67275 15.0773 3 14.25 3H12.75V1.5H11.25V3H6.75V1.5H5.25V3H3.75C2.92275 3 2.25 3.67275 2.25 4.5V15C2.25 15.8273 2.92275 16.5 3.75 16.5H14.25C15.0773 16.5 15.75 15.8273 15.75 15ZM6.75 13.5H5.25V12H6.75V13.5ZM6.75 10.5H5.25V9H6.75V10.5ZM9.75 13.5H8.25V12H9.75V13.5ZM9.75 10.5H8.25V9H9.75V10.5ZM12.75 13.5H11.25V12H12.75V13.5ZM12.75 10.5H11.25V9H12.75V10.5ZM14.25 6.75H3.75V5.25H14.25V6.75Z" fill="#5FB7FA"/>
@@ -455,11 +405,11 @@ export class DesktopTopics extends LitElement {
             })}
           </div>
 
-          <!-- Right: Activity cards (mobile style) -->
+          <!-- Right: Activity cards (horizontal scroll) -->
           <div class="events-section">
             ${this.topicEvents.length > 0 ? html`
               <div class="events-list">
-                ${visibleEvents.map(event => html`
+                ${this.topicEvents.map(event => html`
                   <div class="activity-card">
                     <div class="activity-card-shape">
                       <svg viewBox="0 0 351 317" fill="none" preserveAspectRatio="none">
@@ -496,19 +446,6 @@ export class DesktopTopics extends LitElement {
                     </div>
                   </div>
                 `)}
-              </div>
-
-              <div class="nav-arrows">
-                <button class="nav-button" ?disabled=${!canPrev} @click=${this.handlePrevEvents}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M15 18l-6-6 6-6"/>
-                  </svg>
-                </button>
-                <button class="nav-button" ?disabled=${!canNext} @click=${this.handleNextEvents}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M9 18l6-6-6-6"/>
-                  </svg>
-                </button>
               </div>
             ` : html`
               <div class="empty-message">暫無活動</div>
