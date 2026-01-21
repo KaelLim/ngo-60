@@ -344,7 +344,7 @@ export class BlessingPage extends LitElement {
     const blessing = this.blessingData;
     const author = blessing?.author || '證嚴上人';
     const content = blessing?.full_content || blessing?.message || '';
-    const imageUrl = blessing?.image_url || 'https://images.unsplash.com/photo-1544027993-37dbfe43562a?w=800';
+    const imageUrl = blessing?.image_url || '';
 
     return html`
       <div class="page-container">

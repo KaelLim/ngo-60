@@ -644,7 +644,7 @@ export class TopicPage extends LitElement {
     }
 
     const topic = this.topicData;
-    const backgroundImage = topic.background_image || 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800';
+    const backgroundImage = topic.background_image || '';
 
     return html`
       <div class="page-container">
