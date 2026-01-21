@@ -125,7 +125,7 @@ export class DesktopTopics extends LitElement {
       margin: 0;
     }
 
-    /* Right: Event cards - using mobile style */
+    /* Right: Activity cards - using mobile style */
     .events-section {
       display: flex;
       flex-direction: column;
@@ -138,88 +138,159 @@ export class DesktopTopics extends LitElement {
       gap: 12px;
     }
 
-    /* Mobile-style event card */
-    .event-card {
-      background: white;
-      border-radius: 20px;
-      padding: 20px 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
+    /* Mobile-style activity card */
+    .activity-card {
+      position: relative;
+      overflow: visible;
       cursor: pointer;
       transition: transform 0.3s, box-shadow 0.3s;
     }
 
-    .event-card:hover {
+    .activity-card:hover {
       transform: translateY(-4px);
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
     }
 
-    .event-card:active {
+    .activity-card:active {
       transform: scale(0.98);
     }
 
-    .event-info {
+    .activity-card-shape {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+    }
+
+    .activity-card-shape svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .activity-card-bg {
+      position: relative;
+      padding: 20px 12px;
+      z-index: 1;
+    }
+
+    .activity-card-content {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .activity-info {
       display: flex;
       flex-direction: column;
       gap: 12px;
-      flex: 1;
-      min-width: 0;
+      padding-right: 50px;
     }
 
-    .event-title {
+    .activity-title {
       font-family: 'Noto Sans TC', sans-serif;
       font-size: 18px;
       font-weight: 500;
       color: #121212;
-      line-height: 1.3;
+      line-height: 1.28;
       margin: 0;
     }
 
-    .event-items {
+    .activity-items {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 4px;
     }
 
-    .event-row {
+    .activity-row {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 4px;
     }
 
-    .event-icon {
+    .activity-icon {
       width: 18px;
       height: 18px;
       flex-shrink: 0;
     }
 
-    .event-icon svg {
+    .activity-icon svg {
       width: 100%;
       height: 100%;
     }
 
-    .event-text {
+    .activity-text {
       font-family: 'Noto Sans TC', sans-serif;
-      font-size: 14px;
-      color: #666;
-      line-height: 1.3;
+      font-size: 15px;
+      font-weight: 400;
+      color: #121212;
+      line-height: 16px;
     }
 
-    .event-image {
-      width: 120px;
+    .activity-image {
+      width: 100%;
       height: 120px;
       border-radius: 12px;
-      background: #f5f5f5;
-      flex-shrink: 0;
       overflow: hidden;
-      margin-left: 16px;
     }
 
-    .event-image img {
+    .activity-image img {
       width: 100%;
       height: 100%;
       object-fit: cover;
+    }
+
+    .activity-description {
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: 15px;
+      font-weight: 400;
+      color: #8d8d8d;
+      line-height: 1.4;
+      margin: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* Link button */
+    .link-button {
+      position: absolute;
+      top: 0;
+      right: 2%;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: white;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition:
+        transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow 0.2s ease,
+        background-color 0.2s ease;
+      z-index: 2;
+    }
+
+    .link-button:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+      background: #f8f8f8;
+    }
+
+    .link-button:active {
+      transform: scale(0.95);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .link-button svg {
+      width: 24px;
+      height: 24px;
+      color: #0E2669;
+      transition: transform 0.2s ease;
+    }
+
+    .link-button:hover svg {
+      transform: translate(2px, -2px);
     }
 
     /* Navigation arrows */
@@ -342,6 +413,12 @@ export class DesktopTopics extends LitElement {
       </svg>
     `;
 
+    const linkArrow = html`
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M5 12h14M14 5l7 7-7 7"/>
+      </svg>
+    `;
+
     return html`
       <div class="section-container">
         <div class="section-title">看主題</div>
@@ -378,32 +455,45 @@ export class DesktopTopics extends LitElement {
             })}
           </div>
 
-          <!-- Right: Event cards (mobile style) -->
+          <!-- Right: Activity cards (mobile style) -->
           <div class="events-section">
             ${this.topicEvents.length > 0 ? html`
               <div class="events-list">
                 ${visibleEvents.map(event => html`
-                  <div class="event-card" @click=${() => event.link_url && window.open(event.link_url, '_blank')}>
-                    <div class="event-info">
-                      <p class="event-title">${event.title}</p>
-                      <div class="event-items">
-                        <div class="event-row">
-                          <span class="event-icon">${calendarIcon}</span>
-                          <span class="event-text">
-                            ${this.formatDate(event.date_start)}${event.date_end ? ` - ${this.formatDate(event.date_end)}` : ''}
-                          </span>
+                  <div class="activity-card">
+                    <div class="activity-card-shape">
+                      <svg viewBox="0 0 351 317" fill="none" preserveAspectRatio="none">
+                        <path d="M273 0C284.046 0 293 8.95431 293 20V26C293 43.6731 307.327 58 325 58H331C342.046 58 351 66.9543 351 78V297C351 308.046 342.046 317 331 317H20C8.95431 317 0 308.046 0 297V20C0 8.9543 8.95431 0 20 0H273Z" fill="white"/>
+                      </svg>
+                    </div>
+                    <button class="link-button" @click=${() => event.link_url && window.open(event.link_url, '_blank')}>
+                      ${linkArrow}
+                    </button>
+                    <div class="activity-card-bg">
+                      <div class="activity-card-content">
+                        <div class="activity-info">
+                          <h3 class="activity-title">${event.title}</h3>
+                          <div class="activity-items">
+                            <div class="activity-row">
+                              <span class="activity-icon">${calendarIcon}</span>
+                              <span class="activity-text">${this.formatDate(event.date_start)}${event.date_end ? ` - ${this.formatDate(event.date_end)}` : ''}</span>
+                            </div>
+                            <div class="activity-row">
+                              <span class="activity-icon">${personIcon}</span>
+                              <span class="activity-text">${this.getParticipationText(event)}</span>
+                            </div>
+                          </div>
                         </div>
-                        <div class="event-row">
-                          <span class="event-icon">${personIcon}</span>
-                          <span class="event-text">${this.getParticipationText(event)}</span>
-                        </div>
+                        ${event.image_url ? html`
+                          <div class="activity-image">
+                            <img src="${event.image_url}" alt="${event.title}" />
+                          </div>
+                        ` : ''}
+                        ${event.description ? html`
+                          <p class="activity-description">${event.description}</p>
+                        ` : ''}
                       </div>
                     </div>
-                    ${event.image_url ? html`
-                      <div class="event-image">
-                        <img src=${event.image_url} alt=${event.title} />
-                      </div>
-                    ` : ''}
                   </div>
                 `)}
               </div>
