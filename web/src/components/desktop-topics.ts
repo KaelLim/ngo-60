@@ -1,6 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { Topic, Event, api, TopicWithEvents } from '../services/api.js';
+import { Topic, Event, api } from '../services/api.js';
 
 @customElement('desktop-topics')
 export class DesktopTopics extends LitElement {
@@ -39,39 +39,48 @@ export class DesktopTopics extends LitElement {
 
     .content-grid {
       display: grid;
-      grid-template-columns: 280px 1fr;
+      grid-template-columns: 320px 1fr;
       gap: 24px;
     }
 
-    /* Left: Topic list card */
-    .topic-list-card {
-      background: white;
-      border-radius: 24px;
-      overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    /* Left: Topic cards list - each card is independent */
+    .topic-cards-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
 
-    /* Main topic card with background image */
-    .main-topic {
+    /* Individual topic card */
+    .topic-card {
       position: relative;
-      min-height: 180px;
-      cursor: pointer;
+      border-radius: 20px;
       overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.3s, box-shadow 0.3s;
     }
 
-    .main-topic-bg {
+    .topic-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+    }
+
+    .topic-card:active {
+      transform: translateY(-2px) scale(0.98);
+    }
+
+    /* Active card - expanded with full content */
+    .topic-card.active {
+      min-height: 200px;
+    }
+
+    .topic-card.active .topic-card-bg {
       position: absolute;
       inset: 0;
       background-size: cover;
       background-position: center;
-      transition: transform 0.3s ease;
     }
 
-    .main-topic:hover .main-topic-bg {
-      transform: scale(1.05);
-    }
-
-    .main-topic-overlay {
+    .topic-card.active .topic-card-overlay {
       position: absolute;
       inset: 0;
       background: rgba(14, 38, 105, 0.9);
@@ -81,7 +90,7 @@ export class DesktopTopics extends LitElement {
       justify-content: flex-end;
     }
 
-    .main-topic-title {
+    .topic-card.active .topic-card-title {
       font-family: 'Noto Sans TC', sans-serif;
       font-size: 20px;
       font-weight: 500;
@@ -90,7 +99,7 @@ export class DesktopTopics extends LitElement {
       line-height: 1.3;
     }
 
-    .main-topic-desc {
+    .topic-card.active .topic-card-desc {
       font-family: 'Noto Sans TC', sans-serif;
       font-size: 14px;
       color: rgba(255, 255, 255, 0.85);
@@ -102,28 +111,13 @@ export class DesktopTopics extends LitElement {
       overflow: hidden;
     }
 
-    /* Topic list items */
-    .topic-items {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .topic-item {
+    /* Inactive card - simple row style */
+    .topic-card.inactive {
+      background: white;
       padding: 20px 24px;
-      cursor: pointer;
-      transition: background 0.2s;
-      border-top: 1px solid rgba(0, 0, 0, 0.08);
     }
 
-    .topic-item:hover {
-      background: rgba(14, 38, 105, 0.05);
-    }
-
-    .topic-item.active {
-      background: rgba(14, 38, 105, 0.08);
-    }
-
-    .topic-item-text {
+    .topic-card.inactive .topic-card-text {
       font-family: 'Noto Sans TC', sans-serif;
       font-size: 16px;
       font-weight: 500;
@@ -131,67 +125,101 @@ export class DesktopTopics extends LitElement {
       margin: 0;
     }
 
-    /* Right: Event cards */
+    /* Right: Event cards - using mobile style */
     .events-section {
       display: flex;
       flex-direction: column;
       gap: 16px;
     }
 
-    .events-carousel {
+    .events-list {
       display: flex;
-      gap: 16px;
-      overflow: hidden;
+      flex-direction: column;
+      gap: 12px;
     }
 
+    /* Mobile-style event card */
     .event-card {
-      flex: 0 0 calc(50% - 8px);
       background: white;
-      border-radius: 16px;
-      overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      border-radius: 20px;
+      padding: 20px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
       cursor: pointer;
       transition: transform 0.3s, box-shadow 0.3s;
     }
 
     .event-card:hover {
       transform: translateY(-4px);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
     }
 
-    .event-card-image {
-      width: 100%;
-      height: 140px;
-      background: #ddd;
-      object-fit: cover;
+    .event-card:active {
+      transform: scale(0.98);
     }
 
-    .event-card-content {
-      padding: 16px;
+    .event-info {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      flex: 1;
+      min-width: 0;
     }
 
-    .event-card-title {
+    .event-title {
       font-family: 'Noto Sans TC', sans-serif;
-      font-size: 16px;
+      font-size: 18px;
       font-weight: 500;
       color: #121212;
-      margin: 0 0 8px 0;
+      line-height: 1.3;
+      margin: 0;
     }
 
-    .event-card-date {
-      font-family: 'Noto Sans TC', sans-serif;
-      font-size: 13px;
-      color: #666;
-      margin: 0 0 4px 0;
+    .event-items {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
 
-    .event-card-tag {
-      font-family: 'Noto Sans TC', sans-serif;
-      font-size: 12px;
-      color: #0e2669;
+    .event-row {
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 8px;
+    }
+
+    .event-icon {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    .event-icon svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .event-text {
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: 14px;
+      color: #666;
+      line-height: 1.3;
+    }
+
+    .event-image {
+      width: 120px;
+      height: 120px;
+      border-radius: 12px;
+      background: #f5f5f5;
+      flex-shrink: 0;
+      overflow: hidden;
+      margin-left: 16px;
+    }
+
+    .event-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
     /* Navigation arrows */
@@ -199,6 +227,7 @@ export class DesktopTopics extends LitElement {
       display: flex;
       justify-content: flex-end;
       gap: 8px;
+      margin-top: 8px;
     }
 
     .nav-button {
@@ -236,6 +265,8 @@ export class DesktopTopics extends LitElement {
       color: #999;
       text-align: center;
       padding: 40px;
+      background: white;
+      border-radius: 20px;
     }
   `;
 
@@ -285,74 +316,94 @@ export class DesktopTopics extends LitElement {
     }
   }
 
-  private formatDateRange(start: string, end: string | null): string {
-    const startDate = new Date(start);
-    const startStr = `${startDate.getMonth() + 1}.${startDate.getDate()}`;
+  private formatDate(dateStr: string): string {
+    const date = new Date(dateStr);
+    return `${date.getMonth() + 1}.${date.getDate().toString().padStart(2, '0')}`;
+  }
 
-    if (!end) return startStr;
-
-    const endDate = new Date(end);
-    const endStr = `${endDate.getMonth() + 1}.${endDate.getDate()}`;
-
-    return `${startStr} - ${endStr}`;
+  private getParticipationText(event: Event): string {
+    return event.participation_type || '現場參與';
   }
 
   render() {
-    const selectedTopic = this.topics[this.selectedTopicIndex];
     const visibleEvents = this.topicEvents.slice(this.eventCarouselIndex, this.eventCarouselIndex + 2);
     const canPrev = this.eventCarouselIndex > 0;
     const canNext = this.eventCarouselIndex < this.topicEvents.length - 2;
+
+    const calendarIcon = html`
+      <svg viewBox="0 0 18 18" fill="none">
+        <path d="M15.75 15V4.5C15.75 3.67275 15.0773 3 14.25 3H12.75V1.5H11.25V3H6.75V1.5H5.25V3H3.75C2.92275 3 2.25 3.67275 2.25 4.5V15C2.25 15.8273 2.92275 16.5 3.75 16.5H14.25C15.0773 16.5 15.75 15.8273 15.75 15ZM6.75 13.5H5.25V12H6.75V13.5ZM6.75 10.5H5.25V9H6.75V10.5ZM9.75 13.5H8.25V12H9.75V13.5ZM9.75 10.5H8.25V9H9.75V10.5ZM12.75 13.5H11.25V12H12.75V13.5ZM12.75 10.5H11.25V9H12.75V10.5ZM14.25 6.75H3.75V5.25H14.25V6.75Z" fill="#5FB7FA"/>
+      </svg>
+    `;
+
+    const personIcon = html`
+      <svg viewBox="0 0 18 18" fill="none">
+        <path d="M9 1.5C9.825 1.5 10.5 2.175 10.5 3C10.5 3.825 9.825 4.5 9 4.5C8.175 4.5 7.5 3.825 7.5 3C7.5 2.175 8.175 1.5 9 1.5ZM11.925 6.075C11.625 5.775 11.1 5.25 10.125 5.25H8.25C6.15 5.25 4.5 3.6 4.5 1.5H3C3 3.9 4.575 5.85 6.75 6.525V16.5H8.25V12H9.75V16.5H11.25V7.575L14.25 10.5L15.3 9.45L11.925 6.075Z" fill="#5FB7FA"/>
+      </svg>
+    `;
 
     return html`
       <div class="section-container">
         <div class="section-title">看主題</div>
 
         <div class="content-grid">
-          <!-- Left: Topic list -->
-          <div class="topic-list-card">
-            ${selectedTopic ? html`
-              <div class="main-topic" @click=${() => this.handleTopicClick(selectedTopic.id)}>
+          <!-- Left: Topic cards (each independent) -->
+          <div class="topic-cards-list">
+            ${this.topics.map((topic, index) => {
+              const isActive = index === this.selectedTopicIndex;
+              return isActive ? html`
+                <!-- Active card - expanded with background -->
                 <div
-                  class="main-topic-bg"
-                  style="background-image: url('${selectedTopic.background_image || ''}')"
-                ></div>
-                <div class="main-topic-overlay">
-                  <h3 class="main-topic-title">${selectedTopic.name} ${selectedTopic.subtitle || ''}</h3>
-                  <p class="main-topic-desc">${selectedTopic.description || ''}</p>
-                </div>
-              </div>
-            ` : ''}
-
-            <div class="topic-items">
-              ${this.topics.filter((_, index) => index !== this.selectedTopicIndex).map((topic, index) => html`
-                <div
-                  class="topic-item"
-                  @click=${() => this.handleTopicSelect(this.topics.indexOf(topic))}
+                  class="topic-card active"
+                  @click=${() => this.handleTopicClick(topic.id)}
                 >
-                  <p class="topic-item-text">${topic.name} ${topic.subtitle || ''}</p>
+                  <div
+                    class="topic-card-bg"
+                    style="background-image: url('${topic.background_image || ''}')"
+                  ></div>
+                  <div class="topic-card-overlay">
+                    <h3 class="topic-card-title">${topic.name} ${topic.subtitle || ''}</h3>
+                    <p class="topic-card-desc">${topic.description || ''}</p>
+                  </div>
                 </div>
-              `)}
-            </div>
+              ` : html`
+                <!-- Inactive card - simple row -->
+                <div
+                  class="topic-card inactive"
+                  @click=${() => this.handleTopicSelect(index)}
+                >
+                  <p class="topic-card-text">${topic.name} ${topic.subtitle || ''}</p>
+                </div>
+              `;
+            })}
           </div>
 
-          <!-- Right: Event cards -->
+          <!-- Right: Event cards (mobile style) -->
           <div class="events-section">
             ${this.topicEvents.length > 0 ? html`
-              <div class="events-carousel">
+              <div class="events-list">
                 ${visibleEvents.map(event => html`
-                  <div class="event-card">
-                    ${event.image_url ? html`
-                      <img class="event-card-image" src=${event.image_url} alt=${event.title} />
-                    ` : html`
-                      <div class="event-card-image"></div>
-                    `}
-                    <div class="event-card-content">
-                      <h4 class="event-card-title">${event.title}</h4>
-                      <p class="event-card-date">${this.formatDateRange(event.date_start, event.date_end)}</p>
-                      <div class="event-card-tag">
-                        ${event.participation_type || ''}
+                  <div class="event-card" @click=${() => event.link_url && window.open(event.link_url, '_blank')}>
+                    <div class="event-info">
+                      <p class="event-title">${event.title}</p>
+                      <div class="event-items">
+                        <div class="event-row">
+                          <span class="event-icon">${calendarIcon}</span>
+                          <span class="event-text">
+                            ${this.formatDate(event.date_start)}${event.date_end ? ` - ${this.formatDate(event.date_end)}` : ''}
+                          </span>
+                        </div>
+                        <div class="event-row">
+                          <span class="event-icon">${personIcon}</span>
+                          <span class="event-text">${this.getParticipationText(event)}</span>
+                        </div>
                       </div>
                     </div>
+                    ${event.image_url ? html`
+                      <div class="event-image">
+                        <img src=${event.image_url} alt=${event.title} />
+                      </div>
+                    ` : ''}
                   </div>
                 `)}
               </div>
