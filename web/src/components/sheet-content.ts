@@ -1221,8 +1221,6 @@ export class SheetContent extends LitElement {
       </svg>
     `;
 
-    // Fallback image
-    const defaultEventImage = 'https://images.unsplash.com/photo-1544027993-37dbfe43562a?w=400';
 
     return html`
       <div class="schedule-container">
@@ -1263,7 +1261,7 @@ export class SheetContent extends LitElement {
                   </div>
                 </div>
                 <div class="event-image">
-                  <img src="${event.image_url || defaultEventImage}" alt="${event.title}" />
+                  <img src="${event.image_url || ''}" alt="${event.title}" />
                 </div>
               </div>
             `) : html`
@@ -1296,7 +1294,6 @@ export class SheetContent extends LitElement {
 
     // Get first featured blessing for photo card
     const featuredBlessing = this.blessings[0];
-    const defaultBlessingImage = 'https://images.unsplash.com/photo-1544027993-37dbfe43562a?w=600';
 
     return html`
       <div class="impact-container">
@@ -1390,7 +1387,7 @@ export class SheetContent extends LitElement {
               <!-- Photo cards from API -->
               ${this.blessings.map(blessing => html`
                 <div class="bless-card bless-photo-card" @click=${() => this.handleBlessingClick(blessing.id)}>
-                  <img src="${blessing.image_url || defaultBlessingImage}" alt="${blessing.author}" />
+                  <img src="${blessing.image_url || ''}" alt="${blessing.author}" />
                   <div class="bless-photo-overlay"></div>
                   <span class="bless-photo-text">${blessing.author}</span>
                 </div>
