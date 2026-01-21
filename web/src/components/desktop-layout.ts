@@ -73,7 +73,7 @@ export class DesktopLayout extends LitElement {
     /* Section cards */
     .section-card {
       background: #e4ddd4;
-      border-radius: 24px;
+      border-radius: 60px;
       overflow: hidden;
     }
 

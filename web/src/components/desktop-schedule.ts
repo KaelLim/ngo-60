@@ -39,12 +39,12 @@ export class DesktopSchedule extends LitElement {
 
     .section-title {
       font-family: 'Noto Sans TC', sans-serif;
-      font-size: 14px;
+      font-size: 16px;
       font-weight: 500;
-      color: #0e2669;
-      background: rgba(14, 38, 105, 0.1);
-      padding: 6px 12px;
-      border-radius: 20px;
+      color: white;
+      background: #121212;
+      padding: 12px 24px;
+      border-radius: 26px;
       display: inline-block;
       margin-bottom: 24px;
     }

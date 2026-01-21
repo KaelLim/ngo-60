@@ -27,12 +27,12 @@ export class DesktopTopics extends LitElement {
 
     .section-title {
       font-family: 'Noto Sans TC', sans-serif;
-      font-size: 14px;
+      font-size: 16px;
       font-weight: 500;
-      color: #0e2669;
-      background: rgba(14, 38, 105, 0.1);
-      padding: 6px 12px;
-      border-radius: 20px;
+      color: white;
+      background: #121212;
+      padding: 12px 24px;
+      border-radius: 26px;
       display: inline-block;
       margin-bottom: 24px;
     }
@@ -46,76 +46,88 @@ export class DesktopTopics extends LitElement {
     /* Left: Topic list card */
     .topic-list-card {
       background: white;
-      border-radius: 16px;
-      padding: 24px;
+      border-radius: 24px;
+      overflow: hidden;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     }
 
+    /* Main topic card with background image */
     .main-topic {
-      margin-bottom: 20px;
+      position: relative;
+      min-height: 180px;
+      cursor: pointer;
+      overflow: hidden;
+    }
+
+    .main-topic-bg {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      transition: transform 0.3s ease;
+    }
+
+    .main-topic:hover .main-topic-bg {
+      transform: scale(1.05);
+    }
+
+    .main-topic-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(14, 38, 105, 0.9);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
     }
 
     .main-topic-title {
       font-family: 'Noto Sans TC', sans-serif;
       font-size: 20px;
       font-weight: 500;
-      color: #0e2669;
-      margin: 0 0 4px 0;
+      color: white;
+      margin: 0 0 12px 0;
+      line-height: 1.3;
     }
 
-    .main-topic-subtitle {
+    .main-topic-desc {
       font-family: 'Noto Sans TC', sans-serif;
       font-size: 14px;
-      color: #666;
+      color: rgba(255, 255, 255, 0.85);
       margin: 0;
+      line-height: 1.6;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
 
+    /* Topic list items */
     .topic-items {
       display: flex;
       flex-direction: column;
-      gap: 12px;
     }
 
     .topic-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 12px;
-      background: #f5f5f5;
-      border-radius: 12px;
+      padding: 20px 24px;
       cursor: pointer;
-      transition: background 0.2s, transform 0.2s;
+      transition: background 0.2s;
+      border-top: 1px solid rgba(0, 0, 0, 0.08);
     }
 
     .topic-item:hover {
-      background: #eee;
-      transform: translateX(4px);
+      background: rgba(14, 38, 105, 0.05);
     }
 
     .topic-item.active {
-      background: rgba(14, 38, 105, 0.1);
-    }
-
-    .topic-item-icon {
-      font-size: 18px;
+      background: rgba(14, 38, 105, 0.08);
     }
 
     .topic-item-text {
-      flex: 1;
-    }
-
-    .topic-item-name {
       font-family: 'Noto Sans TC', sans-serif;
-      font-size: 14px;
+      font-size: 16px;
       font-weight: 500;
-      color: #121212;
-      margin: 0;
-    }
-
-    .topic-item-subtitle {
-      font-family: 'Noto Sans TC', sans-serif;
-      font-size: 12px;
-      color: #666;
+      color: #0e2669;
       margin: 0;
     }
 
@@ -300,22 +312,24 @@ export class DesktopTopics extends LitElement {
           <div class="topic-list-card">
             ${selectedTopic ? html`
               <div class="main-topic" @click=${() => this.handleTopicClick(selectedTopic.id)}>
-                <h3 class="main-topic-title">${selectedTopic.name} ${selectedTopic.subtitle || ''}</h3>
-                <p class="main-topic-subtitle">${selectedTopic.description || ''}</p>
+                <div
+                  class="main-topic-bg"
+                  style="background-image: url('${selectedTopic.background_image || ''}')"
+                ></div>
+                <div class="main-topic-overlay">
+                  <h3 class="main-topic-title">${selectedTopic.name} ${selectedTopic.subtitle || ''}</h3>
+                  <p class="main-topic-desc">${selectedTopic.description || ''}</p>
+                </div>
               </div>
             ` : ''}
 
             <div class="topic-items">
-              ${this.topics.map((topic, index) => html`
+              ${this.topics.filter((_, index) => index !== this.selectedTopicIndex).map((topic, index) => html`
                 <div
-                  class="topic-item ${index === this.selectedTopicIndex ? 'active' : ''}"
-                  @click=${() => this.handleTopicSelect(index)}
+                  class="topic-item"
+                  @click=${() => this.handleTopicSelect(this.topics.indexOf(topic))}
                 >
-                  <span class="topic-item-icon">${topic.icon || ''}</span>
-                  <div class="topic-item-text">
-                    <p class="topic-item-name">${topic.name}</p>
-                    <p class="topic-item-subtitle">${topic.subtitle || ''}</p>
-                  </div>
+                  <p class="topic-item-text">${topic.name} ${topic.subtitle || ''}</p>
                 </div>
               `)}
             </div>
