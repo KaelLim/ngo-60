@@ -93,7 +93,7 @@ export function updateImagePreview(fieldId, imageUrl) {
   if (previewContainer && imageUrl) {
     previewContainer.innerHTML = `<img src="${imageUrl}" alt="">`;
   } else if (previewContainer) {
-    previewContainer.innerHTML = '<span class="placeholder">🖼️</span>';
+    previewContainer.innerHTML = '<span class="placeholder"><span class="material-symbols-outlined">image</span></span>';
   }
 }
 

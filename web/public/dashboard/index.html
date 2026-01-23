@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard - 慈濟60週年後台</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -17,27 +18,27 @@
       </div>
       <nav>
         <div class="nav-item active" data-section="homepage">
-          <span class="icon">🏠</span>
+          <span class="material-symbols-outlined">home</span>
           <span>首頁內容</span>
         </div>
         <div class="nav-item" data-section="topics">
-          <span class="icon">📂</span>
+          <span class="material-symbols-outlined">category</span>
           <span>主題管理</span>
         </div>
         <div class="nav-item" data-section="events">
-          <span class="icon">📅</span>
+          <span class="material-symbols-outlined">event</span>
           <span>活動管理</span>
         </div>
         <div class="nav-item" data-section="blessings">
-          <span class="icon">🙏</span>
+          <span class="material-symbols-outlined">volunteer_activism</span>
           <span>祝福語管理</span>
         </div>
         <div class="nav-item" data-section="blessing-tags">
-          <span class="icon">💬</span>
+          <span class="material-symbols-outlined">chat_bubble</span>
           <span>祝福標籤管理</span>
         </div>
         <div class="nav-item" data-section="gallery">
-          <span class="icon">🖼️</span>
+          <span class="material-symbols-outlined">photo_library</span>
           <span>圖庫管理</span>
         </div>
       </nav>
@@ -270,7 +271,7 @@
               <input type="hidden" id="topic-background">
               <div class="image-picker-field">
                 <div class="image-picker-preview" id="topic-background-preview">
-                  <span class="placeholder">🖼️</span>
+                  <span class="placeholder"><span class="material-symbols-outlined">image</span></span>
                 </div>
                 <div class="image-picker-actions">
                   <button type="button" class="btn btn-outline btn-sm" onclick="openImagePicker('topic-background', 'topics')">選擇圖片</button>
@@ -362,7 +363,7 @@
             <input type="hidden" id="event-image">
             <div class="image-picker-field">
               <div class="image-picker-preview" id="event-image-preview">
-                <span class="placeholder">🖼️</span>
+                <span class="placeholder"><span class="material-symbols-outlined">image</span></span>
               </div>
               <div class="image-picker-actions">
                 <button type="button" class="btn btn-outline btn-sm" onclick="openImagePicker('event-image', 'events')">選擇圖片</button>
@@ -412,7 +413,7 @@
             <input type="hidden" id="blessing-image">
             <div class="image-picker-field">
               <div class="image-picker-preview" id="blessing-image-preview">
-                <span class="placeholder">🖼️</span>
+                <span class="placeholder"><span class="material-symbols-outlined">image</span></span>
               </div>
               <div class="image-picker-actions">
                 <button type="button" class="btn btn-outline btn-sm" onclick="openImagePicker('blessing-image', 'blessings')">選擇圖片</button>
