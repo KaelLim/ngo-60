@@ -32,6 +32,10 @@
           <span class="icon">🙏</span>
           <span>祝福語管理</span>
         </div>
+        <div class="nav-item" data-section="blessing-tags">
+          <span class="icon">💬</span>
+          <span>祝福標籤管理</span>
+        </div>
         <div class="nav-item" data-section="gallery">
           <span class="icon">🖼️</span>
           <span>圖庫管理</span>
@@ -142,6 +146,28 @@
                 </tr>
               </thead>
               <tbody id="blessings-table"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Blessing Tags Section -->
+      <section id="section-blessing-tags" class="section">
+        <div class="page-header">
+          <h2>祝福標籤管理</h2>
+          <button class="btn btn-primary" onclick="openBlessingTagModal()">+ 新增標籤</button>
+        </div>
+        <div class="card">
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>標籤內容</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="blessing-tags-table"></tbody>
             </table>
           </div>
         </div>
@@ -403,6 +429,29 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" onclick="closeBlessingModal()">取消</button>
+          <button type="submit" class="btn btn-primary">儲存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Blessing Tag Modal -->
+  <div class="modal-overlay" id="blessing-tag-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="blessing-tag-modal-title">新增祝福標籤</h3>
+        <button class="modal-close" onclick="closeBlessingTagModal()">&times;</button>
+      </div>
+      <form id="blessing-tag-form">
+        <div class="modal-body">
+          <input type="hidden" id="blessing-tag-id">
+          <div class="form-group">
+            <label>標籤內容 *</label>
+            <input type="text" id="blessing-tag-message" required placeholder="例：謝謝陪伴需要幫助的人">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeBlessingTagModal()">取消</button>
           <button type="submit" class="btn btn-primary">儲存</button>
         </div>
       </form>

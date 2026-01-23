@@ -4,6 +4,7 @@ import { loadTopics, initTopics, openTopicModal, closeTopicModal } from './topic
 import { loadEvents, initEvents, openEventModal, closeEventModal } from './events.js';
 import { loadBlessings, initBlessings, openBlessingModal, closeBlessingModal } from './blessings.js';
 import { loadGallery, initGallery, closeGalleryModal } from './gallery.js';
+import { loadBlessingTags, initBlessingTags, openBlessingTagModal, closeBlessingTagModal } from './blessing-tags.js';
 import { initImagePicker, openImagePicker, closeImagePicker, confirmImageSelection, clearImageField } from './image-picker.js';
 
 // Section loaders map
@@ -12,6 +13,7 @@ const sectionLoaders = {
   topics: loadTopics,
   events: loadEvents,
   blessings: loadBlessings,
+  'blessing-tags': loadBlessingTags,
   gallery: loadGallery
 };
 
@@ -44,6 +46,8 @@ window.openEventModal = openEventModal;
 window.closeEventModal = closeEventModal;
 window.openBlessingModal = openBlessingModal;
 window.closeBlessingModal = closeBlessingModal;
+window.openBlessingTagModal = openBlessingTagModal;
+window.closeBlessingTagModal = closeBlessingTagModal;
 window.closeGalleryModal = closeGalleryModal;
 window.openImagePicker = openImagePicker;
 window.closeImagePicker = closeImagePicker;
@@ -57,6 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initTopics();
   initEvents();
   initBlessings();
+  initBlessingTags();
   initGallery();
   initImagePicker();
 

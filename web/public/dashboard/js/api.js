@@ -197,5 +197,33 @@ export const api = {
 
   async deleteGalleryImage(id) {
     await fetch(`${API_BASE}/gallery/${id}`, { method: 'DELETE' });
+  },
+
+  // Blessing Tags
+  async getBlessingTags() {
+    const res = await fetch(`${API_BASE}/blessing-tags`);
+    return res.json();
+  },
+
+  async createBlessingTag(data) {
+    const res = await fetch(`${API_BASE}/blessing-tags`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    return res.json();
+  },
+
+  async updateBlessingTag(id, data) {
+    const res = await fetch(`${API_BASE}/blessing-tags/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    return res.json();
+  },
+
+  async deleteBlessingTag(id) {
+    await fetch(`${API_BASE}/blessing-tags/${id}`, { method: 'DELETE' });
   }
 };

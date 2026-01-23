@@ -34,6 +34,28 @@ blessingTagRoutes.post("/", async (c) => {
   return c.json(rows[0], 201);
 });
 
+// PUT /api/blessing-tags/:id - 更新祝福語標籤
+blessingTagRoutes.put("/:id", async (c) => {
+  const id = c.req.param("id");
+  const body = await c.req.json();
+  const { message } = body;
+
+  if (!message) {
+    return c.json({ error: "message is required" }, 400);
+  }
+
+  const rows = await query<BlessingTag>(
+    "UPDATE blessing_tags SET message = $1 WHERE id = $2 AND is_active = true RETURNING *",
+    [message, id]
+  );
+
+  if (rows.length === 0) {
+    return c.json({ error: "Blessing tag not found" }, 404);
+  }
+
+  return c.json(rows[0]);
+});
+
 // DELETE /api/blessing-tags/:id - 刪除祝福語標籤
 blessingTagRoutes.delete("/:id", async (c) => {
   const id = c.req.param("id");
