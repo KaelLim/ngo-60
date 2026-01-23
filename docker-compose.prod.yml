@@ -53,7 +53,7 @@ services:
         ADMIN_USER: ${ADMIN_USER:-admin}
         ADMIN_PASSWORD: ${ADMIN_PASSWORD:-changeme}
     ports:
-      - "${PORT:-80}:80"
+      - "${PORT:-8973}:80"
     depends_on:
       - api
     restart: unless-stopped
