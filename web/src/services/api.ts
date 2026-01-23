@@ -52,6 +52,12 @@ export interface Blessing {
   sort_order: number;
 }
 
+export interface BlessingTag {
+  id: number;
+  message: string;
+  is_active: boolean;
+}
+
 export interface GalleryImage {
   id: number;
   filename: string;
@@ -122,6 +128,12 @@ export const api = {
   async getBlessingById(id: number): Promise<Blessing | null> {
     const res = await fetch(`${API_BASE}/blessings/${id}`);
     if (!res.ok) return null;
+    return res.json();
+  },
+
+  // Blessing Tags (祝福語標籤)
+  async getBlessingTags(): Promise<BlessingTag[]> {
+    const res = await fetch(`${API_BASE}/blessing-tags`);
     return res.json();
   },
 

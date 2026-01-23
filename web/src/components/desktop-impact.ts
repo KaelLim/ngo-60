@@ -1,11 +1,14 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import { ImpactSection } from '../services/api.js';
+import { ImpactSection, BlessingTag } from '../services/api.js';
 
 @customElement('desktop-impact')
 export class DesktopImpact extends LitElement {
   @property({ type: Array })
   sections: ImpactSection[] = [];
+
+  @property({ type: Array })
+  blessingTags: BlessingTag[] = [];
 
   static styles = css`
     :host {
@@ -13,260 +16,407 @@ export class DesktopImpact extends LitElement {
     }
 
     .section-container {
-      padding: 40px;
+      padding: 60px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 48px;
+    }
+
+    /* Report section - horizontal layout */
+    .report-section {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+    }
+
+    /* Left: Title */
+    .title-section {
+      flex: 1;
+      padding-bottom: 60px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
     }
 
     .section-title {
       font-family: 'Noto Sans TC', sans-serif;
-      font-size: 16px;
+      font-size: 18px;
       font-weight: 500;
       color: white;
       background: #121212;
-      padding: 12px 24px;
-      border-radius: 26px;
+      padding: 8px 24px;
+      border-radius: 80px;
       display: inline-block;
-      margin-bottom: 24px;
+      width: fit-content;
+      text-align: center;
     }
 
-    .content-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 32px;
-      align-items: start;
-    }
-
-    /* Left: Description */
-    .description-section {
-      padding: 24px 0;
+    .text-content {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
 
     .main-title {
       font-family: 'Noto Sans TC', sans-serif;
-      font-size: 28px;
+      font-size: 32px;
       font-weight: 500;
-      color: #121212;
-      margin: 0 0 16px 0;
-      line-height: 1.4;
+      color: black;
+      margin: 0;
+      line-height: 1.25;
     }
 
     .main-desc {
       font-family: 'Noto Sans TC', sans-serif;
-      font-size: 15px;
-      color: #666;
+      font-size: 18px;
+      font-weight: 400;
+      color: black;
       margin: 0;
-      line-height: 1.6;
+      line-height: 1.25;
     }
 
-    /* Right: Stats card */
-    .stats-card {
-      background: white;
-      border-radius: 16px;
-      padding: 32px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    }
-
-    .stats-header {
-      text-align: center;
-      margin-bottom: 24px;
-    }
-
-    .stats-total {
-      font-family: 'Noto Sans TC', sans-serif;
-      font-size: 14px;
-      color: #666;
-      margin: 0 0 4px 0;
-    }
-
-    .stats-value {
-      font-family: 'Noto Sans TC', sans-serif;
-      font-size: 36px;
-      font-weight: 600;
-      color: #0e2669;
-      margin: 0;
-    }
-
-    .stats-label {
-      font-family: 'Noto Sans TC', sans-serif;
-      font-size: 14px;
-      color: #666;
-      margin: 4px 0 0 0;
-    }
-
-    /* Simple visualization */
-    .stats-visual {
-      display: flex;
-      justify-content: center;
-      gap: 8px;
-      margin: 24px 0;
-    }
-
-    .stats-bar {
-      width: 60px;
-      height: 80px;
-      background: rgba(14, 38, 105, 0.1);
-      border-radius: 8px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .stats-bar-fill {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
+    /* Right: Graphic card */
+    .graphic-card {
+      width: 502px;
+      flex-shrink: 0;
       background: #0e2669;
-      border-radius: 8px;
-      transition: height 0.5s ease-out;
-    }
-
-    .stats-bar-label {
-      font-family: 'Noto Sans TC', sans-serif;
-      font-size: 11px;
-      color: #666;
-      text-align: center;
-      margin-top: 8px;
-    }
-
-    /* Tags */
-    .stats-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      justify-content: center;
-      margin-bottom: 24px;
-    }
-
-    .stats-tag {
-      font-family: 'Noto Sans TC', sans-serif;
-      font-size: 13px;
-      color: #0e2669;
-      background: rgba(14, 38, 105, 0.1);
-      padding: 6px 14px;
       border-radius: 20px;
-    }
-
-    /* Stats row */
-    .stats-row {
+      padding: 48px 54px;
       display: flex;
-      justify-content: space-around;
-      border-top: 1px solid #eee;
-      padding-top: 20px;
-      margin-bottom: 20px;
+      flex-direction: column;
+      gap: 40px;
+      align-items: center;
+      overflow: hidden;
+      box-sizing: border-box;
     }
 
-    .stat-item {
-      text-align: center;
+    .graphic-area {
+      position: relative;
+      width: 394px;
+      height: 254px;
     }
 
-    .stat-item-value {
+    /* Triangle */
+    .triangle-svg {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, calc(-50% + 27px));
+      width: 200px;
+      height: 148px;
+    }
+
+    .triangle-svg svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Nodes */
+    .impact-node {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .impact-node.top {
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .impact-node.bottom-left {
+      top: 176px;
+      left: 0;
+    }
+
+    .impact-node.bottom-right {
+      top: 176px;
+      right: 0;
+    }
+
+    .impact-node-badge {
+      background: #0e2669;
+      padding: 8px;
+      border-radius: 30px;
+    }
+
+    .impact-node-inner {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 8px 14px;
+      border-radius: 20px;
+      box-shadow: inset 0 0 4px rgba(255, 255, 255, 0.4);
+    }
+
+    .impact-node-inner span {
       font-family: 'Noto Sans TC', sans-serif;
+      font-size: 18px;
+      font-weight: 500;
+      color: white;
+      line-height: 1.2;
+    }
+
+    .impact-node-stat {
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+      color: white;
+      font-family: 'Noto Sans TC', sans-serif;
+      justify-content: center;
+    }
+
+    .impact-node-stat .label {
+      font-size: 15px;
+      font-weight: 400;
+      line-height: 1.2;
+    }
+
+    .impact-node-stat .value {
       font-size: 20px;
-      font-weight: 600;
-      color: #0e2669;
-      margin: 0;
+      font-weight: 400;
+      line-height: 1;
     }
 
-    .stat-item-label {
+    .impact-node-stat .unit {
+      font-size: 15px;
+      font-weight: 400;
+      line-height: 1.2;
+    }
+
+    /* Buttons */
+    .button-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: flex-end;
+      width: 328px;
+    }
+
+    .report-btn {
+      width: 268px;
+      height: 48px;
+      background: white;
+      border: none;
+      border-radius: 24px;
       font-family: 'Noto Sans TC', sans-serif;
-      font-size: 12px;
-      color: #666;
-      margin: 4px 0 0 0;
+      font-size: 18px;
+      font-weight: 500;
+      color: black;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
     }
 
-    /* Report button */
-    .report-button {
+    .report-btn:hover {
+      transform: scale(1.03);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .report-btn:active {
+      transform: scale(0.98);
+    }
+
+    .link-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: white;
+      border: none;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      width: 100%;
-      padding: 14px;
-      border: 1px solid #0e2669;
-      border-radius: 12px;
-      background: transparent;
       cursor: pointer;
-      transition: background 0.2s, color 0.2s;
+      transition: transform 0.2s, box-shadow 0.2s;
     }
 
-    .report-button:hover {
-      background: #0e2669;
-      color: white;
+    .link-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
 
-    .report-button:hover svg {
-      color: white;
+    .link-btn:active {
+      transform: scale(0.95);
     }
 
-    .report-button-text {
+    .link-btn svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    /* Blessings section */
+    .blessings-section {
+      border: 4px solid white;
+      border-radius: 20px;
+      padding: 24px 40px 36px 40px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .blessings-title {
       font-family: 'Noto Sans TC', sans-serif;
-      font-size: 14px;
+      font-size: 24px;
       font-weight: 500;
       color: #0e2669;
+      line-height: 1.6;
+      margin: 0;
     }
 
-    .report-button:hover .report-button-text {
-      color: white;
+    .dialogs-wrapper {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px 20px;
     }
 
-    .report-button svg {
-      width: 18px;
-      height: 18px;
-      color: #0e2669;
-      transition: color 0.2s;
+    .dialog-item {
+      display: flex;
+      align-items: center;
+      padding-right: 4px;
+    }
+
+    .dialog-bubble {
+      background: white;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 12px;
+      border-radius: 8px;
+      margin-right: -4px;
+    }
+
+    .dialog-bubble span {
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: 16px;
+      font-weight: 400;
+      color: black;
+      line-height: 1.25;
+    }
+
+    .dialog-pointer {
+      width: 12px;
+      height: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: -4px;
+    }
+
+    .dialog-pointer svg {
+      width: 12px;
+      height: 16px;
     }
   `;
 
   render() {
-    // Sample data for visualization (can be made dynamic later)
-    const totalEvents = '348,039';
-    const tags = ['永續環境', '讓眾共善', '同片茶園'];
-    const stats = [
-      { value: '7,509', label: '名波及生' },
-      { value: '60%', label: '女孩失學前識' }
-    ];
+    const triangleSvg = html`
+      <svg viewBox="0 0 200 148" fill="none">
+        <path d="M100 5 L195 143 L5 143 Z" stroke="#5fb7fa" stroke-width="2" fill="none"/>
+      </svg>
+    `;
+
+    const arrowIcon = html`
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M7 17L17 7M17 7H7M17 7V17" stroke="#121212" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    `;
+
+    const pointerSvg = html`
+      <svg viewBox="0 0 12 16" fill="none">
+        <path d="M12 8L0 0V16L12 8Z" fill="white"/>
+      </svg>
+    `;
+
+    const blessingTexts = this.blessingTags.map(t => t.message);
 
     return html`
       <div class="section-container">
-        <div class="section-title">看影響</div>
-
-        <div class="content-grid">
-          <!-- Left: Description -->
-          <div class="description-section">
-            <h2 class="main-title">慈濟 60 年帶來哪些影響？</h2>
-            <p class="main-desc">
-              我們用三個關鍵方向，回顧慈濟社會影響
-            </p>
+        <!-- Report Section -->
+        <div class="report-section">
+          <!-- Left: Title -->
+          <div class="title-section">
+            <div class="section-title">看影響</div>
+            <div class="text-content">
+              <h2 class="main-title">慈濟 60 年帶來哪些影響？</h2>
+              <p class="main-desc">我們用三個關鍵方向，回應臺灣社會脈絡</p>
+            </div>
           </div>
 
-          <!-- Right: Stats card -->
-          <div class="stats-card">
-            <div class="stats-header">
-              <p class="stats-total">累計</p>
-              <p class="stats-value">${totalEvents}</p>
-              <p class="stats-label">場感恩活</p>
-            </div>
+          <!-- Right: Graphic card -->
+          <div class="graphic-card">
+            <div class="graphic-area">
+              <div class="triangle-svg">
+                ${triangleSvg}
+              </div>
 
-            <div class="stats-tags">
-              ${tags.map(tag => html`
-                <span class="stats-tag">${tag}</span>
-              `)}
-            </div>
-
-            <div class="stats-row">
-              ${stats.map(stat => html`
-                <div class="stat-item">
-                  <p class="stat-item-value">${stat.value}</p>
-                  <p class="stat-item-label">${stat.label}</p>
+              <!-- Top node: 永續環境 -->
+              <div class="impact-node top">
+                <div class="impact-node-stat">
+                  <span class="label">降低</span>
+                  <span class="value">348,039</span>
+                  <span class="unit">噸碳排放</span>
                 </div>
-              `)}
+                <div class="impact-node-badge">
+                  <div class="impact-node-inner">
+                    <span>永續環境</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bottom left node: 深耕共伴 -->
+              <div class="impact-node bottom-left">
+                <div class="impact-node-badge">
+                  <div class="impact-node-inner">
+                    <span>深耕共伴</span>
+                  </div>
+                </div>
+                <div class="impact-node-stat">
+                  <span class="label">培訓</span>
+                  <span class="value">7,509</span>
+                  <span class="unit">名防災士</span>
+                </div>
+              </div>
+
+              <!-- Bottom right node: 向光家園 -->
+              <div class="impact-node bottom-right">
+                <div class="impact-node-badge">
+                  <div class="impact-node-inner">
+                    <span>向光家園</span>
+                  </div>
+                </div>
+                <div class="impact-node-stat">
+                  <span class="label">驅動</span>
+                  <span class="value">80%</span>
+                  <span class="unit">災民利他意願</span>
+                </div>
+              </div>
             </div>
 
-            <button class="report-button">
-              <span class="report-button-text">影響力報告</span>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M5 12h14M14 5l7 7-7 7"/>
-              </svg>
-            </button>
+            <!-- Buttons -->
+            <div class="button-row">
+              <button class="report-btn">影響力報告</button>
+              <button class="link-btn">
+                ${arrowIcon}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Blessings Section -->
+        <div class="blessings-section">
+          <h3 class="blessings-title">選擇對慈濟 60 的祝福！</h3>
+          <div class="dialogs-wrapper">
+            ${blessingTexts.map(text => html`
+              <div class="dialog-item">
+                <div class="dialog-bubble">
+                  <span>${text}</span>
+                </div>
+                <div class="dialog-pointer">
+                  ${pointerSvg}
+                </div>
+              </div>
+            `)}
           </div>
         </div>
       </div>

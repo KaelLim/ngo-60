@@ -4,14 +4,13 @@ import { consume } from '@lit/context';
 import { appContext } from '../contexts/app-context.js';
 import { AppStore } from '../stores/app-store.js';
 import { StoreController } from '../controllers/store-controller.js';
-import { api, Homepage, Topic, Event, ImpactSection, Blessing, GalleryImage } from '../services/api.js';
+import { api, Homepage, Topic, Event, ImpactSection, Blessing, BlessingTag, GalleryImage } from '../services/api.js';
 
 import './desktop-header.js';
 import './desktop-intro.js';
 import './desktop-topics.js';
 import './desktop-schedule.js';
 import './desktop-impact.js';
-import './desktop-blessings.js';
 
 @customElement('desktop-layout')
 export class DesktopLayout extends LitElement {
@@ -37,6 +36,9 @@ export class DesktopLayout extends LitElement {
 
   @state()
   private blessings: Blessing[] = [];
+
+  @state()
+  private blessingTags: BlessingTag[] = [];
 
   @state()
   private loading = true;
@@ -100,13 +102,14 @@ export class DesktopLayout extends LitElement {
 
   private async loadData() {
     try {
-      const [homepage, images, topics, events, impact, blessings] = await Promise.all([
+      const [homepage, images, topics, events, impact, blessings, blessingTags] = await Promise.all([
         api.getHomepage(),
         api.getGalleryRandom(25, 'homepage'),
         api.getTopics(),
         api.getEvents({ month: this.appStore.selectedMonth, year: this.appStore.selectedYear }),
         api.getImpactSections(),
-        api.getBlessings()
+        api.getBlessings(),
+        api.getBlessingTags()
       ]);
 
       this.homepage = homepage;
@@ -115,6 +118,7 @@ export class DesktopLayout extends LitElement {
       this.events = events;
       this.impactSections = impact;
       this.blessings = blessings;
+      this.blessingTags = blessingTags;
     } catch (e) {
       console.error('Failed to load desktop data:', e);
     } finally {
@@ -189,19 +193,12 @@ export class DesktopLayout extends LitElement {
           ></desktop-schedule>
         </div>
 
-        <!-- Impact: 看影響 -->
+        <!-- Impact: 看影響 + 祝福區 -->
         <div class="section-card">
           <desktop-impact
             .sections=${this.impactSections}
+            .blessingTags=${this.blessingTags}
           ></desktop-impact>
-        </div>
-
-        <!-- Blessings: 祝福區 -->
-        <div class="section-card">
-          <desktop-blessings
-            .blessings=${this.blessings}
-            @blessing-click=${this.handleBlessingClick}
-          ></desktop-blessings>
         </div>
       </div>
 

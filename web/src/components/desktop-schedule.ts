@@ -53,40 +53,43 @@ export class DesktopSchedule extends LitElement {
     .date-selector {
       display: flex;
       align-items: center;
-      gap: 24px;
+      justify-content: space-between;
       margin-bottom: 24px;
-      background: white;
-      border-radius: 16px;
-      padding: 16px 24px;
     }
 
     .year-display {
       font-family: 'Noto Sans TC', sans-serif;
-      font-size: 24px;
+      font-size: 30px;
       font-weight: 500;
-      color: #121212;
+      color: #0e2669;
+      width: 102px;
+      text-align: center;
+      flex-shrink: 0;
     }
 
     .month-tabs {
       display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
+      gap: 12px;
+      height: 72px;
     }
 
     .month-tab {
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 8px 12px;
+      justify-content: center;
+      gap: 4px;
+      width: 64px;
+      height: 72px;
       border: none;
-      background: transparent;
+      background: #f4f1ee;
       border-radius: 12px;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: background 0.2s, color 0.2s;
     }
 
     .month-tab:hover {
-      background: #f5f5f5;
+      background: #e8e5e2;
     }
 
     .month-tab.active {
@@ -100,15 +103,30 @@ export class DesktopSchedule extends LitElement {
 
     .month-num {
       font-family: 'Noto Sans TC', sans-serif;
-      font-size: 14px;
       font-weight: 500;
       color: #121212;
+      line-height: 1.2;
+    }
+
+    .month-num-value {
+      font-size: 18px;
+    }
+
+    .month-num-label {
+      font-size: 16px;
     }
 
     .month-en {
       font-family: 'Noto Sans TC', sans-serif;
-      font-size: 11px;
-      color: #999;
+      font-size: 14px;
+      font-weight: 400;
+      color: #121212;
+      line-height: 1.2;
+    }
+
+    .month-tab.active .month-num-value,
+    .month-tab.active .month-num-label {
+      color: white;
     }
 
     /* Event cards */
@@ -228,7 +246,9 @@ export class DesktopSchedule extends LitElement {
                 class="month-tab ${month.num === this.selectedMonth ? 'active' : ''}"
                 @click=${() => this.handleMonthClick(month.num)}
               >
-                <span class="month-num">${month.label}</span>
+                <span class="month-num">
+                  <span class="month-num-value">${month.num} </span><span class="month-num-label">月</span>
+                </span>
                 <span class="month-en">${month.en}</span>
               </button>
             `)}

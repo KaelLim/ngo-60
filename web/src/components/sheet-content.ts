@@ -4,7 +4,7 @@ import { consume } from '@lit/context';
 import { appContext } from '../contexts/app-context.js';
 import { AppStore } from '../stores/app-store.js';
 import { StoreController } from '../controllers/store-controller.js';
-import { api, Topic, Event, ImpactSection, Blessing } from '../services/api.js';
+import { api, Topic, Event, ImpactSection, Blessing, BlessingTag } from '../services/api.js';
 
 import './homepage-tabs.js';
 
@@ -1074,14 +1074,8 @@ export class SheetContent extends LitElement {
     { en: 'Sep.' }, { en: 'Oct.' }, { en: 'Nov.' }, { en: 'Dec.' }
   ];
 
-  // Hardcoded bless messages for dialog bubbles
-  private blessMessages = [
-    '謝謝陪伴需要幫助的人',
-    '陪災民找回希望',
-    '願醫護人員健康平安',
-    '讓善心善款都能化為溫暖',
-    '持續守護台灣與世界'
-  ];
+  @state()
+  private blessMessages: string[] = [];
 
   connectedCallback() {
     super.connectedCallback();
@@ -1089,7 +1083,9 @@ export class SheetContent extends LitElement {
 
     // Start bless highlight rotation every 5 seconds
     this.blessIntervalId = window.setInterval(() => {
-      this.blessHighlightIndex = (this.blessHighlightIndex + 1) % this.blessMessages.length;
+      if (this.blessMessages.length > 0) {
+        this.blessHighlightIndex = (this.blessHighlightIndex + 1) % this.blessMessages.length;
+      }
     }, 5000);
 
     // Load initial data
@@ -1108,17 +1104,19 @@ export class SheetContent extends LitElement {
     this.loading = true;
     try {
       // Load all data in parallel
-      const [topics, events, impactSections, blessings] = await Promise.all([
+      const [topics, events, impactSections, blessings, blessingTags] = await Promise.all([
         api.getTopics(),
         api.getEvents({ month: this.appStore.selectedMonth, year: this.appStore.selectedYear }),
         api.getImpactSections(),
-        api.getBlessings(true) // Get featured blessings
+        api.getBlessings(true), // Get featured blessings
+        api.getBlessingTags()
       ]);
 
       this.topics = topics;
       this.events = events;
       this.impactSections = impactSections;
       this.blessings = blessings;
+      this.blessMessages = blessingTags.map((t: BlessingTag) => t.message);
     } catch (error) {
       console.error('Failed to load data:', error);
     } finally {

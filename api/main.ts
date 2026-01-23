@@ -8,6 +8,7 @@ import { impactRoutes } from "./routes/impact.ts";
 import { blessingsRoutes } from "./routes/blessings.ts";
 import { galleryRoutes } from "./routes/gallery.ts";
 import { homepageRoutes } from "./routes/homepage.ts";
+import { blessingTagRoutes } from "./routes/blessing-tags.ts";
 import { agentRoutes } from "./routes/agent.ts";
 
 const app = new Hono();
@@ -23,6 +24,7 @@ app.route("/api/topics", topicsRoutes);
 app.route("/api/events", eventsRoutes);
 app.route("/api/impact", impactRoutes);
 app.route("/api/blessings", blessingsRoutes);
+app.route("/api/blessing-tags", blessingTagRoutes);
 
 // Gallery 路由 - 增加上傳大小限制至 50MB
 app.use("/api/gallery", bodyLimit({ maxSize: 50 * 1024 * 1024 }));

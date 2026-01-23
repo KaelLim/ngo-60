@@ -1,5 +1,5 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import { customElement, property, state, query } from 'lit/decorators.js';
 import { Topic, Event, api } from '../services/api.js';
 
 @customElement('desktop-topics')
@@ -12,6 +12,12 @@ export class DesktopTopics extends LitElement {
 
   @state()
   private topicEvents: Event[] = [];
+
+  @state()
+  private activeScrollPage = 0;
+
+  @query('.events-list')
+  private eventsContainer!: HTMLElement;
 
   static styles = css`
     :host {
@@ -38,6 +44,7 @@ export class DesktopTopics extends LitElement {
       display: grid;
       grid-template-columns: 320px 1fr;
       gap: 24px;
+      overflow: hidden;
     }
 
     /* Left: Topic cards list - each card is independent */
@@ -127,6 +134,8 @@ export class DesktopTopics extends LitElement {
       display: flex;
       flex-direction: column;
       gap: 16px;
+      min-width: 0;
+      overflow: hidden;
     }
 
     .events-list {
@@ -259,7 +268,7 @@ export class DesktopTopics extends LitElement {
     .link-button {
       position: absolute;
       top: 0;
-      right: 2%;
+      right: 0;
       width: 48px;
       height: 48px;
       border-radius: 50%;
@@ -307,6 +316,63 @@ export class DesktopTopics extends LitElement {
       background: white;
       border-radius: 20px;
     }
+
+    /* Scroll navigation */
+    .scroll-nav {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 0;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .scroll-nav-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid #ccc;
+      background: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .scroll-nav-btn:hover {
+      background: #f5f5f5;
+      border-color: #0e2669;
+    }
+
+    .scroll-nav-btn:active {
+      transform: scale(0.95);
+    }
+
+    .scroll-nav-btn svg {
+      width: 16px;
+      height: 16px;
+      color: #333;
+    }
+
+    .scroll-nav-lines {
+      display: flex;
+      flex: 1;
+      gap: 8px;
+    }
+
+    .scroll-nav-line {
+      flex: 1;
+      height: 4px;
+      border-radius: 8px;
+      background: rgba(14, 38, 105, 0.20);
+      transition: background 0.3s;
+    }
+
+    .scroll-nav-line.active {
+      background: rgba(14, 38, 105, 0.60);
+    }
   `;
 
   updated(changedProperties: Map<string, unknown>) {
@@ -348,6 +414,23 @@ export class DesktopTopics extends LitElement {
 
   private getParticipationText(event: Event): string {
     return event.participation_type || '現場參與';
+  }
+
+  private handleEventScroll() {
+    if (!this.eventsContainer) return;
+    const { scrollLeft, scrollWidth, clientWidth } = this.eventsContainer;
+    const maxScroll = scrollWidth - clientWidth;
+    const progress = maxScroll > 0 ? scrollLeft / maxScroll : 0;
+    this.activeScrollPage = progress > 0.5 ? 1 : 0;
+  }
+
+  private scrollEvents(direction: 'prev' | 'next') {
+    if (!this.eventsContainer) return;
+    const scrollAmount = 350;
+    const newScroll = direction === 'next'
+      ? this.eventsContainer.scrollLeft + scrollAmount
+      : this.eventsContainer.scrollLeft - scrollAmount;
+    this.eventsContainer.scrollTo({ left: newScroll, behavior: 'smooth' });
   }
 
   render() {
@@ -408,7 +491,7 @@ export class DesktopTopics extends LitElement {
           <!-- Right: Activity cards (horizontal scroll) -->
           <div class="events-section">
             ${this.topicEvents.length > 0 ? html`
-              <div class="events-list">
+              <div class="events-list" @scroll=${this.handleEventScroll}>
                 ${this.topicEvents.map(event => html`
                   <div class="activity-card">
                     <div class="activity-card-shape">
@@ -446,6 +529,23 @@ export class DesktopTopics extends LitElement {
                     </div>
                   </div>
                 `)}
+              </div>
+              <!-- Event scroll navigation -->
+              <div class="scroll-nav">
+                <button class="scroll-nav-btn" @click=${() => this.scrollEvents('prev')}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M15 18l-6-6 6-6"/>
+                  </svg>
+                </button>
+                <div class="scroll-nav-lines">
+                  <div class="scroll-nav-line ${this.activeScrollPage === 0 ? 'active' : ''}"></div>
+                  <div class="scroll-nav-line ${this.activeScrollPage === 1 ? 'active' : ''}"></div>
+                </div>
+                <button class="scroll-nav-btn" @click=${() => this.scrollEvents('next')}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 18l6-6-6-6"/>
+                  </svg>
+                </button>
               </div>
             ` : html`
               <div class="empty-message">暫無活動</div>

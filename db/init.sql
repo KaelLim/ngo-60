@@ -54,6 +54,13 @@ CREATE TABLE IF NOT EXISTS blessings (
     sort_order INT DEFAULT 0
 );
 
+-- 祝福語標籤 (用於【看影響】的對話泡泡選項)
+CREATE TABLE IF NOT EXISTS blessing_tags (
+    id SERIAL PRIMARY KEY,
+    message TEXT NOT NULL,
+    is_active BOOLEAN DEFAULT true
+);
+
 -- Gallery 圖片表
 CREATE TABLE IF NOT EXISTS gallery (
     id SERIAL PRIMARY KEY,
@@ -155,6 +162,17 @@ WHERE NOT EXISTS (SELECT 1 FROM blessings WHERE message = '生氣是拿別人的
 INSERT INTO blessings (author, message, full_content, image_url, is_featured, sort_order)
 SELECT '志工分享', '在付出中，我找到了生命的意義。', '加入慈濟志工行列，是我人生最重要的決定之一。每一次的付出，每一次的服務，都讓我更加體會到生命的價值。原來，幸福不是擁有多少，而是付出多少。', '/uploads/gallery/gallery_16.jpg', false, 4
 WHERE NOT EXISTS (SELECT 1 FROM blessings WHERE message = '在付出中，我找到了生命的意義。');
+
+-- 祝福語標籤 seed data (只在資料表為空時插入)
+INSERT INTO blessing_tags (message) SELECT '謝謝陪伴需要幫助的人' WHERE NOT EXISTS (SELECT 1 FROM blessing_tags LIMIT 1);
+INSERT INTO blessing_tags (message) SELECT '陪災民找回希望' WHERE NOT EXISTS (SELECT 1 FROM blessing_tags WHERE message = '陪災民找回希望');
+INSERT INTO blessing_tags (message) SELECT '願醫護人員健康平安' WHERE NOT EXISTS (SELECT 1 FROM blessing_tags WHERE message = '願醫護人員健康平安');
+INSERT INTO blessing_tags (message) SELECT '志工力量連結社會' WHERE NOT EXISTS (SELECT 1 FROM blessing_tags WHERE message = '志工力量連結社會');
+INSERT INTO blessing_tags (message) SELECT '持續守護台灣與世界' WHERE NOT EXISTS (SELECT 1 FROM blessing_tags WHERE message = '持續守護台灣與世界');
+INSERT INTO blessing_tags (message) SELECT '讓善心善款都能化為溫暖' WHERE NOT EXISTS (SELECT 1 FROM blessing_tags WHERE message = '讓善心善款都能化為溫暖');
+INSERT INTO blessing_tags (message) SELECT '攜手為地球環境盡一份力量' WHERE NOT EXISTS (SELECT 1 FROM blessing_tags WHERE message = '攜手為地球環境盡一份力量');
+INSERT INTO blessing_tags (message) SELECT '帶領大家做應該做但沒人做的' WHERE NOT EXISTS (SELECT 1 FROM blessing_tags WHERE message = '帶領大家做應該做但沒人做的');
+INSERT INTO blessing_tags (message) SELECT 'Just Do It!' WHERE NOT EXISTS (SELECT 1 FROM blessing_tags WHERE message = 'Just Do It!');
 
 -- 首頁內容 (只在資料表為空時插入)
 INSERT INTO homepage (slogan, title, content)
