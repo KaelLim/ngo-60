@@ -6,7 +6,7 @@ import sharp from "npm:sharp@0.33.5";
 const IMAGE_CONFIG = {
   maxWidth: 1920,
   maxHeight: 1080,
-  quality: 85,  // JPEG 品質 (1-100)
+  quality: 80,  // WebP 品質 (1-100)
 };
 
 interface GalleryImage {
@@ -81,16 +81,15 @@ galleryRoutes.post("/", async (c) => {
     const arrayBuffer = await file.arrayBuffer();
     const inputBuffer = Buffer.from(arrayBuffer);
 
-    // 使用 Sharp 處理圖片（高效處理大型圖片）
-    const filename = `${crypto.randomUUID()}.jpg`;
+    // 使用 Sharp 處理圖片並轉為 WebP
+    const filename = `${crypto.randomUUID()}.webp`;
 
-    // Sharp 會自動處理大型圖片，使用串流方式不會佔用過多記憶體
     const processedBuffer = await sharp(inputBuffer)
       .resize(IMAGE_CONFIG.maxWidth, IMAGE_CONFIG.maxHeight, {
-        fit: 'inside',  // 保持比例，確保圖片在指定尺寸內
-        withoutEnlargement: true  // 不放大小於目標尺寸的圖片
+        fit: 'inside',
+        withoutEnlargement: true
       })
-      .jpeg({ quality: IMAGE_CONFIG.quality })
+      .webp({ quality: IMAGE_CONFIG.quality })
       .toBuffer();
 
     const uploadPath = `./uploads/gallery/${filename}`;
@@ -103,7 +102,7 @@ galleryRoutes.post("/", async (c) => {
       `INSERT INTO gallery (filename, original_name, mime_type, category)
        VALUES ($1, $2, $3, $4)
        RETURNING *`,
-      [filename, file.name, "image/jpeg", category]
+      [filename, file.name, "image/webp", category]
     );
 
     return c.json(rows[0], 201);
