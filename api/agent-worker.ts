@@ -78,6 +78,12 @@ interface Homepage {
   updated_at: string;
 }
 
+interface BlessingTag {
+  id: number;
+  message: string;
+  is_active: boolean;
+}
+
 interface GalleryImage {
   id: number;
   filename: string;
@@ -292,6 +298,43 @@ const tools = [
     return { content: [{ type: "text" as const, text: JSON.stringify({ message: "祝福語已刪除", id: input.id }, null, 2) }] };
   }),
 
+  tool("getBlessingTags", "取得祝福語標籤列表", {}, async () => {
+    const rows = await query<BlessingTag>("SELECT * FROM blessing_tags ORDER BY id");
+    return { content: [{ type: "text" as const, text: JSON.stringify(rows, null, 2) }] };
+  }),
+
+  tool("createBlessingTag", "新增祝福語標籤", {
+    message: z.string()
+  }, async (input) => {
+    const rows = await query<BlessingTag>(
+      "INSERT INTO blessing_tags (message) VALUES ($1) RETURNING *",
+      [input.message]
+    );
+    return { content: [{ type: "text" as const, text: JSON.stringify({ message: "祝福語標籤已新增", tag: rows[0] }, null, 2) }] };
+  }),
+
+  tool("updateBlessingTag", "更新祝福語標籤", {
+    id: z.number(),
+    message: z.string().optional(),
+    is_active: z.boolean().optional()
+  }, async (input) => {
+    const existing = await query<BlessingTag>("SELECT * FROM blessing_tags WHERE id = $1", [input.id]);
+    if (!existing[0]) return { content: [{ type: "text" as const, text: JSON.stringify({ error: "祝福語標籤不存在" }) }] };
+    const e = existing[0];
+    const rows = await query<BlessingTag>(
+      "UPDATE blessing_tags SET message = $1, is_active = $2 WHERE id = $3 RETURNING *",
+      [input.message ?? e.message, input.is_active ?? e.is_active, input.id]
+    );
+    return { content: [{ type: "text" as const, text: JSON.stringify({ message: "祝福語標籤已更新", tag: rows[0] }, null, 2) }] };
+  }),
+
+  tool("deleteBlessingTag", "刪除祝福語標籤", { id: z.number() }, async (input) => {
+    const existing = await query<BlessingTag>("SELECT * FROM blessing_tags WHERE id = $1", [input.id]);
+    if (!existing[0]) return { content: [{ type: "text" as const, text: JSON.stringify({ error: "祝福語標籤不存在" }) }] };
+    await query("DELETE FROM blessing_tags WHERE id = $1", [input.id]);
+    return { content: [{ type: "text" as const, text: JSON.stringify({ message: "祝福語標籤已刪除", id: input.id }, null, 2) }] };
+  }),
+
   tool("getImpact", "取得影響力區塊資料", {}, async () => {
     const rows = await query<ImpactSection>("SELECT * FROM impact_sections ORDER BY sort_order");
     return { content: [{ type: "text" as const, text: JSON.stringify(rows, null, 2) }] };
@@ -409,9 +452,10 @@ const SYSTEM_PROMPT = `你是慈濟 60 週年活動網站的 AI 管理助手。
 1. 管理主題 (Topics) - 使用 getTopics, getTopic, createTopic, updateTopic, deleteTopic
 2. 管理活動時程 (Events) - 使用 getEvents, createEvent, updateEvent, deleteEvent
 3. 管理祝福語 (Blessings) - 使用 getBlessings, createBlessing, updateBlessing, deleteBlessing
-4. 管理影響力數據 (Impact) - 使用 getImpact, createImpact, updateImpact, deleteImpact
-5. 更新首頁內容 (Homepage) - 使用 getHomepage, updateHomepage
-6. 管理圖片庫 (Gallery) - 使用 getGallery, updateGalleryImage, deleteGalleryImage
+4. 管理祝福語標籤 (Blessing Tags) - 使用 getBlessingTags, createBlessingTag, updateBlessingTag, deleteBlessingTag
+5. 管理影響力數據 (Impact) - 使用 getImpact, createImpact, updateImpact, deleteImpact
+6. 更新首頁內容 (Homepage) - 使用 getHomepage, updateHomepage
+7. 管理圖片庫 (Gallery) - 使用 getGallery, updateGalleryImage, deleteGalleryImage
 
 主題 (Topics) 操作說明：
 - getTopics: 查詢所有主題列表
@@ -431,6 +475,12 @@ const SYSTEM_PROMPT = `你是慈濟 60 週年活動網站的 AI 管理助手。
 - createBlessing: 新增祝福語，必填 author, message
 - updateBlessing: 更新祝福語，必填 id，其他欄位可選
 - deleteBlessing: 刪除祝福語，必填 id
+
+祝福語標籤 (Blessing Tags) 操作說明：
+- getBlessingTags: 查詢所有祝福語標籤（顯示於【看影響】區塊的對話泡泡）
+- createBlessingTag: 新增祝福語標籤，必填 message
+- updateBlessingTag: 更新祝福語標籤，必填 id，可更新 message 或 is_active
+- deleteBlessingTag: 刪除祝福語標籤，必填 id
 
 影響力 (Impact) 操作說明：
 - getImpact: 查詢所有影響力區塊
@@ -485,6 +535,10 @@ async function main() {
     "mcp__tzu-chi-admin__createBlessing",
     "mcp__tzu-chi-admin__updateBlessing",
     "mcp__tzu-chi-admin__deleteBlessing",
+    "mcp__tzu-chi-admin__getBlessingTags",
+    "mcp__tzu-chi-admin__createBlessingTag",
+    "mcp__tzu-chi-admin__updateBlessingTag",
+    "mcp__tzu-chi-admin__deleteBlessingTag",
     "mcp__tzu-chi-admin__getImpact",
     "mcp__tzu-chi-admin__createImpact",
     "mcp__tzu-chi-admin__updateImpact",
