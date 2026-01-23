@@ -8,7 +8,7 @@
 #   - ADMIN_USER: 後台登入帳號 (預設: admin)
 #   - ADMIN_PASSWORD: 後台登入密碼 (預設: changeme)
 #   - DB_USER, DB_PASSWORD, DB_NAME: 資料庫設定
-#   - PORT: 對外 port (預設: 80)
+#   - PORT: 對外 port (預設: 8973)
 
 services:
   db:
@@ -39,6 +39,7 @@ services:
       DB_NAME: ${DB_NAME:-events_app}
     volumes:
       - uploads_data:/app/uploads
+      - claude_config:/root/.claude
     depends_on:
       db:
         condition: service_healthy
@@ -61,3 +62,4 @@ services:
 volumes:
   postgres_data:
   uploads_data:
+  claude_config:
