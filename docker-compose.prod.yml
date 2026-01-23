@@ -30,8 +30,8 @@ services:
   api:
     image: kaellim/ngo60-api:latest
     build:
-      context: ./api
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: api/Dockerfile
     environment:
       DB_HOST: db
       DB_USER: ${DB_USER:-postgres}
