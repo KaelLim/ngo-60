@@ -1,8 +1,3 @@
-# NGO60 簡化部署
-# 使用方式：
-#   curl -O https://raw.githubusercontent.com/KaelLim/ngo-60/main/deploy/docker-compose.yml
-#   docker compose up -d
-
 services:
   db:
     image: postgres:18
@@ -12,6 +7,7 @@ services:
       POSTGRES_DB: ${DB_NAME:-events_app}
     volumes:
       - postgres_data:/var/lib/postgresql
+      - ../db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
@@ -19,8 +15,8 @@ services:
       timeout: 5s
       retries: 5
 
-  app:
-    image: ubuntu:24.04
+  api:
+    build: ../api
     depends_on:
       db:
         condition: service_healthy
@@ -29,107 +25,24 @@ services:
       DB_USER: ${DB_USER:-postgres}
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
       DB_NAME: ${DB_NAME:-events_app}
+    volumes:
+      - uploads_data:/app/uploads
+    restart: unless-stopped
+
+  web:
+    build: ../web
+    restart: unless-stopped
+
+  nginx:
+    build: ../nginx
+    depends_on:
+      - web
+      - api
+    environment:
       ADMIN_USER: ${ADMIN_USER:-admin}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-changeme}
     ports:
       - "${PORT:-8937}:80"
-    volumes:
-      - uploads_data:/uploads
-    entrypoint: ["/bin/bash", "-c"]
-    command:
-      - |
-        set -e
-        export DEBIAN_FRONTEND=noninteractive
-
-        echo "=== [1/6] 安裝系統套件 ==="
-        apt-get update
-        apt-get install -y --no-install-recommends \
-          curl git unzip nginx apache2-utils postgresql-client ca-certificates
-
-        echo "=== [2/6] 初始化資料庫 ==="
-        export PGPASSWORD=${DB_PASSWORD:-postgres}
-        curl -fsSL https://raw.githubusercontent.com/KaelLim/ngo-60/main/db/init.sql | \
-          psql -h db -U ${DB_USER:-postgres} -d ${DB_NAME:-events_app}
-
-        echo "=== [3/6] 安裝 Deno ==="
-        if [ ! -f /root/.deno/bin/deno ]; then
-          curl -fsSL https://deno.land/install.sh | sh
-        fi
-        DENO=/root/.deno/bin/deno
-        # 建立 symlink 讓 Deno.Command 可以找到 deno
-        ln -sf /root/.deno/bin/deno /usr/local/bin/deno
-
-        echo "=== [4/6] Clone 專案並建置前端 ==="
-        # 設定 git safe.directory
-        git config --global --add safe.directory /app
-        if [ -d /app/.git ]; then
-          echo "專案已存在，更新中..."
-          cd /app && git pull
-        else
-          rm -rf /app
-          git clone https://github.com/KaelLim/ngo-60.git /app
-        fi
-        cd /app/web
-        $$DENO install --node-modules-dir --entrypoint npm:vite
-        $$DENO run -A --node-modules-dir npm:vite build
-
-        echo "=== [5/6] 設定 Nginx ==="
-        cp /app/nginx/nginx.conf /etc/nginx/sites-available/default
-        # 因為 API 和 Nginx 在同一容器，將 api:8000 改為 localhost:8000
-        sed -i 's/api:8000/localhost:8000/g' /etc/nginx/sites-available/default
-        cp -r /app/web/dist/* /usr/share/nginx/html/
-        htpasswd -bc /etc/nginx/.htpasswd ${ADMIN_USER:-admin} ${ADMIN_PASSWORD:-changeme}
-
-        # 連結 uploads 目錄 (持久化儲存)
-        mkdir -p /uploads/gallery
-        rm -rf /app/api/uploads
-        ln -sf /uploads /app/api/uploads
-
-        # 複製預設圖片 (如果 gallery 是空的)
-        if [ -z "$(ls -A /uploads/gallery 2>/dev/null)" ]; then
-          echo "複製預設圖片..."
-          cp /app/seed/gallery/* /uploads/gallery/ 2>/dev/null || true
-        fi
-
-        echo "=== [6/8] 安裝 Claude Code CLI & SDK ==="
-        # 安裝 Node.js (for npm)
-        curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-        apt-get install -y nodejs sudo
-        # 安裝 Claude Code CLI (SDK 依賴此 CLI)
-        npm install -g @anthropic-ai/claude-code
-
-        echo "=== [7/8] 建立非 root 使用者 ==="
-        # 建立 appuser 使用者 (如果不存在)
-        id appuser &>/dev/null || useradd -m -s /bin/bash appuser
-        # 設定目錄權限
-        chown -R appuser:appuser /app /uploads
-        chown -R appuser:appuser /usr/share/nginx/html
-        # 複製完整的 deno 到 appuser
-        mkdir -p /home/appuser/.deno/bin
-        cp /root/.deno/bin/deno /home/appuser/.deno/bin/
-        # 複製 deno 快取 (包含 jsr, npm 等依賴)
-        cp -r /root/.cache/deno /home/appuser/.cache/ 2>/dev/null || mkdir -p /home/appuser/.cache/deno
-        chown -R appuser:appuser /home/appuser
-        ln -sf /home/appuser/.deno/bin/deno /usr/local/bin/deno
-        # 複製 Claude Code 憑證到 appuser (如果存在)
-        if [ -f /root/.claude/.credentials.json ]; then
-          mkdir -p /home/appuser/.claude
-          cp /root/.claude/.credentials.json /home/appuser/.claude/
-          chown -R appuser:appuser /home/appuser/.claude
-        fi
-        # 以 appuser 身份快取 API 依賴
-        cd /app/api
-        sudo -u appuser HOME=/home/appuser /home/appuser/.deno/bin/deno cache main.ts || echo "Main cache failed"
-        sudo -u appuser HOME=/home/appuser /home/appuser/.deno/bin/deno cache agent-worker.ts || echo "Agent worker cache failed"
-
-        echo "=== [8/8] 啟動服務 ==="
-        # 啟動 Nginx (背景，以 root 啟動但 worker 會降權)
-        nginx
-
-        # 啟動 Deno API (前景，以 appuser 身份執行)
-        # 使用 sudo -E 保留環境變數，設定 HOME
-        cd /app/api
-        exec sudo -E -u appuser HOME=/home/appuser /home/appuser/.deno/bin/deno run --allow-net --allow-env --allow-read --allow-write --allow-run --allow-ffi main.ts
     restart: unless-stopped
 
 volumes:
