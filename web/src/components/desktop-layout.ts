@@ -11,6 +11,7 @@ import './desktop-intro.js';
 import './desktop-topics.js';
 import './desktop-schedule.js';
 import './desktop-impact.js';
+import './desktop-blessings.js';
 
 @customElement('desktop-layout')
 export class DesktopLayout extends LitElement {
@@ -199,6 +200,14 @@ export class DesktopLayout extends LitElement {
             .sections=${this.impactSections}
             .blessingTags=${this.blessingTags}
           ></desktop-impact>
+        </div>
+
+        <!-- 內部期許: 祝福卡片輪播 -->
+        <div class="section-card">
+          <desktop-blessings
+            .blessings=${this.blessings}
+            @blessing-click=${this.handleBlessingClick}
+          ></desktop-blessings>
         </div>
       </div>
 
