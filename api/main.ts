@@ -26,9 +26,13 @@ app.route("/api/impact", impactRoutes);
 app.route("/api/blessings", blessingsRoutes);
 app.route("/api/blessing-tags", blessingTagRoutes);
 
-// Gallery 路由 - 增加上傳大小限制至 50MB
-app.use("/api/gallery", bodyLimit({ maxSize: 50 * 1024 * 1024 }));
-app.use("/api/gallery/*", bodyLimit({ maxSize: 50 * 1024 * 1024 }));
+// Gallery 路由 - 上傳大小限制 100MB
+const galleryBodyLimit = bodyLimit({
+  maxSize: 100 * 1024 * 1024,
+  onError: (c) => c.json({ error: "檔案大小超過 100MB 限制" }, 413)
+});
+app.use("/api/gallery", galleryBodyLimit);
+app.use("/api/gallery/*", galleryBodyLimit);
 app.route("/api/gallery", galleryRoutes);
 app.route("/api/homepage", homepageRoutes);
 
