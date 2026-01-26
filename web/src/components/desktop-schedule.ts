@@ -132,70 +132,92 @@ export class DesktopSchedule extends LitElement {
     /* Event cards */
     .events-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
       gap: 20px;
     }
 
     .event-card {
       background: white;
-      border-radius: 16px;
-      overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      border-radius: 20px;
+      padding: 20px 16px 20px 20px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
       cursor: pointer;
       transition: transform 0.3s, box-shadow 0.3s;
     }
 
     .event-card:hover {
-      transform: translateY(-4px);
+      transform: translateY(-2px);
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
     }
 
-    .event-card-image {
-      width: 100%;
-      height: 160px;
-      background: #ddd;
-      object-fit: cover;
-    }
-
-    .event-card-content {
-      padding: 16px;
+    .event-card-info {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      flex: 1;
+      min-width: 0;
     }
 
     .event-card-title {
       font-family: 'Noto Sans TC', sans-serif;
-      font-size: 16px;
+      font-size: 20px;
       font-weight: 500;
       color: #121212;
-      margin: 0 0 8px 0;
+      margin: 0;
+      line-height: 1.28;
+    }
+
+    .event-card-items {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
 
     .event-card-date {
       font-family: 'Noto Sans TC', sans-serif;
-      font-size: 13px;
-      color: #666;
-      margin: 0 0 4px 0;
+      font-size: 16px;
+      font-weight: 400;
+      color: #121212;
+      margin: 0;
       display: flex;
       align-items: center;
       gap: 4px;
+      line-height: 1;
     }
 
     .event-card-date svg {
-      width: 14px;
-      height: 14px;
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
     }
 
     .event-card-tag {
       font-family: 'Noto Sans TC', sans-serif;
-      font-size: 12px;
-      color: #0e2669;
+      font-size: 16px;
+      font-weight: 400;
+      color: #121212;
       display: flex;
       align-items: center;
       gap: 4px;
+      line-height: 1;
     }
 
     .event-card-tag svg {
-      width: 12px;
-      height: 12px;
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    .event-card-image {
+      width: 100px;
+      height: 100px;
+      border-radius: 12px;
+      background: #f0f0f0;
+      object-fit: cover;
+      flex-shrink: 0;
     }
 
     .empty-message {
@@ -259,30 +281,30 @@ export class DesktopSchedule extends LitElement {
           <div class="events-grid">
             ${this.events.map(event => html`
               <div class="event-card">
+                <div class="event-card-info">
+                  <h4 class="event-card-title">${event.title}</h4>
+                  <div class="event-card-items">
+                    <p class="event-card-date">
+                      <svg viewBox="0 0 24 24" fill="#c4beb6">
+                        <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"/>
+                      </svg>
+                      ${this.formatDateRange(event.date_start, event.date_end)}
+                    </p>
+                    ${event.participation_type ? html`
+                      <div class="event-card-tag">
+                        <svg viewBox="0 0 24 24" fill="#c4beb6">
+                          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                        </svg>
+                        ${event.participation_type}
+                      </div>
+                    ` : ''}
+                  </div>
+                </div>
                 ${event.image_url ? html`
                   <img class="event-card-image" src=${event.image_url} alt=${event.title} />
                 ` : html`
                   <div class="event-card-image"></div>
                 `}
-                <div class="event-card-content">
-                  <h4 class="event-card-title">${event.title}</h4>
-                  <p class="event-card-date">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                      <line x1="16" y1="2" x2="16" y2="6"/>
-                      <line x1="8" y1="2" x2="8" y2="6"/>
-                      <line x1="3" y1="10" x2="21" y2="10"/>
-                    </svg>
-                    ${this.formatDateRange(event.date_start, event.date_end)}
-                  </p>
-                  <div class="event-card-tag">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                      <circle cx="12" cy="10" r="3"/>
-                    </svg>
-                    ${event.participation_type || ''}
-                  </div>
-                </div>
               </div>
             `)}
           </div>
