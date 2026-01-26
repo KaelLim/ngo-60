@@ -44,7 +44,7 @@ services:
       ADMIN_USER: ${ADMIN_USER:-admin}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-changeme}
     ports:
-      - "${PORT:-8937}:80"
+      - "${PORT:-8973}:80"
     restart: unless-stopped
 
 volumes:
