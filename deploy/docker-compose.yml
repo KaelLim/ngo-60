@@ -29,6 +29,7 @@ services:
       DB_NAME: ${DB_NAME:-events_app}
     volumes:
       - uploads_data:/app/uploads
+      - claude_config:/root/.claude
     restart: unless-stopped
 
   web:
@@ -50,3 +51,4 @@ services:
 volumes:
   postgres_data:
   uploads_data:
+  claude_config:
