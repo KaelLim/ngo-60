@@ -24,7 +24,6 @@ function renderBlessingsTable() {
       <td>${b.sort_order}</td>
       <td>${b.author}</td>
       <td>${preview}</td>
-      <td>${b.is_featured ? '✓' : ''}</td>
       <td class="actions">
         <button class="btn btn-secondary btn-sm" data-action="edit" data-id="${b.id}">編輯</button>
         <button class="btn btn-danger btn-sm" data-action="delete" data-id="${b.id}">刪除</button>
@@ -48,7 +47,6 @@ export function openBlessingModal(blessing = null) {
   document.getElementById('blessing-author').value = blessing?.author || '';
   document.getElementById('blessing-content').value = blessing?.full_content || '';
   document.getElementById('blessing-image').value = blessing?.image_url || '';
-  document.getElementById('blessing-featured').checked = blessing?.is_featured || false;
   document.getElementById('blessing-sort').value = blessing?.sort_order || 0;
   updateImagePreview('blessing-image', blessing?.image_url);
   document.getElementById('blessing-modal').classList.add('active');
@@ -85,7 +83,6 @@ async function handleSubmit(e) {
     message: message,
     full_content: fullContent,
     image_url: document.getElementById('blessing-image').value,
-    is_featured: document.getElementById('blessing-featured').checked,
     sort_order: parseInt(document.getElementById('blessing-sort').value)
   };
 

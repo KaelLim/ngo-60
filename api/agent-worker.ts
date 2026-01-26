@@ -57,7 +57,6 @@ interface Blessing {
   message: string;
   full_content: string | null;
   image_url: string | null;
-  is_featured: boolean;
   sort_order: number;
 }
 
@@ -248,10 +247,8 @@ const tools = [
     return { content: [{ type: "text" as const, text: JSON.stringify({ message: "活動已刪除", id: input.id }, null, 2) }] };
   }),
 
-  tool("getBlessings", "取得祝福語列表", { featured: z.boolean().optional() }, async (input) => {
-    const rows = input.featured
-      ? await query<Blessing>("SELECT * FROM blessings WHERE is_featured = true ORDER BY sort_order")
-      : await query<Blessing>("SELECT * FROM blessings ORDER BY sort_order");
+  tool("getBlessings", "取得祝福語列表", {}, async () => {
+    const rows = await query<Blessing>("SELECT id, author, message, full_content, image_url, sort_order FROM blessings ORDER BY sort_order");
     return { content: [{ type: "text" as const, text: JSON.stringify(rows, null, 2) }] };
   }),
 
@@ -260,13 +257,13 @@ const tools = [
     message: z.string(),
     full_content: z.string().optional(),
     image_url: z.string().optional(),
-    is_featured: z.boolean().optional(),
     sort_order: z.number().optional()
   }, async (input) => {
     const rows = await query<Blessing>(
-      `INSERT INTO blessings (author, message, full_content, image_url, is_featured, sort_order)
-       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-      [input.author, input.message, input.full_content || null, input.image_url || null, input.is_featured || false, input.sort_order || 0]
+      `INSERT INTO blessings (author, message, full_content, image_url, sort_order)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id, author, message, full_content, image_url, sort_order`,
+      [input.author, input.message, input.full_content || null, input.image_url || null, input.sort_order || 0]
     );
     return { content: [{ type: "text" as const, text: JSON.stringify({ message: "祝福語已新增", blessing: rows[0] }, null, 2) }] };
   }),
@@ -277,16 +274,15 @@ const tools = [
     message: z.string().optional(),
     full_content: z.string().optional(),
     image_url: z.string().optional(),
-    is_featured: z.boolean().optional(),
     sort_order: z.number().optional()
   }, async (input) => {
     const existing = await query<Blessing>("SELECT * FROM blessings WHERE id = $1", [input.id]);
     if (!existing[0]) return { content: [{ type: "text" as const, text: JSON.stringify({ error: "祝福語不存在" }) }] };
     const e = existing[0];
     const rows = await query<Blessing>(
-      `UPDATE blessings SET author = $1, message = $2, full_content = $3, image_url = $4, is_featured = $5, sort_order = $6
-       WHERE id = $7 RETURNING *`,
-      [input.author ?? e.author, input.message ?? e.message, input.full_content ?? e.full_content, input.image_url ?? e.image_url, input.is_featured ?? e.is_featured, input.sort_order ?? e.sort_order, input.id]
+      `UPDATE blessings SET author = $1, message = $2, full_content = $3, image_url = $4, sort_order = $5
+       WHERE id = $6 RETURNING id, author, message, full_content, image_url, sort_order`,
+      [input.author ?? e.author, input.message ?? e.message, input.full_content ?? e.full_content, input.image_url ?? e.image_url, input.sort_order ?? e.sort_order, input.id]
     );
     return { content: [{ type: "text" as const, text: JSON.stringify({ message: "祝福語已更新", blessing: rows[0] }, null, 2) }] };
   }),

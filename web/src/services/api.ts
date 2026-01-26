@@ -48,7 +48,6 @@ export interface Blessing {
   message: string;
   full_content: string | null;
   image_url: string | null;
-  is_featured: boolean;
   sort_order: number;
 }
 
