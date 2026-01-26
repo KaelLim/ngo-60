@@ -102,6 +102,10 @@ export class DesktopBlessings extends LitElement {
       color: #8e8e93;
       line-height: 1.4;
       margin: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
 
     .carousel-controls {
@@ -195,7 +199,7 @@ export class DesktopBlessings extends LitElement {
                 ` : html``}
               </div>
               <div class="card-body">
-                <p class="card-message">${b.message}</p>
+                <p class="card-message">${b.full_content || b.message}</p>
               </div>
             </div>
           `)}
