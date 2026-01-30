@@ -30,7 +30,7 @@ export class AppRoot extends LitElement {
     @media (max-width: 767px) {
       :host {
         max-width: 430px;
-        margin: 0 auto;
+        margin: 0 auto !important;
       }
     }
   `;

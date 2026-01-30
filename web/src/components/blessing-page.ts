@@ -23,6 +23,15 @@ export class BlessingPage extends LitElement {
   @state()
   private loading = false;
 
+  @state()
+  private allBlessings: Blessing[] = [];
+
+  @state()
+  private slideDirection: 'prev' | 'next' | 'slide-in-prev' | 'slide-in-next' | null = null;
+
+  @state()
+  private hasNavigated = false;
+
   @property({ type: Boolean, reflect: true })
   closing = false;
 
@@ -203,29 +212,66 @@ export class BlessingPage extends LitElement {
       to { opacity: 0; }
     }
 
-    /* Modal card */
+    /* Modal wrapper with nav arrows */
     :host([desktopMode]) .modal-container {
       display: flex;
+      align-items: center;
+      gap: 12px;
     }
 
     .modal-container {
       display: none;
     }
 
-    .modal-card {
-      background: white;
-      border-radius: 24px;
-      width: 100%;
-      max-width: 480px;
-      max-height: 80vh;
-      overflow: hidden;
+    /* Nav arrows */
+    .nav-arrow {
+      width: 48px;
+      height: 48px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.7;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .nav-arrow:hover {
+      opacity: 1;
+    }
+
+    .nav-arrow:disabled {
+      opacity: 0.2;
+      cursor: not-allowed;
+    }
+
+    .nav-arrow svg {
+      width: 24px;
+      height: 24px;
+      color: white;
+    }
+
+    .nav-arrow.prev svg {
+      transform: rotate(180deg);
+    }
+
+    /* Modal main card */
+    .modal-main {
+      width: 720px;
+      max-height: 85vh;
       display: flex;
       flex-direction: column;
-      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.2);
       animation: modalSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
-    :host([desktopMode][closing]) .modal-card {
+    /* Disable entrance animation after navigation */
+    .modal-main.no-entrance {
+      animation: none;
+    }
+
+    :host([desktopMode][closing]) .modal-main {
       animation: modalSlideOut 0.25s ease-in forwards;
     }
 
@@ -239,49 +285,129 @@ export class BlessingPage extends LitElement {
       to { opacity: 0; transform: scale(0.9) translateY(20px); }
     }
 
-    /* Modal header */
+    /* Modal header with background */
     .modal-header {
-      display: flex;
-      justify-content: flex-end;
-      padding: 16px 16px 0 16px;
+      position: relative;
+      height: 323px;
+      border-radius: 40px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .modal-header-bg {
+      position: absolute;
+      inset: 0;
+    }
+
+    .modal-header-bg img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .modal-header-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(14, 38, 105, 0.9);
+    }
+
+    .modal-close-row {
+      position: absolute;
+      top: 24px;
+      right: 24px;
     }
 
     .close-button {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: #f4f1ee;
+      width: 24px;
+      height: 24px;
       border: none;
+      background: transparent;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
+      padding: 0;
       transition: all 0.2s ease;
     }
 
     .close-button:hover {
-      background: #e8e5e2;
-      transform: scale(1.05);
-    }
-
-    .close-button:active {
-      transform: scale(0.95);
+      opacity: 0.8;
+      transform: scale(1.1);
     }
 
     .close-button svg {
-      width: 20px;
-      height: 20px;
-      color: #666;
+      width: 24px;
+      height: 24px;
+      color: white;
+    }
+
+    /* Slide animations for modal switching - pure left/right only */
+    .modal-main.slide-out-left {
+      animation: slideOutLeft 0.2s ease-in forwards !important;
+    }
+
+    .modal-main.slide-out-right {
+      animation: slideOutRight 0.2s ease-in forwards !important;
+    }
+
+    .modal-main.slide-in-left {
+      animation: slideInLeft 0.25s ease-out forwards !important;
+    }
+
+    .modal-main.slide-in-right {
+      animation: slideInRight 0.25s ease-out forwards !important;
+    }
+
+    @keyframes slideOutLeft {
+      from { transform: translateX(0); }
+      to { transform: translateX(-80px); opacity: 0; }
+    }
+
+    @keyframes slideOutRight {
+      from { transform: translateX(0); }
+      to { transform: translateX(80px); opacity: 0; }
+    }
+
+    @keyframes slideInLeft {
+      from { transform: translateX(80px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    @keyframes slideInRight {
+      from { transform: translateX(-80px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* Content wrapper (title + body) - overlaps header */
+    .modal-content-wrapper {
+      margin-top: -165px;
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .modal-title {
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: 32px;
+      font-weight: 500;
+      color: white;
+      line-height: 1.4;
+      margin: 0;
+      padding: 0 40px 24px 40px;
+      flex-shrink: 0;
     }
 
     /* Modal body */
     .modal-body {
-      padding: 8px 32px 32px 32px;
+      background: white;
+      border-radius: 40px;
+      padding: 40px;
       overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
+      flex: 1;
+      min-height: 0;
     }
 
     .modal-body::-webkit-scrollbar {
@@ -297,38 +423,12 @@ export class BlessingPage extends LitElement {
       border-radius: 3px;
     }
 
-    .modal-photo {
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      object-fit: cover;
-      background: #f4f1ee;
-      margin-bottom: 16px;
-    }
-
-    .modal-author {
-      font-family: 'Noto Sans TC', sans-serif;
-      font-size: 22px;
-      font-weight: 500;
-      color: #121212;
-      margin: 0 0 20px 0;
-    }
-
-    .modal-divider {
-      width: 60px;
-      height: 2px;
-      background: #e4ddd4;
-      margin-bottom: 24px;
-    }
-
     .modal-content {
       font-family: 'Noto Sans TC', sans-serif;
       font-size: 16px;
       font-weight: 400;
-      color: #444;
-      line-height: 1.8;
-      text-align: left;
-      width: 100%;
+      color: #121212;
+      line-height: 1.4;
     }
 
     .modal-content p {
@@ -349,6 +449,15 @@ export class BlessingPage extends LitElement {
     super.connectedCallback();
     this.storeController = new StoreController(this, this.appStore);
     this.loadBlessingData();
+    this.loadAllBlessings();
+  }
+
+  private async loadAllBlessings() {
+    try {
+      this.allBlessings = await api.getBlessings();
+    } catch (error) {
+      console.error('Failed to load blessings list:', error);
+    }
   }
 
   updated(changedProperties: Map<string, unknown>) {
@@ -392,6 +501,48 @@ export class BlessingPage extends LitElement {
     }
   }
 
+  private getCurrentIndex(): number {
+    const currentId = this.blessingId || this.appStore.currentBlessingId;
+    return this.allBlessings.findIndex(b => b.id === currentId);
+  }
+
+  private navigateBlessing(direction: 'prev' | 'next') {
+    const currentIndex = this.getCurrentIndex();
+    if (currentIndex === -1 || this.slideDirection) return;
+
+    const newIndex = direction === 'prev' ? currentIndex - 1 : currentIndex + 1;
+    if (newIndex < 0 || newIndex >= this.allBlessings.length) return;
+
+    // Mark as navigated to disable entrance animation
+    this.hasNavigated = true;
+
+    // Start slide-out animation
+    this.slideDirection = direction;
+
+    // After slide-out, load new content and slide-in
+    setTimeout(() => {
+      const newBlessing = this.allBlessings[newIndex];
+      this.appStore.openBlessing(newBlessing.id);
+
+      // Change to slide-in state
+      this.slideDirection = direction === 'prev' ? 'slide-in-prev' : 'slide-in-next';
+
+      // Clear animation state
+      setTimeout(() => {
+        this.slideDirection = null;
+      }, 300);
+    }, 200);
+  }
+
+  private getSlideClass(): string {
+    if (!this.slideDirection) return '';
+    if (this.slideDirection === 'prev') return 'slide-out-left';
+    if (this.slideDirection === 'next') return 'slide-out-right';
+    if (this.slideDirection === 'slide-in-prev') return 'slide-in-right';
+    if (this.slideDirection === 'slide-in-next') return 'slide-in-left';
+    return '';
+  }
+
   render() {
     const blessing = this.blessingData;
     const author = blessing?.author || '證嚴上人';
@@ -409,6 +560,13 @@ export class BlessingPage extends LitElement {
     const closeIcon = html`
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M18 6L6 18M6 6l12 12"/>
+      </svg>
+    `;
+
+    // Navigation arrow SVG
+    const navArrow = html`
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M9 18l6-6-6-6"/>
       </svg>
     `;
 
@@ -462,25 +620,43 @@ export class BlessingPage extends LitElement {
 
       <!-- Desktop: Modal Layout -->
       <div class="modal-container" @click=${this.handleBackdropClick}>
-        <div class="modal-card">
+        <button
+          class="nav-arrow prev"
+          @click=${() => this.navigateBlessing('prev')}
+          ?disabled=${this.getCurrentIndex() <= 0}
+        >
+          ${navArrow}
+        </button>
+
+        <div class="modal-main ${this.getSlideClass()} ${this.hasNavigated && !this.slideDirection ? 'no-entrance' : ''}">
           <div class="modal-header">
-            <button class="close-button" @click=${this.handleBack}>
-              ${closeIcon}
-            </button>
+            <div class="modal-header-bg">
+              ${imageUrl ? html`<img src="${imageUrl}" alt="" />` : ''}
+            </div>
+            <div class="modal-header-overlay"></div>
+            <div class="modal-close-row">
+              <button class="close-button" @click=${this.handleBack}>
+                ${closeIcon}
+              </button>
+            </div>
           </div>
-          <div class="modal-body">
-            ${imageUrl ? html`
-              <img class="modal-photo" src="${imageUrl}" alt="${author}" />
-            ` : html`
-              <div class="modal-photo"></div>
-            `}
-            <h2 class="modal-author">${author}</h2>
-            <div class="modal-divider"></div>
-            <div class="modal-content">
-              ${this.loading ? html`<p>載入中...</p>` : contentParagraphs}
+          <div class="modal-content-wrapper">
+            <h2 class="modal-title">${author}</h2>
+            <div class="modal-body">
+              <div class="modal-content">
+                ${this.loading ? html`<p>載入中...</p>` : contentParagraphs}
+              </div>
             </div>
           </div>
         </div>
+
+        <button
+          class="nav-arrow next"
+          @click=${() => this.navigateBlessing('next')}
+          ?disabled=${this.getCurrentIndex() >= this.allBlessings.length - 1}
+        >
+          ${navArrow}
+        </button>
       </div>
     `;
   }

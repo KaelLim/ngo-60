@@ -416,7 +416,7 @@ export class DesktopTopics extends LitElement {
 
   private formatDate(dateStr: string): string {
     const date = new Date(dateStr);
-    return `${date.getMonth() + 1}.${date.getDate().toString().padStart(2, '0')}`;
+    return `${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
   }
 
   private getParticipationText(event: Event): string {

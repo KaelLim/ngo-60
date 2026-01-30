@@ -241,18 +241,18 @@ export class DesktopSchedule extends LitElement {
 
   private formatDateRange(start: string, end: string | null): string {
     const startDate = new Date(start);
-    const startMonth = startDate.getMonth() + 1;
-    const startDay = startDate.getDate();
+    const startMonth = String(startDate.getMonth() + 1).padStart(2, '0');
+    const startDay = String(startDate.getDate()).padStart(2, '0');
 
     if (!end) {
-      return `${startMonth}.${startDay.toString().padStart(2, '0')}`;
+      return `${startMonth}.${startDay}`;
     }
 
     const endDate = new Date(end);
-    const endMonth = endDate.getMonth() + 1;
-    const endDay = endDate.getDate();
+    const endMonth = String(endDate.getMonth() + 1).padStart(2, '0');
+    const endDay = String(endDate.getDate()).padStart(2, '0');
 
-    return `${startMonth}.${startDay.toString().padStart(2, '0')} - ${endMonth}.${endDay.toString().padStart(2, '0')}`;
+    return `${startMonth}.${startDay} - ${endMonth}.${endDay}`;
   }
 
   render() {

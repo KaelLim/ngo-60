@@ -20,6 +20,7 @@ export const eventsRoutes = new Hono();
 
 // GET /api/events - 取得活動列表
 // 支援篩選: ?month=8&year=2026 或 ?topic_id=1
+// 日期範圍邏輯: 活動 date_start~date_end 包含查詢月份就會顯示
 eventsRoutes.get("/", async (c) => {
   const month = c.req.query("month");
   const year = c.req.query("year");
@@ -34,20 +35,51 @@ eventsRoutes.get("/", async (c) => {
     return c.json(rows);
   }
 
-  // 依月份和年份篩選
+  // 依月份和年份篩選 (使用日期範圍邏輯)
+  // 活動會顯示在該月份，如果：
+  // - date_start <= 該月最後一天 AND
+  // - (date_end >= 該月第一天 OR date_end IS NULL 且 date_start 在該月內)
   if (month && year) {
+    const m = parseInt(month);
+    const y = parseInt(year);
+    // 該月第一天
+    const monthStart = `${y}-${String(m).padStart(2, '0')}-01`;
+    // 該月最後一天 (下個月第一天減一天)
+    const nextMonth = m === 12 ? 1 : m + 1;
+    const nextYear = m === 12 ? y + 1 : y;
+    const monthEnd = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`;
+
     const rows = await query<Event>(
-      "SELECT * FROM events WHERE month = $1 AND year = $2 ORDER BY date_start",
-      [parseInt(month), parseInt(year)]
+      `SELECT * FROM events
+       WHERE date_start < $2::date
+         AND (
+           date_end >= $1::date
+           OR (date_end IS NULL AND date_start >= $1::date AND date_start < $2::date)
+         )
+       ORDER BY date_start`,
+      [monthStart, monthEnd]
     );
     return c.json(rows);
   }
 
-  // 僅依月份篩選
+  // 僅依月份篩選 (假設當年)
   if (month) {
+    const m = parseInt(month);
+    const y = new Date().getFullYear();
+    const monthStart = `${y}-${String(m).padStart(2, '0')}-01`;
+    const nextMonth = m === 12 ? 1 : m + 1;
+    const nextYear = m === 12 ? y + 1 : y;
+    const monthEnd = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`;
+
     const rows = await query<Event>(
-      "SELECT * FROM events WHERE month = $1 ORDER BY date_start",
-      [parseInt(month)]
+      `SELECT * FROM events
+       WHERE date_start < $2::date
+         AND (
+           date_end >= $1::date
+           OR (date_end IS NULL AND date_start >= $1::date AND date_start < $2::date)
+         )
+       ORDER BY date_start`,
+      [monthStart, monthEnd]
     );
     return c.json(rows);
   }
