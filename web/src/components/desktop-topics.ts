@@ -16,6 +16,9 @@ export class DesktopTopics extends LitElement {
   @state()
   private activeScrollPage = 0;
 
+  @state()
+  private totalScrollPages = 1;
+
   @query('.events-list')
   private eventsContainer!: HTMLElement;
 
@@ -379,6 +382,10 @@ export class DesktopTopics extends LitElement {
     if (changedProperties.has('topics') && this.topics.length > 0) {
       this.loadTopicEvents(this.topics[0].id);
     }
+    if (changedProperties.has('topicEvents')) {
+      // Recalculate scroll pages after DOM updates
+      requestAnimationFrame(() => this.calculateScrollPages());
+    }
   }
 
   private async loadTopicEvents(topicId: number) {
@@ -416,17 +423,34 @@ export class DesktopTopics extends LitElement {
     return event.participation_type || '現場參與';
   }
 
+  private calculateScrollPages() {
+    if (!this.eventsContainer) return;
+    const { scrollWidth, clientWidth } = this.eventsContainer;
+    const cardWidth = 328 + 16; // card width + gap
+    const visibleCards = Math.floor(clientWidth / cardWidth) || 1;
+    const totalCards = this.topicEvents.length;
+    this.totalScrollPages = Math.max(1, Math.ceil(totalCards / visibleCards));
+  }
+
   private handleEventScroll() {
     if (!this.eventsContainer) return;
     const { scrollLeft, scrollWidth, clientWidth } = this.eventsContainer;
     const maxScroll = scrollWidth - clientWidth;
-    const progress = maxScroll > 0 ? scrollLeft / maxScroll : 0;
-    this.activeScrollPage = progress > 0.5 ? 1 : 0;
+    if (maxScroll <= 0) {
+      this.activeScrollPage = 0;
+      return;
+    }
+    const progress = scrollLeft / maxScroll;
+    this.activeScrollPage = Math.min(
+      Math.floor(progress * this.totalScrollPages),
+      this.totalScrollPages - 1
+    );
   }
 
   private scrollEvents(direction: 'prev' | 'next') {
     if (!this.eventsContainer) return;
-    const scrollAmount = 350;
+    const { clientWidth } = this.eventsContainer;
+    const scrollAmount = clientWidth * 0.8; // scroll 80% of visible width
     const newScroll = direction === 'next'
       ? this.eventsContainer.scrollLeft + scrollAmount
       : this.eventsContainer.scrollLeft - scrollAmount;
@@ -538,8 +562,9 @@ export class DesktopTopics extends LitElement {
                   </svg>
                 </button>
                 <div class="scroll-nav-lines">
-                  <div class="scroll-nav-line ${this.activeScrollPage === 0 ? 'active' : ''}"></div>
-                  <div class="scroll-nav-line ${this.activeScrollPage === 1 ? 'active' : ''}"></div>
+                  ${Array.from({ length: this.totalScrollPages }, (_, i) => html`
+                    <div class="scroll-nav-line ${this.activeScrollPage === i ? 'active' : ''}"></div>
+                  `)}
                 </div>
                 <button class="scroll-nav-btn" @click=${() => this.scrollEvents('next')}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
