@@ -86,19 +86,32 @@ deno task dev        # 同時啟動 API + 前端
 | `/api/gallery/random?count=15` | GET | 隨機取得圖片 |
 | `/api/gallery` | POST | 上傳圖片 |
 | `/api/homepage` | GET/PUT | 首頁內容 |
+| `/api/blessings` | GET/POST | 祝福列表/新增 |
+| `/api/blessings/:id` | GET/PUT/DELETE | 單一祝福 CRUD |
+| `/api/blessing_tags` | GET/POST | 祝福標籤列表/新增 |
 | `/uploads/gallery/*` | GET | 靜態圖片 |
 
 ## Frontend Architecture
 
 **State Management:** @lit/context + Store pattern
-- `AppStore`: UI state (tabs, navigation, sheet position)
+- `AppStore`: UI state (tabs, navigation, sheet position, blessing modal)
 - `DataStore`: Data from API (categories, events, news)
 
 **Components:**
-- `app-root`: Root component, provides contexts
-- `app-homepage`: Homepage with gallery grid
-- `homepage-grid`: 4x5 circular image grid
-- `homepage-tabs`: Tab navigation (看時程/看主題/看影響)
+
+| Component | 說明 |
+|-----------|------|
+| `app-root` | Root component, provides contexts |
+| `app-shell` | 判斷 mobile/desktop 模式 |
+| `desktop-layout` | Desktop 主佈局 |
+| `desktop-header` | 百工圖 (6+0 digit grid) + Slogan |
+| `desktop-intro` | 介紹區塊 |
+| `desktop-topics` | 看主題 + 活動卡片輪播 |
+| `desktop-schedule` | 看時程 (月份選擇 + 活動卡片) |
+| `desktop-impact` | 看影響 + 祝福標籤 |
+| `desktop-blessings` | 內部期許卡片輪播 |
+| `blessing-page` | 祝福詳情 (Mobile: 全頁, Desktop: Modal) |
+| `topic-page` | 主題詳情頁 |
 
 ## Database Tables
 
@@ -108,3 +121,33 @@ deno task dev        # 同時啟動 API + 前端
 - `activities`: 月份活動
 - `gallery`: 圖片 metadata
 - `homepage`: 首頁內容 (slogan, title, content)
+- `blessings`: 祝福內容 (author, message, full_content, image_url)
+- `blessing_tags`: 祝福標籤
+
+## Deployment
+
+**本地開發 (deploy/):**
+```bash
+cd deploy
+docker compose up -d --build
+# 訪問 http://localhost:8973
+```
+
+**生產環境:**
+```bash
+cd ~/ngo-60
+git pull
+docker compose down
+docker compose up -d --build
+```
+
+## Recent Progress (2026-01)
+
+- ✅ Desktop 佈局完成
+- ✅ 百工圖 6+0 digit grid (動態空位設定)
+- ✅ 內部期許祝福卡片輪播
+- ✅ 祝福頁面 Desktop Modal 設計
+- ✅ 活動卡片水平佈局 (左資訊右圖片)
+- ✅ scroll-nav 動態頁數指示
+- ✅ link-button 箭頭改為右上 ↗️
+- ✅ init.sql 更新為生產環境備份
