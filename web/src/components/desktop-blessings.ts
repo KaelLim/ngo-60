@@ -37,7 +37,8 @@ export class DesktopBlessings extends LitElement {
     }
 
     .cards {
-      display: flex;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
       gap: 20px;
       overflow: hidden;
     }
@@ -47,7 +48,6 @@ export class DesktopBlessings extends LitElement {
       border-radius: 20px;
       padding: 20px 0;
       min-width: 0;
-      flex: 1;
       display: flex;
       flex-direction: column;
       gap: 20px;
