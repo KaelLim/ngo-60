@@ -810,3 +810,74 @@ tr:hover {
   margin-bottom: 16px;
   color: #52525b;
 }
+
+/* Badge */
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.badge-success {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+}
+
+.badge-draft {
+  background: rgba(161, 161, 170, 0.15);
+  color: #a1a1aa;
+}
+
+/* Badge Toggle Button */
+.badge-toggle {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.badge-toggle-on {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+}
+
+.badge-toggle-on:hover {
+  background: rgba(34, 197, 94, 0.25);
+}
+
+.badge-toggle-off {
+  background: rgba(161, 161, 170, 0.15);
+  color: #a1a1aa;
+}
+
+.badge-toggle-off:hover {
+  background: rgba(161, 161, 170, 0.25);
+  color: #d4d4d8;
+}
+
+/* Draft row style */
+.row-draft {
+  opacity: 0.6;
+}
+
+/* Checkbox label */
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 400;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #3b82f6;
+  cursor: pointer;
+}

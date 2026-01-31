@@ -49,6 +49,7 @@ interface Event {
   topic_id: number | null;
   month: number;
   year: number;
+  published: boolean;
 }
 
 interface Blessing {
@@ -155,20 +156,22 @@ const tools = [
     return { content: [{ type: "text" as const, text: JSON.stringify({ message: "主題已刪除", id: input.id }, null, 2) }] };
   }),
 
-  tool("getEvents", "取得活動列表", {
+  tool("getEvents", "取得活動列表（預設顯示所有活動含未發布）", {
     month: z.number().optional(),
     year: z.number().optional(),
-    topic_id: z.number().optional()
+    topic_id: z.number().optional(),
+    published_only: z.boolean().optional().describe("是否只顯示已發布的活動，預設 false")
   }, async (input) => {
     let rows: Event[];
+    const publishedFilter = input.published_only ? "AND published = true" : "";
     if (input.topic_id) {
-      rows = await query<Event>("SELECT * FROM events WHERE topic_id = $1 ORDER BY date_start", [input.topic_id]);
+      rows = await query<Event>(`SELECT * FROM events WHERE topic_id = $1 ${publishedFilter} ORDER BY date_start`, [input.topic_id]);
     } else if (input.month && input.year) {
-      rows = await query<Event>("SELECT * FROM events WHERE month = $1 AND year = $2 ORDER BY date_start", [input.month, input.year]);
+      rows = await query<Event>(`SELECT * FROM events WHERE month = $1 AND year = $2 ${publishedFilter} ORDER BY date_start`, [input.month, input.year]);
     } else if (input.month) {
-      rows = await query<Event>("SELECT * FROM events WHERE month = $1 ORDER BY date_start", [input.month]);
+      rows = await query<Event>(`SELECT * FROM events WHERE month = $1 ${publishedFilter} ORDER BY date_start`, [input.month]);
     } else {
-      rows = await query<Event>("SELECT * FROM events ORDER BY date_start");
+      rows = await query<Event>(`SELECT * FROM events WHERE 1=1 ${publishedFilter} ORDER BY date_start`);
     }
     return { content: [{ type: "text" as const, text: JSON.stringify(rows, null, 2) }] };
   }),
@@ -184,18 +187,19 @@ const tools = [
     image_url: z.string().optional(),
     link_url: z.string().optional(),
     topic_id: z.number().optional(),
-    sort_order: z.number().optional()
+    sort_order: z.number().optional(),
+    published: z.boolean().optional().describe("是否發布，預設 true")
   }, async (input) => {
     const rows = await query<Event>(
-      `INSERT INTO events (title, description, date_start, date_end, participation_type, image_url, link_url, topic_id, month, year, sort_order)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      `INSERT INTO events (title, description, date_start, date_end, participation_type, image_url, link_url, topic_id, month, year, sort_order, published)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
        RETURNING *`,
-      [input.title, input.description || null, input.date_start, input.date_end || null, input.participation_type || null, input.image_url || null, input.link_url || null, input.topic_id || null, input.month, input.year, input.sort_order || 0]
+      [input.title, input.description || null, input.date_start, input.date_end || null, input.participation_type || null, input.image_url || null, input.link_url || null, input.topic_id || null, input.month, input.year, input.sort_order || 0, input.published ?? true]
     );
     return { content: [{ type: "text" as const, text: JSON.stringify({ message: "活動已新增", event: rows[0] }, null, 2) }] };
   }),
 
-  tool("updateEvent", "更新活動", {
+  tool("updateEvent", "更新活動（可設定發布狀態）", {
     id: z.number(),
     title: z.string().optional(),
     description: z.string().optional(),
@@ -207,7 +211,8 @@ const tools = [
     topic_id: z.number().optional(),
     month: z.number().optional(),
     year: z.number().optional(),
-    sort_order: z.number().optional()
+    sort_order: z.number().optional(),
+    published: z.boolean().optional().describe("是否發布活動")
   }, async (input) => {
     const existing = await query<Event>("SELECT * FROM events WHERE id = $1", [input.id]);
     if (!existing[0]) {
@@ -218,8 +223,8 @@ const tools = [
       `UPDATE events SET
         title = $1, description = $2, date_start = $3, date_end = $4,
         participation_type = $5, image_url = $6, link_url = $7, topic_id = $8,
-        month = $9, year = $10, sort_order = $11
-       WHERE id = $12 RETURNING *`,
+        month = $9, year = $10, sort_order = $11, published = $12
+       WHERE id = $13 RETURNING *`,
       [
         input.title ?? e.title,
         input.description ?? e.description,
@@ -232,6 +237,7 @@ const tools = [
         input.month ?? e.month,
         input.year ?? e.year,
         input.sort_order ?? e.sort_order,
+        input.published ?? e.published,
         input.id
       ]
     );
@@ -461,10 +467,15 @@ const SYSTEM_PROMPT = `你是慈濟 60 週年活動網站的 AI 管理助手。
 - deleteTopic: 刪除主題，必填 id（如有關聯活動則無法刪除）
 
 活動 (Events) 操作說明：
-- getEvents: 查詢活動列表，可依 month, year, topic_id 篩選
-- createEvent: 新增活動，必填 title, date_start, month, year
-- updateEvent: 更新活動，必填 id，其他欄位可選
+- getEvents: 查詢活動列表，可依 month, year, topic_id 篩選，預設顯示所有活動（含未發布）
+- createEvent: 新增活動，必填 title, date_start, month, year，可設定 published（預設 true）
+- updateEvent: 更新活動，必填 id，可設定 published 來發布/取消發布活動
 - deleteEvent: 刪除活動，必填 id
+
+活動發布狀態說明：
+- published = true: 活動已發布，會在前台顯示
+- published = false: 活動未發布（草稿），不會在前台顯示
+- 可用 updateEvent 的 published 參數來控制發布/取消發布
 
 祝福語 (Blessings) 操作說明：
 - getBlessings: 查詢祝福語列表，可用 featured=true 篩選精選

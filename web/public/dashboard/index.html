@@ -119,6 +119,7 @@
                   <th>日期</th>
                   <th>參與方式</th>
                   <th>主題</th>
+                  <th>發布</th>
                   <th>操作</th>
                 </tr>
               </thead>
@@ -373,6 +374,13 @@
           <div class="form-group">
             <label>活動連結</label>
             <input type="url" id="event-link" placeholder="https://example.com/event">
+          </div>
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="event-published" checked>
+              <span>發布活動</span>
+              <small style="color: #888; margin-left: 8px;">（取消勾選則前台不顯示）</small>
+            </label>
           </div>
         </div>
         <div class="modal-footer">

@@ -51,8 +51,9 @@ export const api = {
   },
 
   // Events
-  async getEvents() {
-    const res = await fetch(`${API_BASE}/events`);
+  async getEvents(includeUnpublished = false) {
+    const url = includeUnpublished ? `${API_BASE}/events?all=true` : `${API_BASE}/events`;
+    const res = await fetch(url);
     return res.json();
   },
 

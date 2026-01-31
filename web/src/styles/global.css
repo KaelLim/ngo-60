@@ -34,6 +34,13 @@ html, body {
   touch-action: none;
 }
 
+/* Tablet-ish width: show background image on sides */
+@media (min-width: 431px) and (max-width: 767px) {
+  body {
+    background: #0e2669 url('/background.png') center center / cover no-repeat fixed;
+  }
+}
+
 @keyframes pulse {
   0%, 100% { opacity: 0.3; transform: translate(-50%, -50%) scale(1); }
   50% { opacity: 0.6; transform: translate(-50%, -50%) scale(1.05); }

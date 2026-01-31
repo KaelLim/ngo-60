@@ -14,6 +14,7 @@ interface Event {
   month: number;
   year: number;
   sort_order: number;
+  published: boolean;
 }
 
 export const eventsRoutes = new Hono();
@@ -21,15 +22,20 @@ export const eventsRoutes = new Hono();
 // GET /api/events - 取得活動列表
 // 支援篩選: ?month=8&year=2026 或 ?topic_id=1
 // 日期範圍邏輯: 活動 date_start~date_end 包含查詢月份就會顯示
+// ?all=true 顯示所有活動（包含未發布），否則只顯示已發布的
 eventsRoutes.get("/", async (c) => {
   const month = c.req.query("month");
   const year = c.req.query("year");
   const topicId = c.req.query("topic_id");
+  const showAll = c.req.query("all") === "true";
+
+  // published 條件：showAll 時不篩選，否則只顯示 published = true
+  const publishedCondition = showAll ? "" : "AND published = true";
 
   // 依主題篩選
   if (topicId) {
     const rows = await query<Event>(
-      "SELECT * FROM events WHERE topic_id = $1 ORDER BY date_start",
+      `SELECT * FROM events WHERE topic_id = $1 ${publishedCondition} ORDER BY date_start`,
       [parseInt(topicId)]
     );
     return c.json(rows);
@@ -56,6 +62,7 @@ eventsRoutes.get("/", async (c) => {
            date_end >= $1::date
            OR (date_end IS NULL AND date_start >= $1::date AND date_start < $2::date)
          )
+         ${publishedCondition}
        ORDER BY date_start`,
       [monthStart, monthEnd]
     );
@@ -78,6 +85,7 @@ eventsRoutes.get("/", async (c) => {
            date_end >= $1::date
            OR (date_end IS NULL AND date_start >= $1::date AND date_start < $2::date)
          )
+         ${publishedCondition}
        ORDER BY date_start`,
       [monthStart, monthEnd]
     );
@@ -85,7 +93,11 @@ eventsRoutes.get("/", async (c) => {
   }
 
   // 取得所有活動
-  const rows = await query<Event>("SELECT * FROM events ORDER BY date_start");
+  const rows = await query<Event>(
+    showAll
+      ? "SELECT * FROM events ORDER BY date_start"
+      : "SELECT * FROM events WHERE published = true ORDER BY date_start"
+  );
   return c.json(rows);
 });
 
@@ -110,7 +122,8 @@ eventsRoutes.post("/", async (c) => {
     topic_id,
     month,
     year,
-    sort_order = 0
+    sort_order = 0,
+    published = true
   } = body;
 
   if (!title || !date_start || !month || !year) {
@@ -118,10 +131,10 @@ eventsRoutes.post("/", async (c) => {
   }
 
   const rows = await query<Event>(
-    `INSERT INTO events (title, description, date_start, date_end, participation_type, image_url, link_url, topic_id, month, year, sort_order)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+    `INSERT INTO events (title, description, date_start, date_end, participation_type, image_url, link_url, topic_id, month, year, sort_order, published)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
      RETURNING *`,
-    [title, description || null, date_start, date_end || null, participation_type || null, image_url || null, link_url || null, topic_id || null, month, year, sort_order]
+    [title, description || null, date_start, date_end || null, participation_type || null, image_url || null, link_url || null, topic_id || null, month, year, sort_order, published]
   );
 
   return c.json(rows[0], 201);
@@ -149,7 +162,8 @@ eventsRoutes.put("/:id", async (c) => {
     topic_id = existing[0].topic_id,
     month = existing[0].month,
     year = existing[0].year,
-    sort_order = existing[0].sort_order
+    sort_order = existing[0].sort_order,
+    published = existing[0].published
   } = body;
 
   const rows = await query<Event>(
@@ -164,10 +178,11 @@ eventsRoutes.put("/:id", async (c) => {
       topic_id = $8,
       month = $9,
       year = $10,
-      sort_order = $11
-     WHERE id = $12
+      sort_order = $11,
+      published = $12
+     WHERE id = $13
      RETURNING *`,
-    [title, description, date_start, date_end, participation_type, image_url, link_url, topic_id, month, year, sort_order, id]
+    [title, description, date_start, date_end, participation_type, image_url, link_url, topic_id, month, year, sort_order, published, id]
   );
 
   return c.json(rows[0]);
