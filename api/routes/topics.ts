@@ -49,9 +49,9 @@ topicsRoutes.get("/:id", async (c) => {
     return c.json({ error: "Topic not found" }, 404);
   }
 
-  // 取得該主題的所有活動
+  // 取得該主題的已發佈活動
   const eventRows = await query<Event>(
-    "SELECT * FROM events WHERE topic_id = $1 ORDER BY date_start",
+    "SELECT * FROM events WHERE topic_id = $1 AND published = true ORDER BY date_start",
     [id]
   );
 
