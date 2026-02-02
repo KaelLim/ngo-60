@@ -11,12 +11,12 @@ export class DesktopHeader extends LitElement {
   slogan = 'NGO 60\nSLOGAN';
 
   // "6" shape empty positions (4x5 grid)
-  // Row 0: x o o x
+  // Row 0: x o o o
   // Row 1: o x x x
   // Row 2: o o o o
   // Row 3: o x x o
   // Row 4: x o o x
-  private sixEmptyPositions = [0, 3, 5, 6, 7, 13, 14, 16, 19];
+  private sixEmptyPositions = [0, 5, 6, 7, 13, 14, 16, 19];
 
   // "0" shape empty positions (4x5 grid)
   // Row 0: x o o x

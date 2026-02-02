@@ -11,20 +11,20 @@ export class HomepageGrid extends LitElement {
   desktopMode = false;
 
   // Mobile: 定義哪些位置是空白的 (0-indexed, row * 4 + col)
-  // Row 0: x o o x   (corners empty)
-  // Row 1: o . . .   (right 3 empty)
-  // Row 2: x o o x   (corners empty)
-  // Row 3: o x x o   (middle 2 empty)
-  // Row 4: x o o x   (corners empty)
-  private mobileEmptyPositions = [0, 3, 5, 6, 7, 8, 11, 13, 14, 16, 19];
+  // Row 0: x o o o
+  // Row 1: o x x x
+  // Row 2: o o o o
+  // Row 3: o x x o
+  // Row 4: x o o x
+  private mobileEmptyPositions = [0, 5, 6, 7, 13, 14, 16, 19];
 
   // Desktop "6" shape empty positions (4x5 grid)
-  // Row 0: x o o x   (corners empty)
-  // Row 1: o . . .   (right 3 empty)
-  // Row 2: x o o x   (corners empty)
-  // Row 3: o x x o   (middle 2 empty)
-  // Row 4: x o o x   (corners empty)
-  private sixEmptyPositions = [0, 3, 5, 6, 7, 8, 11, 13, 14, 16, 19];
+  // Row 0: x o o o
+  // Row 1: o x x x
+  // Row 2: o o o o
+  // Row 3: o x x o
+  // Row 4: x o o x
+  private sixEmptyPositions = [0, 5, 6, 7, 13, 14, 16, 19];
 
   // Desktop "0" shape empty positions (4x5 grid)
   // Row 0: x o o x   (corners empty)
