@@ -38,6 +38,14 @@ export class TopicPage extends LitElement {
       overflow: hidden;
     }
 
+    /* Mobile: 限制寬度並置中 */
+    @media (max-width: 767px) {
+      :host {
+        max-width: 430px;
+        margin: 0 auto;
+      }
+    }
+
     /* Desktop mode - embedded instead of fixed overlay */
     :host([desktopMode]) {
       position: relative;
@@ -304,9 +312,15 @@ export class TopicPage extends LitElement {
       transform: translate(2px, -2px);
     }
 
-    /* Animation - Mobile slide in */
-    :host {
-      animation: slideInPage 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    /* Animation - Mobile slide in (on container to preserve centering) */
+    @media (max-width: 767px) {
+      .page-container {
+        animation: slideInPage 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+
+      :host([closing]) .page-container {
+        animation: slideOutPage 0.35s cubic-bezier(0.4, 0, 1, 1) forwards;
+      }
     }
 
     @keyframes slideInPage {
@@ -318,11 +332,6 @@ export class TopicPage extends LitElement {
         transform: translateX(0);
         opacity: 1;
       }
-    }
-
-    /* Animation - Mobile slide out (exit) */
-    :host([closing]) {
-      animation: slideOutPage 0.35s cubic-bezier(0.4, 0, 1, 1) forwards;
     }
 
     @keyframes slideOutPage {

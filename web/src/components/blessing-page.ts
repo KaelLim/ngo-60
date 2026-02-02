@@ -45,11 +45,22 @@ export class BlessingPage extends LitElement {
       inset: 0;
       z-index: 1000;
       background: #0e2669;
-      animation: slideInPage 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
-    :host([closing]) {
-      animation: slideOutPage 0.35s cubic-bezier(0.4, 0, 1, 1) forwards;
+    /* Mobile: 限制寬度並置中 */
+    @media (max-width: 767px) {
+      :host {
+        max-width: 430px;
+        margin: 0 auto;
+      }
+
+      .page-container {
+        animation: slideInPage 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+
+      :host([closing]) .page-container {
+        animation: slideOutPage 0.35s cubic-bezier(0.4, 0, 1, 1) forwards;
+      }
     }
 
     @keyframes slideInPage {
