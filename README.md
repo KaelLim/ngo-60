@@ -29,6 +29,7 @@ docker compose up -d --build
 /
 ├── docker-compose.yml      # Docker 編排設定
 ├── .env.example            # 環境變數範本
+├── TECH_STACK.md           # 技術棧說明
 ├── db/init.sql             # 資料庫 schema + 種子資料
 ├── api/                    # 後端 (Deno + Hono)
 │   ├── main.ts
@@ -39,9 +40,17 @@ docker compose up -d --build
 │   ├── vite.config.ts
 │   ├── Dockerfile
 │   └── src/
-└── nginx/                  # Nginx 反向代理
-    ├── nginx.conf
-    └── Dockerfile
+│       ├── components/
+│       ├── contexts/
+│       ├── controllers/
+│       ├── services/
+│       ├── stores/
+│       └── styles/
+├── nginx/                  # Nginx 反向代理
+│   ├── nginx.conf
+│   └── Dockerfile
+├── scripts/                # 工具腳本
+└── seed/                   # 種子資料 (圖片等)
 ```
 
 ## 環境變數
@@ -89,7 +98,7 @@ docker run --rm -v tzuchi-60_uploads_data:/data -v $(pwd):/backup alpine tar czf
 | 前台 | http://localhost:8973/ |
 | 後台 | http://localhost:8973/dashboard/ |
 
-後台使用 Basic Auth，預設帳密：`admin` / `changeme`
+後台使用 Basic Auth，帳密請參考 `.env` 設定
 
 ## 授權
 
