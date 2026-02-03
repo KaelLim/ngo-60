@@ -99,7 +99,3 @@ docker run --rm -v tzuchi-60_uploads_data:/data -v $(pwd):/backup alpine tar czf
 | 後台 | http://localhost:8973/dashboard/ |
 
 後台使用 Basic Auth，帳密請參考 `.env` 設定
-
-## 授權
-
-MIT License
