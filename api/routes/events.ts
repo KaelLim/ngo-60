@@ -15,6 +15,8 @@ interface Event {
   year: number;
   sort_order: number;
   published: boolean;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 export const eventsRoutes = new Hono();
@@ -41,53 +43,26 @@ eventsRoutes.get("/", async (c) => {
     return c.json(rows);
   }
 
-  // 依月份和年份篩選 (使用日期範圍邏輯)
-  // 活動會顯示在該月份，如果：
-  // - date_start <= 該月最後一天 AND
-  // - (date_end >= 該月第一天 OR date_end IS NULL 且 date_start 在該月內)
+  // 依月份和年份篩選 (只顯示起始月份的活動)
   if (month && year) {
-    const m = parseInt(month);
-    const y = parseInt(year);
-    // 該月第一天
-    const monthStart = `${y}-${String(m).padStart(2, '0')}-01`;
-    // 該月最後一天 (下個月第一天減一天)
-    const nextMonth = m === 12 ? 1 : m + 1;
-    const nextYear = m === 12 ? y + 1 : y;
-    const monthEnd = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`;
-
     const rows = await query<Event>(
       `SELECT * FROM events
-       WHERE date_start < $2::date
-         AND (
-           date_end >= $1::date
-           OR (date_end IS NULL AND date_start >= $1::date AND date_start < $2::date)
-         )
+       WHERE month = $1 AND year = $2
          ${publishedCondition}
        ORDER BY date_start`,
-      [monthStart, monthEnd]
+      [parseInt(month), parseInt(year)]
     );
     return c.json(rows);
   }
 
   // 僅依月份篩選 (假設當年)
   if (month) {
-    const m = parseInt(month);
-    const y = new Date().getFullYear();
-    const monthStart = `${y}-${String(m).padStart(2, '0')}-01`;
-    const nextMonth = m === 12 ? 1 : m + 1;
-    const nextYear = m === 12 ? y + 1 : y;
-    const monthEnd = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`;
-
     const rows = await query<Event>(
       `SELECT * FROM events
-       WHERE date_start < $2::date
-         AND (
-           date_end >= $1::date
-           OR (date_end IS NULL AND date_start >= $1::date AND date_start < $2::date)
-         )
+       WHERE month = $1 AND year = $2
          ${publishedCondition}
        ORDER BY date_start`,
-      [monthStart, monthEnd]
+      [parseInt(month), new Date().getFullYear()]
     );
     return c.json(rows);
   }
@@ -99,6 +74,17 @@ eventsRoutes.get("/", async (c) => {
       : "SELECT * FROM events WHERE published = true ORDER BY date_start"
   );
   return c.json(rows);
+});
+
+// GET /api/events/active-months?year=2026 - 取得有活動的月份
+eventsRoutes.get("/active-months", async (c) => {
+  const year = c.req.query("year") || new Date().getFullYear().toString();
+  const y = parseInt(year);
+  const rows = await query<{ month: number }>(
+    `SELECT DISTINCT month FROM events WHERE year = $1 AND published = true ORDER BY month`,
+    [y]
+  );
+  return c.json(rows.map(r => r.month));
 });
 
 // GET /api/events/:id - 取得單一活動詳情
@@ -131,8 +117,8 @@ eventsRoutes.post("/", async (c) => {
   }
 
   const rows = await query<Event>(
-    `INSERT INTO events (title, description, date_start, date_end, participation_type, image_url, link_url, topic_id, month, year, sort_order, published)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+    `INSERT INTO events (title, description, date_start, date_end, participation_type, image_url, link_url, topic_id, month, year, sort_order, published, created_at, updated_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), NULL)
      RETURNING *`,
     [title, description || null, date_start, date_end || null, participation_type || null, image_url || null, link_url || null, topic_id || null, month, year, sort_order, published]
   );
@@ -179,7 +165,8 @@ eventsRoutes.put("/:id", async (c) => {
       month = $9,
       year = $10,
       sort_order = $11,
-      published = $12
+      published = $12,
+      updated_at = NOW()
      WHERE id = $13
      RETURNING *`,
     [title, description, date_start, date_end, participation_type, image_url, link_url, topic_id, month, year, sort_order, published, id]

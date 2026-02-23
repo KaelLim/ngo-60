@@ -4,7 +4,7 @@ import { consume } from '@lit/context';
 import { appContext } from '../contexts/app-context.js';
 import { AppStore } from '../stores/app-store.js';
 import { StoreController } from '../controllers/store-controller.js';
-import { api, Homepage, Topic, Event, ImpactSection, Blessing, BlessingTag, GalleryImage } from '../services/api.js';
+import { api, Homepage, Topic, Event, ImpactSection, ImpactConfig, Blessing, BlessingTag, GalleryImage } from '../services/api.js';
 
 import './desktop-header.js';
 import './desktop-intro.js';
@@ -33,7 +33,13 @@ export class DesktopLayout extends LitElement {
   private events: Event[] = [];
 
   @state()
+  private activeMonths: number[] = [];
+
+  @state()
   private impactSections: ImpactSection[] = [];
+
+  @state()
+  private impactConfig: ImpactConfig | null = null;
 
   @state()
   private blessings: Blessing[] = [];
@@ -103,12 +109,14 @@ export class DesktopLayout extends LitElement {
 
   private async loadData() {
     try {
-      const [homepage, images, topics, events, impact, blessings, blessingTags] = await Promise.all([
+      const [homepage, images, topics, events, activeMonths, impact, impactConfig, blessings, blessingTags] = await Promise.all([
         api.getHomepage(),
         api.getGalleryRandom(25, 'homepage'),
         api.getTopics(),
         api.getEvents({ month: this.appStore.selectedMonth, year: this.appStore.selectedYear }),
+        api.getActiveMonths(this.appStore.selectedYear),
         api.getImpactSections(),
+        api.getImpactConfig(),
         api.getBlessings(),
         api.getBlessingTags()
       ]);
@@ -117,7 +125,9 @@ export class DesktopLayout extends LitElement {
       this.galleryImages = images;
       this.topics = topics;
       this.events = events;
+      this.activeMonths = activeMonths;
       this.impactSections = impact;
+      this.impactConfig = impactConfig;
       this.blessings = blessings;
       this.blessingTags = blessingTags;
     } catch (e) {
@@ -190,6 +200,7 @@ export class DesktopLayout extends LitElement {
             .events=${this.events}
             .selectedMonth=${this.appStore.selectedMonth}
             .selectedYear=${this.appStore.selectedYear}
+            .activeMonths=${this.activeMonths}
             @month-change=${this.handleMonthChange}
           ></desktop-schedule>
         </div>
@@ -198,6 +209,7 @@ export class DesktopLayout extends LitElement {
         <div class="section-card">
           <desktop-impact
             .sections=${this.impactSections}
+            .config=${this.impactConfig}
             .blessingTags=${this.blessingTags}
           ></desktop-impact>
         </div>
@@ -214,7 +226,8 @@ export class DesktopLayout extends LitElement {
       <!-- Copyright -->
       <div class="copyright">
         <p class="copyright-text">
-          Copyright © 2020 Open Source Matters. 版權所有. Copyright, OOO Foundation.
+          Copyright © 2020 Open Source Matters. 版權所有.<br>
+          Copyright, Tzuchi Foundation.
         </p>
       </div>
     `;

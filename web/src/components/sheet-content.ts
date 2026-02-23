@@ -4,7 +4,7 @@ import { consume } from '@lit/context';
 import { appContext } from '../contexts/app-context.js';
 import { AppStore } from '../stores/app-store.js';
 import { StoreController } from '../controllers/store-controller.js';
-import { api, Topic, Event, ImpactSection, Blessing, BlessingTag } from '../services/api.js';
+import { api, Topic, Event, ImpactSection, ImpactConfig, Blessing, BlessingTag } from '../services/api.js';
 
 import './homepage-tabs.js';
 
@@ -30,13 +30,20 @@ export class SheetContent extends LitElement {
   private impactSections: ImpactSection[] = [];
 
   @state()
+  private impactConfig: ImpactConfig | null = null;
+
+  @state()
   private blessings: Blessing[] = [];
+
+  @state()
+  private activeMonths: number[] = [];
 
   @state()
   private loading = false;
 
   private storeController!: StoreController<AppStore>;
   private blessIntervalId: number | null = null;
+  private impactCountAnimated = false;
 
   static styles = css`
     :host {
@@ -822,6 +829,171 @@ export class SheetContent extends LitElement {
       line-height: 1.2;
     }
 
+    /* Bless Modal (native dialog) */
+    .bless-modal-dialog {
+      border: none;
+      padding: 0;
+      background: #e4ddd4;
+      border-radius: 20px;
+      width: calc(100% - 24px);
+      max-width: 351px;
+      max-height: 80vh;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    .bless-modal-dialog::backdrop {
+      background: rgba(0, 0, 0, 0.5);
+    }
+
+    .bless-modal-dialog[open] {
+      animation: modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes modalSlideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .bless-modal-close {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 40px;
+      height: 40px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1;
+    }
+
+    .bless-modal-close svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    .bless-modal-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 32px;
+      padding: 48px 24px 36px;
+    }
+
+    .bless-modal-content {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      align-items: center;
+      width: 100%;
+    }
+
+    .bless-modal-title {
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: 20px;
+      font-weight: 500;
+      color: black;
+      line-height: 1.25;
+      margin: 0;
+    }
+
+    .bless-modal-dialogs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 4px;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+    }
+
+    .bless-modal-dialog-item {
+      display: flex;
+      align-items: center;
+      padding-right: 4px;
+    }
+
+    .bless-modal-dialog-bubble {
+      background: white;
+      padding: 0 12px;
+      height: 40px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: -4px;
+    }
+
+    .bless-modal-dialog-bubble span {
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: 16px;
+      font-weight: 400;
+      color: black;
+      line-height: 1.25;
+    }
+
+    .bless-modal-dialog-pointer {
+      width: 12px;
+      height: 16px;
+      margin-left: -4px;
+    }
+
+    .bless-modal-dialog-pointer svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .bless-modal-input-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .bless-modal-input {
+      flex: 1;
+      min-width: 0;
+      border: 2px solid rgba(0, 0, 0, 0.6);
+      border-radius: 4px;
+      padding: 8px 16px;
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: black;
+      background: white;
+      outline: none;
+    }
+
+    .bless-modal-input::placeholder {
+      color: rgba(0, 0, 0, 0.6);
+      font-weight: 700;
+    }
+
+    .bless-modal-input:focus {
+      border-color: #0e2669;
+    }
+
+    .bless-modal-submit {
+      background: #0e2669;
+      border: none;
+      border-radius: 4px;
+      padding: 8px 16px;
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: white;
+      cursor: pointer;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+
+    .bless-modal-submit:active {
+      opacity: 0.8;
+    }
+
     /* ========== Schedule Tab Styles ========== */
     .schedule-container {
       display: flex;
@@ -872,7 +1044,7 @@ export class SheetContent extends LitElement {
     .month-grid {
       display: inline-flex;
       gap: 8px;
-      padding: 0 12px 8px 12px;
+      padding: 8px 12px 8px 12px;
     }
 
     .month-card {
@@ -932,6 +1104,13 @@ export class SheetContent extends LitElement {
     .month-card.active {
       background: #0e2669;
       color: white;
+    }
+
+    .month-card.disabled {
+      background: rgba(169, 169, 169, 0.5);
+      color: #121212;
+      cursor: default;
+      pointer-events: none;
     }
 
     .month-num {
@@ -1052,12 +1231,33 @@ export class SheetContent extends LitElement {
       background: #f5f5f5;
       flex-shrink: 0;
       overflow: hidden;
+      position: relative;
     }
 
     .event-image img {
       width: 100%;
       height: 100%;
       object-fit: cover;
+    }
+
+    .coming-soon-badge {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      background: #0e2669;
+      border-radius: 12px 0 12px 0;
+      padding: 10px;
+      width: 44px;
+      box-sizing: border-box;
+    }
+
+    .coming-soon-badge span {
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: 12px;
+      font-weight: 900;
+      line-height: 14px;
+      color: rgba(255, 255, 255, 0.85);
+      display: block;
     }
 
     .empty-state {
@@ -1076,6 +1276,12 @@ export class SheetContent extends LitElement {
 
   @state()
   private blessMessages: string[] = [];
+
+  @state()
+  private blessModalOpen = false;
+
+  @state()
+  private blessInputValue = '';
 
   connectedCallback() {
     super.connectedCallback();
@@ -1100,21 +1306,64 @@ export class SheetContent extends LitElement {
     }
   }
 
+  updated(changed: Map<string, unknown>) {
+    super.updated(changed);
+    if (this.appStore.activeTab === 'impact' && !this.impactCountAnimated && this.impactSections.length > 0) {
+      this.impactCountAnimated = true;
+      requestAnimationFrame(() => this.animateCountUp());
+    }
+  }
+
+  private animateCountUp() {
+    const container = this.shadowRoot?.querySelector('.impact-container');
+    if (!container) return;
+    const valueEls = container.querySelectorAll('.impact-node-stat .value');
+    valueEls.forEach((el) => {
+      const target = (el as HTMLElement).textContent?.trim() || '';
+      const num = parseFloat(target.replace(/,/g, ''));
+      if (isNaN(num)) return;
+      const hasCommas = target.includes(',');
+      const isPercent = target.includes('%');
+      const duration = 1500;
+      const start = performance.now();
+      const step = (now: number) => {
+        const t = Math.min((now - start) / duration, 1);
+        const ease = 1 - Math.pow(1 - t, 3);
+        const current = num * ease;
+        let display: string;
+        if (Number.isInteger(num)) {
+          display = hasCommas ? Math.round(current).toLocaleString() : Math.round(current).toString();
+        } else {
+          display = current.toFixed(target.split('.')[1]?.replace('%', '').length || 0);
+        }
+        if (isPercent) display += '%';
+        (el as HTMLElement).textContent = display;
+        if (t < 1) requestAnimationFrame(step);
+      };
+      (el as HTMLElement).textContent = isPercent ? '0%' : '0';
+      requestAnimationFrame(step);
+    });
+  }
+
   private async loadData() {
     this.loading = true;
     try {
       // Load all data in parallel
-      const [topics, events, impactSections, blessings, blessingTags] = await Promise.all([
+      const [topics, events, activeMonths, impactSections, impactConfig, blessings, blessingTags] = await Promise.all([
         api.getTopics(),
         api.getEvents({ month: this.appStore.selectedMonth, year: this.appStore.selectedYear }),
+        api.getActiveMonths(this.appStore.selectedYear),
         api.getImpactSections(),
+        api.getImpactConfig(),
         api.getBlessings(true), // Get featured blessings
         api.getBlessingTags()
       ]);
 
       this.topics = topics;
       this.events = events;
+      this.activeMonths = activeMonths;
       this.impactSections = impactSections;
+      this.impactConfig = impactConfig;
       this.blessings = blessings;
       this.blessMessages = blessingTags.map((t: BlessingTag) => t.message);
     } catch (error) {
@@ -1146,6 +1395,36 @@ export class SheetContent extends LitElement {
 
   private handleBlessingClick(blessingId: number) {
     this.appStore.openBlessing(blessingId);
+  }
+
+  private openBlessModal() {
+    this.blessModalOpen = true;
+    this.updateComplete.then(() => {
+      const dialog = this.shadowRoot?.querySelector('.bless-modal-dialog') as HTMLDialogElement;
+      if (dialog && !dialog.open) {
+        dialog.showModal();
+      }
+    });
+  }
+
+  private closeBlessModal() {
+    const dialog = this.shadowRoot?.querySelector('.bless-modal-dialog') as HTMLDialogElement;
+    if (dialog?.open) dialog.close();
+    this.blessModalOpen = false;
+    this.blessInputValue = '';
+  }
+
+  private async submitBlessing() {
+    const msg = this.blessInputValue.trim();
+    if (!msg) return;
+    try {
+      await api.createBlessingTag(msg);
+      this.blessMessages = [...this.blessMessages, msg];
+      this.blessInputValue = '';
+      this.closeBlessModal();
+    } catch (e) {
+      console.error('Failed to submit blessing:', e);
+    }
   }
 
   private formatDate(dateStr: string): string {
@@ -1225,15 +1504,20 @@ export class SheetContent extends LitElement {
           <h2 class="year-header">${selectedYear}</h2>
           <div class="month-grid-wrapper">
             <div class="month-grid">
-              ${this.months.map((monthData, index) => html`
-                <div
-                  class="month-card ${selectedMonth === index + 1 ? 'active' : ''}"
-                  @click=${() => this.handleMonthClick(index + 1)}
-                >
-                  <span class="month-num">${index + 1} <span>月</span></span>
-                  <span class="month-label">${monthData.en}</span>
-                </div>
-              `)}
+              ${this.months.map((monthData, index) => {
+                const month = index + 1;
+                const hasEvents = this.activeMonths.includes(month);
+                const isActive = selectedMonth === month;
+                return html`
+                  <div
+                    class="month-card ${isActive ? 'active' : !hasEvents ? 'disabled' : ''}"
+                    @click=${() => hasEvents ? this.handleMonthClick(month) : undefined}
+                  >
+                    <span class="month-num">${month} <span>月</span></span>
+                    <span class="month-label">${monthData.en}</span>
+                  </div>
+                `;
+              })}
             </div>
           </div>
         </div>
@@ -1259,6 +1543,12 @@ export class SheetContent extends LitElement {
                 </div>
                 <div class="event-image">
                   <img src="${event.image_url || ''}" alt="${event.title}" />
+                  ${!event.link_url ? html`
+                    <div class="coming-soon-badge">
+                      <span>敬請</span>
+                      <span>期待</span>
+                    </div>
+                  ` : ''}
                 </div>
               </div>
             `) : html`
@@ -1295,10 +1585,11 @@ export class SheetContent extends LitElement {
     return html`
       <div class="impact-container">
         <!-- Report Section -->
+        ${this.impactConfig?.published === 1 ? html`
         <div class="impact-report">
           <div class="impact-title-section">
-            <h2 class="impact-main-title">慈濟 60 年帶來哪些影響？</h2>
-            <p class="impact-subtitle">慈濟用三大主軸回應臺灣社會脈絡</p>
+            <h2 class="impact-main-title">${this.impactConfig?.main_title || ''}</h2>
+            <p class="impact-subtitle">${this.impactConfig?.subtitle || ''}</p>
           </div>
 
           <div class="impact-report-card">
@@ -1307,45 +1598,45 @@ export class SheetContent extends LitElement {
                 ${triangleSvg}
               </div>
 
-              <!-- Top node: 永續環境 -->
+              <!-- Top node -->
               <div class="impact-node top">
                 <div class="impact-node-stat">
-                  <span class="label">降低</span>
-                  <span class="value">348,039</span>
-                  <span class="unit">噸碳排放</span>
+                  <span class="label">${this.impactSections[0]?.stat_label || ''}</span>
+                  <span class="value">${this.impactSections[0]?.stat_value || ''}</span>
+                  <span class="unit">${this.impactSections[0]?.stat_unit || ''}</span>
                 </div>
                 <div class="impact-node-badge">
                   <div class="impact-node-inner">
-                    <span>${this.impactSections[0]?.name || '永續'}環境</span>
+                    <span>${this.impactSections[0]?.name || ''}</span>
                   </div>
                 </div>
               </div>
 
-              <!-- Bottom left node: 深耕共伴 -->
+              <!-- Bottom left node -->
               <div class="impact-node bottom-left">
                 <div class="impact-node-badge">
                   <div class="impact-node-inner">
-                    <span>${this.impactSections[1]?.name || '深耕'}共伴</span>
+                    <span>${this.impactSections[1]?.name || ''}</span>
                   </div>
                 </div>
                 <div class="impact-node-stat">
-                  <span class="label">培訓</span>
-                  <span class="value">7,509</span>
-                  <span class="unit">名防災士</span>
+                  <span class="label">${this.impactSections[1]?.stat_label || ''}</span>
+                  <span class="value">${this.impactSections[1]?.stat_value || ''}</span>
+                  <span class="unit">${this.impactSections[1]?.stat_unit || ''}</span>
                 </div>
               </div>
 
-              <!-- Bottom right node: 向光家園 -->
+              <!-- Bottom right node -->
               <div class="impact-node bottom-right">
                 <div class="impact-node-badge">
                   <div class="impact-node-inner">
-                    <span>${this.impactSections[2]?.name || '向光'}家園</span>
+                    <span>${this.impactSections[2]?.name || ''}</span>
                   </div>
                 </div>
                 <div class="impact-node-stat">
-                  <span class="label">驅動</span>
-                  <span class="value">80%</span>
-                  <span class="unit">災民利他意願</span>
+                  <span class="label">${this.impactSections[2]?.stat_label || ''}</span>
+                  <span class="value">${this.impactSections[2]?.stat_value || ''}</span>
+                  <span class="unit">${this.impactSections[2]?.stat_unit || ''}</span>
                 </div>
               </div>
             </div>
@@ -1359,14 +1650,16 @@ export class SheetContent extends LitElement {
             </div>
           </div>
         </div>
+        ` : ''}
 
         <!-- Bless Section -->
+        ${this.impactConfig?.blessing_published === 1 ? html`
         <div class="bless-section">
-          <h3 class="bless-title">祝福慈濟60</h3>
+          <h3 class="bless-title">${this.impactConfig?.blessing_title || '讓善念長流 慈悲綻放'}</h3>
           <div class="bless-cards-wrapper">
             <div class="bless-cards">
               <!-- Dialog bubbles card -->
-              <div class="bless-card">
+              <div class="bless-card" @click=${() => this.openBlessModal()}>
                 <div class="bless-dialogs">
                   ${this.blessMessages.map((msg, index) => html`
                     <div class="bless-dialog">
@@ -1392,6 +1685,8 @@ export class SheetContent extends LitElement {
             </div>
           </div>
         </div>
+        ` : ''}
+
       </div>
     `;
   }
@@ -1433,7 +1728,52 @@ export class SheetContent extends LitElement {
       `;
     }
 
-    return this.renderContent();
+    return html`
+      ${this.renderContent()}
+      ${this.blessModalOpen ? this.renderBlessModal() : ''}
+    `;
+  }
+
+  private renderBlessModal() {
+    return html`
+      <dialog class="bless-modal-dialog" @click=${(e: MouseEvent) => { if (e.target === e.currentTarget) this.closeBlessModal(); }} @cancel=${() => this.closeBlessModal()}>
+        <button class="bless-modal-close" @click=${() => this.closeBlessModal()}>
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M18 6L6 18M6 6L18 18" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <div class="bless-modal-inner">
+          <div class="bless-modal-content">
+            <p class="bless-modal-title">${this.impactConfig?.blessing_title || '傳送祝福 灌溉希望'}</p>
+            <div class="bless-modal-dialogs">
+              ${this.blessMessages.map(msg => html`
+                <div class="bless-modal-dialog-item">
+                  <div class="bless-modal-dialog-bubble">
+                    <span>${msg}</span>
+                  </div>
+                  <div class="bless-modal-dialog-pointer">
+                    <svg viewBox="0 0 12 16" fill="none">
+                      <path d="M12 8L0 0V16L12 8Z" fill="white"/>
+                    </svg>
+                  </div>
+                </div>
+              `)}
+            </div>
+          </div>
+          <div class="bless-modal-input-row">
+            <input
+              class="bless-modal-input"
+              type="text"
+              placeholder="輸入祝福語"
+              .value=${this.blessInputValue}
+              @input=${(e: InputEvent) => { this.blessInputValue = (e.target as HTMLInputElement).value; }}
+              @keydown=${(e: KeyboardEvent) => { if (e.key === 'Enter') this.submitBlessing(); }}
+            />
+            <button class="bless-modal-submit" @click=${() => this.submitBlessing()}>送出</button>
+          </div>
+        </div>
+      </dialog>
+    `;
   }
 
   private handleTabChange(e: CustomEvent) {

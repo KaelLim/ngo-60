@@ -92,6 +92,8 @@ export class AppSheet extends LitElement {
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
     }
 
     .homepage-content.visible {
@@ -105,8 +107,7 @@ export class AppSheet extends LitElement {
 
     /* Tab bar container in full mode */
     .tab-container {
-      padding: 0 12px 24px;
-      margin-top: 20px;
+      padding: 24px 12px;
       background: #e4ddd4;
       position: sticky;
       top: 0;
@@ -114,6 +115,24 @@ export class AppSheet extends LitElement {
     }
 
     .content-inner {
+      padding-bottom: 24px;
+      flex: 1;
+    }
+
+    .copyright {
+      background-color: #121212;
+      padding: 8px 12px;
+      box-sizing: border-box;
+    }
+
+    .copyright-text {
+      font-family: 'Noto Sans TC', sans-serif;
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 1.4;
+      color: white;
+      text-align: center;
+      margin: 0;
     }
   `;
 
@@ -172,6 +191,14 @@ export class AppSheet extends LitElement {
           <!-- Tab content -->
           <div class="content-inner">
             <sheet-content></sheet-content>
+          </div>
+
+          <!-- Footer -->
+          <div class="copyright">
+            <p class="copyright-text">
+              Copyright © 2020 Open Source Matters. 版權所有.<br>
+              Copyright, Tzuchi Foundation.
+            </p>
           </div>
         </div>
       </section>

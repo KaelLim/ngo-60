@@ -5,6 +5,7 @@ import { bodyLimit } from "jsr:@hono/hono@^4.6.0/body-limit";
 import { topicsRoutes } from "./routes/topics.ts";
 import { eventsRoutes } from "./routes/events.ts";
 import { impactRoutes } from "./routes/impact.ts";
+import { impactConfigRoutes } from "./routes/impact-config.ts";
 import { blessingsRoutes } from "./routes/blessings.ts";
 import { galleryRoutes } from "./routes/gallery.ts";
 import { homepageRoutes } from "./routes/homepage.ts";
@@ -23,6 +24,7 @@ app.use("/uploads/*", serveStatic({ root: "./" }));
 app.route("/api/topics", topicsRoutes);
 app.route("/api/events", eventsRoutes);
 app.route("/api/impact", impactRoutes);
+app.route("/api/impact-config", impactConfigRoutes);
 app.route("/api/blessings", blessingsRoutes);
 app.route("/api/blessing-tags", blessingTagRoutes);
 

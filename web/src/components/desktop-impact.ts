@@ -1,14 +1,20 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import { ImpactSection, BlessingTag } from '../services/api.js';
+import { ImpactSection, ImpactConfig, BlessingTag } from '../services/api.js';
 
 @customElement('desktop-impact')
 export class DesktopImpact extends LitElement {
   @property({ type: Array })
   sections: ImpactSection[] = [];
 
+  @property({ type: Object })
+  config: ImpactConfig | null = null;
+
   @property({ type: Array })
   blessingTags: BlessingTag[] = [];
+
+  private countAnimated = false;
+  private observer: IntersectionObserver | null = null;
 
   static styles = css`
     :host {
@@ -16,7 +22,7 @@ export class DesktopImpact extends LitElement {
     }
 
     .section-container {
-      padding: 60px 40px;
+      padding: 40px;
       display: flex;
       flex-direction: column;
       gap: 48px;
@@ -309,6 +315,57 @@ export class DesktopImpact extends LitElement {
     }
   `;
 
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this.observer?.disconnect();
+  }
+
+  updated() {
+    if (!this.countAnimated && this.sections.length > 0) {
+      const card = this.shadowRoot?.querySelector('.graphic-card');
+      if (!card) return;
+      this.observer = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && !this.countAnimated) {
+          this.countAnimated = true;
+          this.animateCountUp();
+          this.observer?.disconnect();
+        }
+      }, { threshold: 0.3 });
+      this.observer.observe(card);
+    }
+  }
+
+  private animateCountUp() {
+    const card = this.shadowRoot?.querySelector('.graphic-card');
+    if (!card) return;
+    const valueEls = card.querySelectorAll('.impact-node-stat .value');
+    valueEls.forEach((el) => {
+      const target = (el as HTMLElement).textContent?.trim() || '';
+      const num = parseFloat(target.replace(/,/g, ''));
+      if (isNaN(num)) return;
+      const hasCommas = target.includes(',');
+      const isPercent = target.includes('%');
+      const duration = 1500;
+      const start = performance.now();
+      const step = (now: number) => {
+        const t = Math.min((now - start) / duration, 1);
+        const ease = 1 - Math.pow(1 - t, 3);
+        const current = num * ease;
+        let display: string;
+        if (Number.isInteger(num)) {
+          display = hasCommas ? Math.round(current).toLocaleString() : Math.round(current).toString();
+        } else {
+          display = current.toFixed(target.split('.')[1]?.replace('%', '').length || 0);
+        }
+        if (isPercent) display += '%';
+        (el as HTMLElement).textContent = display;
+        if (t < 1) requestAnimationFrame(step);
+      };
+      (el as HTMLElement).textContent = isPercent ? '0%' : '0';
+      requestAnimationFrame(step);
+    });
+  }
+
   render() {
     const triangleSvg = html`
       <svg viewBox="0 0 200 148" fill="none">
@@ -332,14 +389,17 @@ export class DesktopImpact extends LitElement {
 
     return html`
       <div class="section-container">
+        <!-- Section Title (always visible) -->
+        <div class="section-title">看影響</div>
+
         <!-- Report Section -->
+        ${this.config?.published === 1 ? html`
         <div class="report-section">
           <!-- Left: Title -->
           <div class="title-section">
-            <div class="section-title">看影響</div>
             <div class="text-content">
-              <h2 class="main-title">慈濟 60 年帶來哪些影響？</h2>
-              <p class="main-desc">我們用三個關鍵方向，回應臺灣社會脈絡</p>
+              <h2 class="main-title">${this.config?.main_title || ''}</h2>
+              <p class="main-desc">${this.config?.subtitle || ''}</p>
             </div>
           </div>
 
@@ -350,45 +410,45 @@ export class DesktopImpact extends LitElement {
                 ${triangleSvg}
               </div>
 
-              <!-- Top node: 永續環境 -->
+              <!-- Top node -->
               <div class="impact-node top">
                 <div class="impact-node-stat">
-                  <span class="label">降低</span>
-                  <span class="value">348,039</span>
-                  <span class="unit">噸碳排放</span>
+                  <span class="label">${this.sections[0]?.stat_label || ''}</span>
+                  <span class="value">${this.sections[0]?.stat_value || ''}</span>
+                  <span class="unit">${this.sections[0]?.stat_unit || ''}</span>
                 </div>
                 <div class="impact-node-badge">
                   <div class="impact-node-inner">
-                    <span>永續環境</span>
+                    <span>${this.sections[0]?.name || ''}</span>
                   </div>
                 </div>
               </div>
 
-              <!-- Bottom left node: 深耕共伴 -->
+              <!-- Bottom left node -->
               <div class="impact-node bottom-left">
                 <div class="impact-node-badge">
                   <div class="impact-node-inner">
-                    <span>深耕共伴</span>
+                    <span>${this.sections[1]?.name || ''}</span>
                   </div>
                 </div>
                 <div class="impact-node-stat">
-                  <span class="label">培訓</span>
-                  <span class="value">7,509</span>
-                  <span class="unit">名防災士</span>
+                  <span class="label">${this.sections[1]?.stat_label || ''}</span>
+                  <span class="value">${this.sections[1]?.stat_value || ''}</span>
+                  <span class="unit">${this.sections[1]?.stat_unit || ''}</span>
                 </div>
               </div>
 
-              <!-- Bottom right node: 向光家園 -->
+              <!-- Bottom right node -->
               <div class="impact-node bottom-right">
                 <div class="impact-node-badge">
                   <div class="impact-node-inner">
-                    <span>向光家園</span>
+                    <span>${this.sections[2]?.name || ''}</span>
                   </div>
                 </div>
                 <div class="impact-node-stat">
-                  <span class="label">驅動</span>
-                  <span class="value">80%</span>
-                  <span class="unit">災民利他意願</span>
+                  <span class="label">${this.sections[2]?.stat_label || ''}</span>
+                  <span class="value">${this.sections[2]?.stat_value || ''}</span>
+                  <span class="unit">${this.sections[2]?.stat_unit || ''}</span>
                 </div>
               </div>
             </div>
@@ -402,15 +462,17 @@ export class DesktopImpact extends LitElement {
             </div>
           </div>
         </div>
+        ` : ''}
 
         <!-- Blessings Section -->
+        ${this.config?.blessing_published === 1 ? html`
         <div class="blessings-section">
-          <h3 class="blessings-title">選擇對慈濟 60 的祝福！</h3>
+          <h3 class="blessings-title">${this.config?.blessing_title || '傳送祝福 灌溉希望'}</h3>
           <div class="dialogs-wrapper">
-            ${blessingTexts.map(text => html`
+            ${blessingTexts.map(msg => html`
               <div class="dialog-item">
                 <div class="dialog-bubble">
-                  <span>${text}</span>
+                  <span>${msg}</span>
                 </div>
                 <div class="dialog-pointer">
                   ${pointerSvg}
@@ -419,6 +481,7 @@ export class DesktopImpact extends LitElement {
             `)}
           </div>
         </div>
+        ` : ''}
       </div>
     `;
   }

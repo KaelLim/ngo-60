@@ -55,6 +55,7 @@ export class DesktopTopics extends LitElement {
       display: flex;
       flex-direction: column;
       gap: 12px;
+      padding-top: 8px;
     }
 
     /* Individual topic card */
@@ -146,6 +147,7 @@ export class DesktopTopics extends LitElement {
       flex-direction: row;
       gap: 16px;
       overflow-x: auto;
+      padding-top: 8px;
       padding-bottom: 8px;
     }
 
@@ -208,6 +210,10 @@ export class DesktopTopics extends LitElement {
       color: #121212;
       line-height: 1.28;
       margin: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      min-width: 0;
     }
 
     .activity-items {
@@ -308,6 +314,44 @@ export class DesktopTopics extends LitElement {
 
     .link-button:hover svg {
       transform: translate(2px, -2px);
+    }
+
+    /* NEW badge */
+    .new-badge {
+      display: inline-block;
+      background: #FB7900;
+      color: white;
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: 12px;
+      font-weight: 900;
+      padding: 2px 8px;
+      border-radius: 20px;
+      line-height: 1.2;
+      flex-shrink: 0;
+      vertical-align: middle;
+    }
+
+    .activity-title-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    /* Coming soon state */
+    .link-button.coming-soon {
+      cursor: default;
+      pointer-events: none;
+    }
+
+    .link-button.coming-soon span {
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      color: #0E2669;
+      white-space: pre-line;
+      text-align: center;
+      line-height: 1.2;
     }
 
     .empty-message {
@@ -419,6 +463,13 @@ export class DesktopTopics extends LitElement {
     return `${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
   }
 
+  private isNewEvent(event: Event): boolean {
+    const dateStr = event.updated_at || event.created_at;
+    if (!dateStr) return false;
+    const diff = Date.now() - new Date(dateStr).getTime();
+    return diff <= 7 * 24 * 60 * 60 * 1000;
+  }
+
   private getParticipationText(event: Event): string {
     return event.participation_type || '現場參與';
   }
@@ -523,13 +574,23 @@ export class DesktopTopics extends LitElement {
                         <path d="M273 0C284.046 0 293 8.95431 293 20V26C293 43.6731 307.327 58 325 58H331C342.046 58 351 66.9543 351 78V297C351 308.046 342.046 317 331 317H20C8.95431 317 0 308.046 0 297V20C0 8.9543 8.95431 0 20 0H273Z" fill="white"/>
                       </svg>
                     </div>
-                    <button class="link-button" @click=${() => event.link_url && window.open(event.link_url, '_blank')}>
-                      ${linkArrow}
-                    </button>
+                    ${event.link_url ? html`
+                      <button class="link-button" @click=${() => window.open(event.link_url, '_blank')}>
+                        ${linkArrow}
+                      </button>
+                    ` : html`
+                      <div class="link-button coming-soon">
+                        <span>敬請
+期待</span>
+                      </div>
+                    `}
                     <div class="activity-card-bg">
                       <div class="activity-card-content">
                         <div class="activity-info">
-                          <h3 class="activity-title">${event.title}</h3>
+                          <div class="activity-title-row">
+                            ${this.isNewEvent(event) ? html`<span class="new-badge">NEW</span>` : ''}
+                            <h3 class="activity-title">${event.title}</h3>
+                          </div>
                           <div class="activity-items">
                             <div class="activity-row">
                               <span class="activity-icon">${calendarIcon}</span>

@@ -13,6 +13,9 @@ export class DesktopSchedule extends LitElement {
   @property({ type: Number })
   selectedYear = 2026;
 
+  @property({ type: Array })
+  activeMonths: number[] = [];
+
   private months = [
     { num: 1, label: '1月', en: 'Jan.' },
     { num: 2, label: '2月', en: 'Feb.' },
@@ -94,6 +97,12 @@ export class DesktopSchedule extends LitElement {
 
     .month-tab.active {
       background: #0e2669;
+    }
+
+    .month-tab.disabled {
+      background: rgba(169, 169, 169, 0.5);
+      cursor: default;
+      pointer-events: none;
     }
 
     .month-tab.active .month-num,
@@ -211,13 +220,40 @@ export class DesktopSchedule extends LitElement {
       flex-shrink: 0;
     }
 
-    .event-card-image {
+    .event-card-image-wrapper {
       width: 100px;
       height: 100px;
       border-radius: 12px;
       background: #f0f0f0;
-      object-fit: cover;
       flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .event-card-image-wrapper img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .coming-soon-badge {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      background: #0e2669;
+      border-radius: 12px 0 12px 0;
+      padding: 8px;
+      width: 40px;
+      box-sizing: border-box;
+    }
+
+    .coming-soon-badge span {
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: 11px;
+      font-weight: 900;
+      line-height: 13px;
+      color: rgba(255, 255, 255, 0.85);
+      display: block;
     }
 
     .empty-message {
@@ -230,6 +266,12 @@ export class DesktopSchedule extends LitElement {
       border-radius: 16px;
     }
   `;
+
+  private handleEventClick(event: Event) {
+    if (event.link_url) {
+      window.open(event.link_url, '_blank');
+    }
+  }
 
   private handleMonthClick(month: number) {
     this.dispatchEvent(new CustomEvent('month-change', {
@@ -263,24 +305,28 @@ export class DesktopSchedule extends LitElement {
         <div class="date-selector">
           <div class="year-display">${this.selectedYear}</div>
           <div class="month-tabs">
-            ${this.months.map(month => html`
-              <button
-                class="month-tab ${month.num === this.selectedMonth ? 'active' : ''}"
-                @click=${() => this.handleMonthClick(month.num)}
-              >
-                <span class="month-num">
-                  <span class="month-num-value">${month.num} </span><span class="month-num-label">月</span>
-                </span>
-                <span class="month-en">${month.en}</span>
-              </button>
-            `)}
+            ${this.months.map(month => {
+              const hasEvents = this.activeMonths.includes(month.num);
+              const isActive = month.num === this.selectedMonth;
+              return html`
+                <button
+                  class="month-tab ${isActive ? 'active' : !hasEvents ? 'disabled' : ''}"
+                  @click=${() => hasEvents ? this.handleMonthClick(month.num) : undefined}
+                >
+                  <span class="month-num">
+                    <span class="month-num-value">${month.num} </span><span class="month-num-label">月</span>
+                  </span>
+                  <span class="month-en">${month.en}</span>
+                </button>
+              `;
+            })}
           </div>
         </div>
 
         ${this.events.length > 0 ? html`
           <div class="events-grid">
             ${this.events.map(event => html`
-              <div class="event-card">
+              <div class="event-card" @click=${() => this.handleEventClick(event)}>
                 <div class="event-card-info">
                   <h4 class="event-card-title">${event.title}</h4>
                   <div class="event-card-items">
@@ -300,11 +346,17 @@ export class DesktopSchedule extends LitElement {
                     ` : ''}
                   </div>
                 </div>
-                ${event.image_url ? html`
-                  <img class="event-card-image" src=${event.image_url} alt=${event.title} />
-                ` : html`
-                  <div class="event-card-image"></div>
-                `}
+                <div class="event-card-image-wrapper">
+                  ${event.image_url ? html`
+                    <img src=${event.image_url} alt=${event.title} />
+                  ` : ''}
+                  ${!event.link_url ? html`
+                    <div class="coming-soon-badge">
+                      <span>敬請</span>
+                      <span>期待</span>
+                    </div>
+                  ` : ''}
+                </div>
               </div>
             `)}
           </div>

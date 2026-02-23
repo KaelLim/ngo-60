@@ -5,6 +5,7 @@ import { updateImagePreview } from './image-picker.js';
 import { getTopicsCache, loadTopics } from './topics.js';
 
 let eventsCache = [];
+let currentSort = { field: 'created_at', direction: 'desc' };
 
 export async function loadEvents() {
   try {
@@ -14,6 +15,7 @@ export async function loadEvents() {
       await loadTopics();
       topicsCache = getTopicsCache();
     }
+    topicsCacheRef = topicsCache;
     updateEventTopicSelect(topicsCache);
 
     // Load all events including unpublished for dashboard
@@ -30,15 +32,67 @@ function updateEventTopicSelect(topicsCache) {
     topicsCache.map(t => `<option value="${t.id}">${t.icon} ${t.name}</option>`).join('');
 }
 
+// 將時間戳轉換為 MM/DD/YYYY 格式
+function formatDateTimeForDisplay(dateStr) {
+  if (!dateStr) return '-';
+  const date = new Date(dateStr);
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${month}/${day}/${year}`;
+}
+
+function sortEvents(events, field, direction) {
+  return [...events].sort((a, b) => {
+    let valA = a[field];
+    let valB = b[field];
+
+    // Handle null values
+    if (valA === null || valA === undefined) valA = '';
+    if (valB === null || valB === undefined) valB = '';
+
+    // Handle dates
+    if (field === 'created_at' || field === 'updated_at' || field === 'date_start') {
+      valA = valA ? new Date(valA).getTime() : 0;
+      valB = valB ? new Date(valB).getTime() : 0;
+    }
+
+    // Handle month/year combination
+    if (field === 'month') {
+      valA = a.year * 100 + a.month;
+      valB = b.year * 100 + b.month;
+    }
+
+    // Compare
+    if (valA < valB) return direction === 'asc' ? -1 : 1;
+    if (valA > valB) return direction === 'asc' ? 1 : -1;
+    return 0;
+  });
+}
+
+function updateSortIndicators() {
+  document.querySelectorAll('th.sortable').forEach(th => {
+    th.classList.remove('sort-asc', 'sort-desc');
+    if (th.dataset.sort === currentSort.field) {
+      th.classList.add(currentSort.direction === 'asc' ? 'sort-asc' : 'sort-desc');
+    }
+  });
+}
+
 function renderEventsTable(topicsCache) {
   const tbody = document.getElementById('events-table');
-  tbody.innerHTML = eventsCache.map(e => {
+  const sortedEvents = sortEvents(eventsCache, currentSort.field, currentSort.direction);
+  updateSortIndicators();
+
+  tbody.innerHTML = sortedEvents.map(e => {
     const topic = topicsCache.find(t => t.id === e.topic_id);
     const publishedToggle = e.published
       ? `<button class="badge-toggle badge-toggle-on" data-action="toggle-publish" data-id="${e.id}" data-published="true" title="點擊取消發布">已發布</button>`
       : `<button class="badge-toggle badge-toggle-off" data-action="toggle-publish" data-id="${e.id}" data-published="false" title="點擊發布">草稿</button>`;
     return `
       <tr class="${e.published ? '' : 'row-draft'}">
+        <td>${formatDateTimeForDisplay(e.created_at)}</td>
+        <td>${formatDateTimeForDisplay(e.updated_at)}</td>
         <td>${e.month}月 / ${e.year}</td>
         <td>${e.title}</td>
         <td>${formatDateForInput(e.date_start)}${e.date_end ? ' ~ ' + formatDateForInput(e.date_end) : ''}</td>
@@ -155,6 +209,26 @@ async function handleSubmit(e) {
   }
 }
 
+let topicsCacheRef = [];
+
 export function initEvents() {
   document.getElementById('event-form').addEventListener('submit', handleSubmit);
+
+  // Add sort listeners to table headers
+  document.querySelectorAll('th.sortable').forEach(th => {
+    th.addEventListener('click', () => {
+      const field = th.dataset.sort;
+      if (currentSort.field === field) {
+        currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+      } else {
+        currentSort.field = field;
+        currentSort.direction = 'asc';
+      }
+      renderEventsTable(topicsCacheRef);
+    });
+  });
+}
+
+export function setTopicsCache(topics) {
+  topicsCacheRef = topics;
 }

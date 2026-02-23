@@ -4,10 +4,37 @@ import { showToast } from './toast.js';
 
 let tagsCache = [];
 
+async function loadBlessingConfig() {
+  try {
+    const config = await api.getImpactConfig();
+    document.getElementById('blessing-config-title').value = config.blessing_title || '';
+    document.getElementById('blessing-config-published').checked = config.blessing_published === 1;
+  } catch (e) {
+    console.error('Failed to load blessing config:', e);
+  }
+}
+
+async function handleBlessingConfigSubmit(e) {
+  e.preventDefault();
+  const title = document.getElementById('blessing-config-title').value;
+  const published = document.getElementById('blessing-config-published').checked ? 1 : 0;
+  const data = { blessing_title: title, blessing_published: published };
+  try {
+    const result = await api.updateImpactConfig(data);
+    // Reload form with saved values from server
+    document.getElementById('blessing-config-title').value = result.blessing_title || '';
+    document.getElementById('blessing-config-published').checked = result.blessing_published === 1;
+    showToast('祝福區塊設定已儲存');
+  } catch (e) {
+    showToast('儲存失敗', 'error');
+  }
+}
+
 export async function loadBlessingTags() {
   try {
     tagsCache = await api.getBlessingTags();
     renderTagsTable();
+    loadBlessingConfig();
   } catch (e) {
     console.error('Failed to load blessing tags:', e);
   }
@@ -85,4 +112,5 @@ async function handleSubmit(e) {
 
 export function initBlessingTags() {
   document.getElementById('blessing-tag-form').addEventListener('submit', handleSubmit);
+  document.getElementById('blessing-config-form').addEventListener('submit', handleBlessingConfigSubmit);
 }

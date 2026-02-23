@@ -689,7 +689,8 @@ tr:hover {
 .image-picker-actions {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  justify-content: space-between;
+  height: 80px;
 }
 
 .picker-category-tabs {
@@ -880,4 +881,61 @@ tr:hover {
   height: 16px;
   accent-color: #3b82f6;
   cursor: pointer;
+}
+
+/* Date input - keep default behavior, just style the calendar icon */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  padding: 4px;
+  margin-right: -4px;
+  filter: invert(0.5);
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  filter: invert(0.7);
+}
+
+/* Select dropdown arrow styling */
+.form-group select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+  cursor: pointer;
+}
+
+.form-group select:hover {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+/* Sortable table headers */
+th.sortable {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+th.sortable:hover {
+  background: rgba(255,255,255,0.06);
+}
+
+th.sortable .sort-icons {
+  font-size: 10px;
+  margin-left: 4px;
+  color: #52525b;
+}
+
+th.sortable .sort-icons .arrow-up,
+th.sortable .sort-icons .arrow-down {
+  color: #52525b;
+}
+
+th.sortable.sort-asc .sort-icons .arrow-up {
+  color: #3b82f6;
+}
+
+th.sortable.sort-desc .sort-icons .arrow-down {
+  color: #3b82f6;
 }

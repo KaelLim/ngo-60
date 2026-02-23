@@ -41,6 +41,10 @@
           <span class="material-symbols-outlined">photo_library</span>
           <span>圖庫管理</span>
         </div>
+        <div class="nav-item" data-section="impact">
+          <span class="material-symbols-outlined">hub</span>
+          <span>影響力管理</span>
+        </div>
       </nav>
     </aside>
 
@@ -114,12 +118,14 @@
             <table>
               <thead>
                 <tr>
-                  <th>月/年</th>
-                  <th>標題</th>
-                  <th>日期</th>
+                  <th class="sortable" data-sort="created_at">建立時間 <span class="sort-icons"><span class="arrow-up">▲</span><span class="arrow-down">▼</span></span></th>
+                  <th class="sortable" data-sort="updated_at">最後更新 <span class="sort-icons"><span class="arrow-up">▲</span><span class="arrow-down">▼</span></span></th>
+                  <th class="sortable" data-sort="month">月/年 <span class="sort-icons"><span class="arrow-up">▲</span><span class="arrow-down">▼</span></span></th>
+                  <th class="sortable" data-sort="title">標題 <span class="sort-icons"><span class="arrow-up">▲</span><span class="arrow-down">▼</span></span></th>
+                  <th class="sortable" data-sort="date_start">日期 <span class="sort-icons"><span class="arrow-up">▲</span><span class="arrow-down">▼</span></span></th>
                   <th>參與方式</th>
-                  <th>主題</th>
-                  <th>發布</th>
+                  <th class="sortable" data-sort="topic_id">主題 <span class="sort-icons"><span class="arrow-up">▲</span><span class="arrow-down">▼</span></span></th>
+                  <th class="sortable" data-sort="published">發布 <span class="sort-icons"><span class="arrow-up">▲</span><span class="arrow-down">▼</span></span></th>
                   <th>操作</th>
                 </tr>
               </thead>
@@ -143,6 +149,7 @@
                   <th>排序</th>
                   <th>標題</th>
                   <th>內容預覽</th>
+                  <th>顯示</th>
                   <th>操作</th>
                 </tr>
               </thead>
@@ -157,6 +164,23 @@
         <div class="page-header">
           <h2>祝福標籤管理</h2>
           <button class="btn btn-primary" onclick="openBlessingTagModal()">+ 新增標籤</button>
+        </div>
+        <div class="card" style="margin-bottom: 20px;">
+          <div class="card-body">
+            <form id="blessing-config-form">
+              <div class="form-group">
+                <label>區塊標題</label>
+                <input type="text" id="blessing-config-title" placeholder="輸入區塊標題">
+              </div>
+              <div class="form-group">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="blessing-config-published" checked>
+                  顯示祝福標籤區塊
+                </label>
+              </div>
+              <button type="submit" class="btn btn-primary">儲存設定</button>
+            </form>
+          </div>
         </div>
         <div class="card">
           <div class="table-container">
@@ -234,7 +258,107 @@
           </div>
         </div>
       </section>
+
+      <!-- Impact Section -->
+      <section id="section-impact" class="section">
+        <!-- Impact Config -->
+        <div class="page-header">
+          <h2>影響力設定</h2>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <form id="impact-config-form">
+              <div class="form-group">
+                <label>主標題</label>
+                <input type="text" id="impact-config-main-title" placeholder="例：慈濟 60 年帶來哪些影響？">
+              </div>
+              <div class="form-group">
+                <label>副標題</label>
+                <input type="text" id="impact-config-subtitle" placeholder="例：慈濟用三大主軸回應臺灣社會脈絡">
+              </div>
+              <div class="form-group">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="impact-config-published" checked>
+                  顯示影響力區塊
+                </label>
+              </div>
+              <button type="submit" class="btn btn-primary">儲存設定</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Impact Sections (triangle nodes) -->
+        <div class="page-header" style="margin-top: 24px;">
+          <h2>影響力節點</h2>
+          <button class="btn btn-primary" onclick="openImpactModal()">+ 新增</button>
+        </div>
+        <div class="card">
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>排序</th>
+                  <th>圖示</th>
+                  <th>名稱</th>
+                  <th>統計標籤</th>
+                  <th>統計數值</th>
+                  <th>統計單位</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="impact-table"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
     </main>
+  </div>
+
+  <!-- Impact Modal -->
+  <div class="modal-overlay" id="impact-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="impact-modal-title">新增影響力節點</h3>
+        <button class="modal-close" onclick="closeImpactModal()">&times;</button>
+      </div>
+      <form id="impact-form">
+        <div class="modal-body">
+          <input type="hidden" id="impact-id">
+          <div class="form-row">
+            <div class="form-group">
+              <label>名稱 *</label>
+              <input type="text" id="impact-name" placeholder="例：永續環境" required>
+            </div>
+            <div class="form-group">
+              <label>圖示 *</label>
+              <input type="text" id="impact-icon" placeholder="例：🌱" required>
+            </div>
+            <div class="form-group">
+              <label>排序</label>
+              <input type="number" id="impact-sort" value="0">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>統計標籤</label>
+              <input type="text" id="impact-stat-label" placeholder="例：降低">
+            </div>
+            <div class="form-group">
+              <label>統計數值</label>
+              <input type="text" id="impact-stat-value" placeholder="例：348,039">
+            </div>
+            <div class="form-group">
+              <label>統計單位</label>
+              <input type="text" id="impact-stat-unit" placeholder="例：噸碳排放">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeImpactModal()">取消</button>
+          <button type="submit" class="btn btn-primary">儲存</button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <!-- Topic Modal -->
@@ -410,6 +534,12 @@
               <label>排序</label>
               <input type="number" id="blessing-sort" value="0">
             </div>
+          </div>
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="blessing-featured">
+              顯示於前台
+            </label>
           </div>
           <div class="form-group">
             <label>完整內容 *</label>

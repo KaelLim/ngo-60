@@ -5,8 +5,9 @@ interface ImpactSection {
   id: number;
   name: string;
   icon: string;
-  stat_value: string | null;
   stat_label: string | null;
+  stat_value: string | null;
+  stat_unit: string | null;
   sort_order: number;
 }
 
@@ -33,17 +34,17 @@ impactRoutes.get("/:id", async (c) => {
 // POST /api/impact - 新增影響力區塊
 impactRoutes.post("/", async (c) => {
   const body = await c.req.json();
-  const { name, icon, stat_value, stat_label, sort_order = 0 } = body;
+  const { name, icon, stat_label, stat_value, stat_unit, sort_order = 0 } = body;
 
   if (!name || !icon) {
     return c.json({ error: "name, icon are required" }, 400);
   }
 
   const rows = await query<ImpactSection>(
-    `INSERT INTO impact_sections (name, icon, stat_value, stat_label, sort_order)
-     VALUES ($1, $2, $3, $4, $5)
+    `INSERT INTO impact_sections (name, icon, stat_label, stat_value, stat_unit, sort_order)
+     VALUES ($1, $2, $3, $4, $5, $6)
      RETURNING *`,
-    [name, icon, stat_value || null, stat_label || null, sort_order]
+    [name, icon, stat_label || null, stat_value || null, stat_unit || null, sort_order]
   );
 
   return c.json(rows[0], 201);
@@ -62,15 +63,16 @@ impactRoutes.put("/:id", async (c) => {
   const {
     name = existing[0].name,
     icon = existing[0].icon,
-    stat_value = existing[0].stat_value,
     stat_label = existing[0].stat_label,
+    stat_value = existing[0].stat_value,
+    stat_unit = existing[0].stat_unit,
     sort_order = existing[0].sort_order
   } = body;
 
   const rows = await query<ImpactSection>(
-    `UPDATE impact_sections SET name = $1, icon = $2, stat_value = $3, stat_label = $4, sort_order = $5
-     WHERE id = $6 RETURNING *`,
-    [name, icon, stat_value, stat_label, sort_order, id]
+    `UPDATE impact_sections SET name = $1, icon = $2, stat_label = $3, stat_value = $4, stat_unit = $5, sort_order = $6
+     WHERE id = $7 RETURNING *`,
+    [name, icon, stat_label, stat_value, stat_unit, sort_order, id]
   );
 
   return c.json(rows[0]);

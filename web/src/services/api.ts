@@ -31,15 +31,28 @@ export interface Event {
   month: number;
   year: number;
   sort_order: number;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 export interface ImpactSection {
   id: number;
   name: string;
   icon: string;
-  stat_value: string | null;
   stat_label: string | null;
+  stat_value: string | null;
+  stat_unit: string | null;
   sort_order: number;
+}
+
+export interface ImpactConfig {
+  id: number;
+  main_title: string | null;
+  subtitle: string | null;
+  published: number;
+  blessing_title: string | null;
+  blessing_published: number;
+  updated_at: string | null;
 }
 
 export interface Blessing {
@@ -48,6 +61,7 @@ export interface Blessing {
   message: string;
   full_content: string | null;
   image_url: string | null;
+  is_featured: boolean;
   sort_order: number;
 }
 
@@ -104,6 +118,11 @@ export const api = {
     return res.json();
   },
 
+  async getActiveMonths(year: number): Promise<number[]> {
+    const res = await fetch(`${API_BASE}/events/active-months?year=${year}`);
+    return res.json();
+  },
+
   async getEventById(id: number): Promise<Event | null> {
     const res = await fetch(`${API_BASE}/events/${id}`);
     if (!res.ok) return null;
@@ -113,6 +132,11 @@ export const api = {
   // Impact (影響力)
   async getImpactSections(): Promise<ImpactSection[]> {
     const res = await fetch(`${API_BASE}/impact`);
+    return res.json();
+  },
+
+  async getImpactConfig(): Promise<ImpactConfig> {
+    const res = await fetch(`${API_BASE}/impact-config`);
     return res.json();
   },
 
@@ -133,6 +157,15 @@ export const api = {
   // Blessing Tags (祝福語標籤)
   async getBlessingTags(): Promise<BlessingTag[]> {
     const res = await fetch(`${API_BASE}/blessing-tags`);
+    return res.json();
+  },
+
+  async createBlessingTag(message: string): Promise<BlessingTag> {
+    const res = await fetch(`${API_BASE}/blessing-tags`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message })
+    });
     return res.json();
   },
 

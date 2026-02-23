@@ -135,6 +135,21 @@ export const api = {
     await fetch(`${API_BASE}/impact/${id}`, { method: 'DELETE' });
   },
 
+  // Impact Config
+  async getImpactConfig() {
+    const res = await fetch(`${API_BASE}/impact-config`);
+    return res.json();
+  },
+
+  async updateImpactConfig(data) {
+    const res = await fetch(`${API_BASE}/impact-config`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    return res.json();
+  },
+
   // Gallery
   async getGallery(category = '') {
     let url = `${API_BASE}/gallery`;
