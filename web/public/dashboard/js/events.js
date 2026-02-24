@@ -143,7 +143,6 @@ export function openEventModal(event = null) {
   document.getElementById('event-topic').value = event?.topic_id || '';
   document.getElementById('event-month').value = event?.month || new Date().getMonth() + 1;
   document.getElementById('event-year').value = event?.year || 2026;
-  document.getElementById('event-sort').value = event?.sort_order || 0;
   document.getElementById('event-participation').value = event?.participation_type || '';
   document.getElementById('event-image').value = event?.image_url || '';
   document.getElementById('event-link').value = event?.link_url || '';
@@ -206,7 +205,6 @@ async function handleSubmit(e) {
     topic_id: topicValue ? parseInt(topicValue) : null,
     month: parseInt(document.getElementById('event-month').value),
     year: parseInt(document.getElementById('event-year').value),
-    sort_order: parseInt(document.getElementById('event-sort').value),
     participation_type: document.getElementById('event-participation').value,
     image_url: document.getElementById('event-image').value,
     link_url: document.getElementById('event-link').value || null,

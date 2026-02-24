@@ -13,7 +13,6 @@ interface Event {
   topic_id: number | null;
   month: number;
   year: number;
-  sort_order: number;
   published: boolean;
   privacy: number;
   created_at: string | null;
@@ -109,7 +108,6 @@ eventsRoutes.post("/", async (c) => {
     topic_id,
     month,
     year,
-    sort_order = 0,
     published = true,
     privacy = 0
   } = body;
@@ -119,10 +117,10 @@ eventsRoutes.post("/", async (c) => {
   }
 
   const rows = await query<Event>(
-    `INSERT INTO events (title, description, date_start, date_end, participation_type, image_url, link_url, topic_id, month, year, sort_order, published, privacy, created_at, updated_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW(), NULL)
+    `INSERT INTO events (title, description, date_start, date_end, participation_type, image_url, link_url, topic_id, month, year, published, privacy, created_at, updated_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), NULL)
      RETURNING *`,
-    [title, description || null, date_start, date_end || null, participation_type || null, image_url || null, link_url || null, topic_id || null, month, year, sort_order, published, privacy]
+    [title, description || null, date_start, date_end || null, participation_type || null, image_url || null, link_url || null, topic_id || null, month, year, published, privacy]
   );
 
   return c.json(rows[0], 201);
@@ -150,7 +148,6 @@ eventsRoutes.put("/:id", async (c) => {
     topic_id = existing[0].topic_id,
     month = existing[0].month,
     year = existing[0].year,
-    sort_order = existing[0].sort_order,
     published = existing[0].published,
     privacy = existing[0].privacy
   } = body;
@@ -167,13 +164,12 @@ eventsRoutes.put("/:id", async (c) => {
       topic_id = $8,
       month = $9,
       year = $10,
-      sort_order = $11,
-      published = $12,
-      privacy = $13,
+      published = $11,
+      privacy = $12,
       updated_at = NOW()
-     WHERE id = $14
+     WHERE id = $13
      RETURNING *`,
-    [title, description, date_start, date_end, participation_type, image_url, link_url, topic_id, month, year, sort_order, published, privacy, id]
+    [title, description, date_start, date_end, participation_type, image_url, link_url, topic_id, month, year, published, privacy, id]
   );
 
   return c.json(rows[0]);
