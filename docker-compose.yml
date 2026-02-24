@@ -29,6 +29,7 @@ services:
       DB_USER: ${DB_USER:-postgres}
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
       DB_NAME: ${DB_NAME:-events_app}
+      JWT_SECRET: ${JWT_SECRET:-tzuchi-60-jwt-secret-change-in-production}
     volumes:
       - uploads_data:/app/uploads
       - claude_config:/root/.claude
@@ -36,16 +37,17 @@ services:
 
   web:
     build: ./web
+    volumes:
+      - ./web/public/dashboard:/usr/share/nginx/html/dashboard
     restart: unless-stopped
 
   nginx:
-    build: ./nginx
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile-windows
     depends_on:
       - web
       - api
-    environment:
-      ADMIN_USER: ${ADMIN_USER:-admin}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-changeme}
     ports:
       - "${PORT:-8973}:80"
     restart: unless-stopped

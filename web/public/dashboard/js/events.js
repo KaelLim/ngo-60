@@ -89,6 +89,9 @@ function renderEventsTable(topicsCache) {
     const publishedToggle = e.published
       ? `<button class="badge-toggle badge-toggle-on" data-action="toggle-publish" data-id="${e.id}" data-published="true" title="點擊取消發布">已發布</button>`
       : `<button class="badge-toggle badge-toggle-off" data-action="toggle-publish" data-id="${e.id}" data-published="false" title="點擊發布">草稿</button>`;
+    const privacyToggle = e.privacy === 1
+      ? `<button class="badge-toggle badge-toggle-privacy-internal" data-action="toggle-privacy" data-id="${e.id}" data-privacy="1" title="點擊切換為所有人">慈濟人</button>`
+      : `<button class="badge-toggle badge-toggle-privacy-public" data-action="toggle-privacy" data-id="${e.id}" data-privacy="0" title="點擊切換為慈濟人">所有人</button>`;
     return `
       <tr class="${e.published ? '' : 'row-draft'}">
         <td>${formatDateTimeForDisplay(e.created_at)}</td>
@@ -99,6 +102,7 @@ function renderEventsTable(topicsCache) {
         <td>${e.participation_type || '-'}</td>
         <td>${topic ? topic.icon + ' ' + topic.name : '-'}</td>
         <td>${publishedToggle}</td>
+        <td>${privacyToggle}</td>
         <td class="actions">
           <button class="btn btn-secondary btn-sm" data-action="edit" data-id="${e.id}">編輯</button>
           <button class="btn btn-danger btn-sm" data-action="delete" data-id="${e.id}">刪除</button>
@@ -116,6 +120,9 @@ function renderEventsTable(topicsCache) {
   });
   tbody.querySelectorAll('[data-action="toggle-publish"]').forEach(btn => {
     btn.addEventListener('click', () => togglePublish(parseInt(btn.dataset.id), btn.dataset.published === 'true'));
+  });
+  tbody.querySelectorAll('[data-action="toggle-privacy"]').forEach(btn => {
+    btn.addEventListener('click', () => togglePrivacy(parseInt(btn.dataset.id), parseInt(btn.dataset.privacy)));
   });
 }
 
@@ -141,6 +148,7 @@ export function openEventModal(event = null) {
   document.getElementById('event-image').value = event?.image_url || '';
   document.getElementById('event-link').value = event?.link_url || '';
   document.getElementById('event-published').checked = event?.published ?? true;
+  document.getElementById('event-privacy').value = event?.privacy ?? 0;
   updateImagePreview('event-image', event?.image_url);
   document.getElementById('event-modal').classList.add('active');
 }
@@ -175,6 +183,17 @@ async function togglePublish(id, currentPublished) {
   }
 }
 
+async function togglePrivacy(id, currentPrivacy) {
+  try {
+    const newPrivacy = currentPrivacy === 1 ? 0 : 1;
+    await api.updateEvent(id, { privacy: newPrivacy });
+    showToast(newPrivacy === 1 ? '已設為慈濟人' : '已設為所有人');
+    loadEvents();
+  } catch (e) {
+    showToast('操作失敗', 'error');
+  }
+}
+
 async function handleSubmit(e) {
   e.preventDefault();
   const id = document.getElementById('event-id').value;
@@ -191,7 +210,8 @@ async function handleSubmit(e) {
     participation_type: document.getElementById('event-participation').value,
     image_url: document.getElementById('event-image').value,
     link_url: document.getElementById('event-link').value || null,
-    published: document.getElementById('event-published').checked
+    published: document.getElementById('event-published').checked,
+    privacy: parseInt(document.getElementById('event-privacy').value)
   };
 
   try {

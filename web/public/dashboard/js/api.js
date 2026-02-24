@@ -1,15 +1,52 @@
 // Dashboard API Module
 const API_BASE = '/api';
 
+function getToken() {
+  return localStorage.getItem('token');
+}
+
+function authHeaders(extra = {}) {
+  const headers = { ...extra };
+  const token = getToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+}
+
+async function authFetch(url, options = {}) {
+  options.headers = authHeaders(options.headers || {});
+  const res = await fetch(url, options);
+  if (res.status === 401) {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/dashboard/login.html';
+    throw new Error('未授權');
+  }
+  return res;
+}
+
 export const api = {
+  // Auth
+  async checkAuth() {
+    const res = await authFetch(`${API_BASE}/auth/me`);
+    return res.json();
+  },
+
+  async logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/dashboard/login.html';
+  },
+
   // Homepage
   async getHomepage() {
-    const res = await fetch(`${API_BASE}/homepage`);
+    const res = await authFetch(`${API_BASE}/homepage`);
     return res.json();
   },
 
   async updateHomepage(data) {
-    const res = await fetch(`${API_BASE}/homepage`, {
+    const res = await authFetch(`${API_BASE}/homepage`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -19,12 +56,12 @@ export const api = {
 
   // Topics
   async getTopics() {
-    const res = await fetch(`${API_BASE}/topics`);
+    const res = await authFetch(`${API_BASE}/topics`);
     return res.json();
   },
 
   async createTopic(data) {
-    const res = await fetch(`${API_BASE}/topics`, {
+    const res = await authFetch(`${API_BASE}/topics`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -33,7 +70,7 @@ export const api = {
   },
 
   async updateTopic(id, data) {
-    const res = await fetch(`${API_BASE}/topics/${id}`, {
+    const res = await authFetch(`${API_BASE}/topics/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -42,7 +79,7 @@ export const api = {
   },
 
   async deleteTopic(id) {
-    const res = await fetch(`${API_BASE}/topics/${id}`, { method: 'DELETE' });
+    const res = await authFetch(`${API_BASE}/topics/${id}`, { method: 'DELETE' });
     if (!res.ok) {
       const data = await res.json();
       throw new Error(data.error);
@@ -53,12 +90,12 @@ export const api = {
   // Events
   async getEvents(includeUnpublished = false) {
     const url = includeUnpublished ? `${API_BASE}/events?all=true` : `${API_BASE}/events`;
-    const res = await fetch(url);
+    const res = await authFetch(url);
     return res.json();
   },
 
   async createEvent(data) {
-    const res = await fetch(`${API_BASE}/events`, {
+    const res = await authFetch(`${API_BASE}/events`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -67,7 +104,7 @@ export const api = {
   },
 
   async updateEvent(id, data) {
-    const res = await fetch(`${API_BASE}/events/${id}`, {
+    const res = await authFetch(`${API_BASE}/events/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -76,17 +113,17 @@ export const api = {
   },
 
   async deleteEvent(id) {
-    await fetch(`${API_BASE}/events/${id}`, { method: 'DELETE' });
+    await authFetch(`${API_BASE}/events/${id}`, { method: 'DELETE' });
   },
 
   // Blessings
   async getBlessings() {
-    const res = await fetch(`${API_BASE}/blessings`);
+    const res = await authFetch(`${API_BASE}/blessings`);
     return res.json();
   },
 
   async createBlessing(data) {
-    const res = await fetch(`${API_BASE}/blessings`, {
+    const res = await authFetch(`${API_BASE}/blessings`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -95,7 +132,7 @@ export const api = {
   },
 
   async updateBlessing(id, data) {
-    const res = await fetch(`${API_BASE}/blessings/${id}`, {
+    const res = await authFetch(`${API_BASE}/blessings/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -104,17 +141,17 @@ export const api = {
   },
 
   async deleteBlessing(id) {
-    await fetch(`${API_BASE}/blessings/${id}`, { method: 'DELETE' });
+    await authFetch(`${API_BASE}/blessings/${id}`, { method: 'DELETE' });
   },
 
   // Impact
   async getImpact() {
-    const res = await fetch(`${API_BASE}/impact`);
+    const res = await authFetch(`${API_BASE}/impact`);
     return res.json();
   },
 
   async createImpact(data) {
-    const res = await fetch(`${API_BASE}/impact`, {
+    const res = await authFetch(`${API_BASE}/impact`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -123,7 +160,7 @@ export const api = {
   },
 
   async updateImpact(id, data) {
-    const res = await fetch(`${API_BASE}/impact/${id}`, {
+    const res = await authFetch(`${API_BASE}/impact/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -132,17 +169,17 @@ export const api = {
   },
 
   async deleteImpact(id) {
-    await fetch(`${API_BASE}/impact/${id}`, { method: 'DELETE' });
+    await authFetch(`${API_BASE}/impact/${id}`, { method: 'DELETE' });
   },
 
   // Impact Config
   async getImpactConfig() {
-    const res = await fetch(`${API_BASE}/impact-config`);
+    const res = await authFetch(`${API_BASE}/impact-config`);
     return res.json();
   },
 
   async updateImpactConfig(data) {
-    const res = await fetch(`${API_BASE}/impact-config`, {
+    const res = await authFetch(`${API_BASE}/impact-config`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -154,7 +191,7 @@ export const api = {
   async getGallery(category = '') {
     let url = `${API_BASE}/gallery`;
     if (category) url += `?category=${category}`;
-    const res = await fetch(url);
+    const res = await authFetch(url);
     return res.json();
   },
 
@@ -177,6 +214,13 @@ export const api = {
       }
 
       xhr.addEventListener('load', () => {
+        if (xhr.status === 401) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          window.location.href = '/dashboard/login.html';
+          reject(new Error('未授權'));
+          return;
+        }
         try {
           const response = JSON.parse(xhr.responseText);
           if (xhr.status >= 200 && xhr.status < 300) {
@@ -198,12 +242,16 @@ export const api = {
       });
 
       xhr.open('POST', `${API_BASE}/gallery`);
+      const token = getToken();
+      if (token) {
+        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+      }
       xhr.send(formData);
     });
   },
 
   async updateGalleryImage(id, category) {
-    const res = await fetch(`${API_BASE}/gallery/${id}`, {
+    const res = await authFetch(`${API_BASE}/gallery/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ category })
@@ -212,17 +260,17 @@ export const api = {
   },
 
   async deleteGalleryImage(id) {
-    await fetch(`${API_BASE}/gallery/${id}`, { method: 'DELETE' });
+    await authFetch(`${API_BASE}/gallery/${id}`, { method: 'DELETE' });
   },
 
   // Blessing Tags
   async getBlessingTags() {
-    const res = await fetch(`${API_BASE}/blessing-tags`);
+    const res = await authFetch(`${API_BASE}/blessing-tags`);
     return res.json();
   },
 
   async createBlessingTag(data) {
-    const res = await fetch(`${API_BASE}/blessing-tags`, {
+    const res = await authFetch(`${API_BASE}/blessing-tags`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -231,7 +279,7 @@ export const api = {
   },
 
   async updateBlessingTag(id, data) {
-    const res = await fetch(`${API_BASE}/blessing-tags/${id}`, {
+    const res = await authFetch(`${API_BASE}/blessing-tags/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -240,6 +288,47 @@ export const api = {
   },
 
   async deleteBlessingTag(id) {
-    await fetch(`${API_BASE}/blessing-tags/${id}`, { method: 'DELETE' });
+    await authFetch(`${API_BASE}/blessing-tags/${id}`, { method: 'DELETE' });
+  },
+
+  // Users
+  async getUsers() {
+    const res = await authFetch(`${API_BASE}/users`);
+    return res.json();
+  },
+
+  async createUser(data) {
+    const res = await authFetch(`${API_BASE}/users`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error);
+    }
+    return res.json();
+  },
+
+  async updateUser(id, data) {
+    const res = await authFetch(`${API_BASE}/users/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error);
+    }
+    return res.json();
+  },
+
+  async deleteUser(id) {
+    const res = await authFetch(`${API_BASE}/users/${id}`, { method: 'DELETE' });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error);
+    }
+    return res.json();
   }
 };

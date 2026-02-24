@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>登入 - 慈濟60週年後台</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      background: #f0f2f5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .login-card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 400px;
+    }
+    .login-card h1 {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+    .login-card p {
+      color: #666;
+      text-align: center;
+      margin-bottom: 32px;
+      font-size: 14px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: #333;
+      margin-bottom: 6px;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid #d9d9d9;
+      border-radius: 8px;
+      font-size: 15px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus {
+      border-color: #1677ff;
+      box-shadow: 0 0 0 2px rgba(22,119,255,0.1);
+    }
+    .btn-login {
+      width: 100%;
+      padding: 12px;
+      background: #1677ff;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-login:hover { background: #0958d9; }
+    .btn-login:disabled { background: #91caff; cursor: not-allowed; }
+    .error-msg {
+      color: #ff4d4f;
+      font-size: 14px;
+      text-align: center;
+      margin-bottom: 16px;
+      min-height: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <h1>慈濟60週年</h1>
+    <p>後台管理系統登入</p>
+    <div class="error-msg" id="error-msg"></div>
+    <form id="login-form">
+      <div class="form-group">
+        <label for="username">帳號</label>
+        <input type="text" id="username" autocomplete="username" required autofocus>
+      </div>
+      <div class="form-group">
+        <label for="password">密碼</label>
+        <input type="password" id="password" autocomplete="current-password" required>
+      </div>
+      <button type="submit" class="btn-login" id="login-btn">登入</button>
+    </form>
+  </div>
+  <script>
+    // If already logged in, redirect to dashboard
+    if (localStorage.getItem('token')) {
+      fetch('/api/auth/me', {
+        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+      }).then(r => {
+        if (r.ok) window.location.href = '/dashboard/';
+      });
+    }
+
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('login-btn');
+      const errorMsg = document.getElementById('error-msg');
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+
+      errorMsg.textContent = '';
+      btn.disabled = true;
+      btn.textContent = '登入中...';
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          errorMsg.textContent = data.error || '登入失敗';
+          return;
+        }
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        window.location.href = '/dashboard/';
+      } catch {
+        errorMsg.textContent = '網路錯誤，請稍後再試';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '登入';
+      }
+    });
+  </script>
+</body>
+</html>

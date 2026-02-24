@@ -939,3 +939,49 @@ th.sortable.sort-asc .sort-icons .arrow-up {
 th.sortable.sort-desc .sort-icons .arrow-down {
   color: #3b82f6;
 }
+
+/* Sidebar user info */
+.sidebar-user {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+  font-size: 13px;
+  color: #a1a1aa;
+}
+
+.sidebar-user .btn {
+  font-size: 12px;
+  padding: 3px 10px;
+}
+
+/* Privacy toggle badges */
+.badge-toggle-privacy-public {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+}
+
+.badge-toggle-privacy-public:hover {
+  background: rgba(59, 130, 246, 0.25);
+}
+
+.badge-toggle-privacy-internal {
+  background: rgba(234, 179, 8, 0.15);
+  color: #facc15;
+}
+
+.badge-toggle-privacy-internal:hover {
+  background: rgba(234, 179, 8, 0.25);
+}
+
+/* Image picker footer layout */
+#image-picker-modal .modal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.picker-upload-area {
+  display: flex;
+  align-items: center;
+}

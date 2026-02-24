@@ -15,6 +15,10 @@
       <div class="sidebar-header">
         <h1>慈濟60週年</h1>
         <p>後台管理系統</p>
+        <div class="sidebar-user">
+          <span id="current-username"></span>
+          <button class="btn btn-outline btn-sm" id="logout-btn">登出</button>
+        </div>
       </div>
       <nav>
         <div class="nav-item active" data-section="homepage">
@@ -44,6 +48,10 @@
         <div class="nav-item" data-section="impact">
           <span class="material-symbols-outlined">hub</span>
           <span>影響力管理</span>
+        </div>
+        <div class="nav-item" data-section="users">
+          <span class="material-symbols-outlined">group</span>
+          <span>帳號管理</span>
         </div>
       </nav>
     </aside>
@@ -126,6 +134,7 @@
                   <th>參與方式</th>
                   <th class="sortable" data-sort="topic_id">主題 <span class="sort-icons"><span class="arrow-up">▲</span><span class="arrow-down">▼</span></span></th>
                   <th class="sortable" data-sort="published">發布 <span class="sort-icons"><span class="arrow-up">▲</span><span class="arrow-down">▼</span></span></th>
+                  <th class="sortable" data-sort="privacy">可見 <span class="sort-icons"><span class="arrow-up">▲</span><span class="arrow-down">▼</span></span></th>
                   <th>操作</th>
                 </tr>
               </thead>
@@ -311,7 +320,66 @@
           </div>
         </div>
       </section>
+
+      <!-- Users Section -->
+      <section id="section-users" class="section">
+        <div class="page-header">
+          <h2>帳號管理</h2>
+          <button class="btn btn-primary" onclick="openUserModal()">+ 新增使用者</button>
+        </div>
+        <div class="card">
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>帳號</th>
+                  <th>角色</th>
+                  <th>建立時間</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="users-table"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
     </main>
+  </div>
+
+  <!-- User Modal -->
+  <div class="modal-overlay" id="user-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="user-modal-title">新增使用者</h3>
+        <button class="modal-close" onclick="closeUserModal()">&times;</button>
+      </div>
+      <form id="user-form">
+        <div class="modal-body">
+          <input type="hidden" id="user-id">
+          <div class="form-group">
+            <label>帳號 *</label>
+            <input type="text" id="user-username" required autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label>密碼</label>
+            <input type="password" id="user-password" autocomplete="new-password">
+            <small id="user-password-hint" style="color: #888; display: none;">留空表示不修改密碼</small>
+          </div>
+          <div class="form-group">
+            <label>角色</label>
+            <select id="user-role">
+              <option value="admin">管理員</option>
+              <option value="editor">編輯者</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeUserModal()">取消</button>
+          <button type="submit" class="btn btn-primary">儲存</button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <!-- Impact Modal -->
@@ -499,12 +567,21 @@
             <label>活動連結</label>
             <input type="url" id="event-link" placeholder="https://example.com/event">
           </div>
-          <div class="form-group">
-            <label class="checkbox-label">
-              <input type="checkbox" id="event-published" checked>
-              <span>發布活動</span>
-              <small style="color: #888; margin-left: 8px;">（取消勾選則前台不顯示）</small>
-            </label>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="checkbox-label">
+                <input type="checkbox" id="event-published" checked>
+                <span>發布活動</span>
+                <small style="color: #888; margin-left: 8px;">（取消勾選則前台不顯示）</small>
+              </label>
+            </div>
+            <div class="form-group">
+              <label>可見對象</label>
+              <select id="event-privacy">
+                <option value="0">所有人</option>
+                <option value="1">慈濟人</option>
+              </select>
+            </div>
           </div>
         </div>
         <div class="modal-footer">
@@ -642,8 +719,17 @@
         <div class="picker-gallery-grid" id="picker-gallery-grid"></div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" onclick="closeImagePicker()">取消</button>
-        <button type="button" class="btn btn-primary" onclick="confirmImageSelection()">確認選擇</button>
+        <div class="picker-upload-area">
+          <input type="file" id="picker-upload-input" accept="image/*" style="display:none">
+          <button type="button" class="btn btn-outline" id="picker-upload-btn">
+            <span class="material-symbols-outlined" style="font-size:18px;vertical-align:middle;margin-right:4px;">upload</span>從電腦上傳圖片
+          </button>
+          <span id="picker-upload-status" style="font-size:13px;color:#a1a1aa;margin-left:8px;"></span>
+        </div>
+        <div>
+          <button type="button" class="btn btn-secondary" onclick="closeImagePicker()">取消</button>
+          <button type="button" class="btn btn-primary" onclick="confirmImageSelection()">確認選擇</button>
+        </div>
       </div>
     </div>
   </div>

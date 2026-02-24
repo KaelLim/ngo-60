@@ -1,4 +1,5 @@
 // Dashboard Main Entry Point
+import { api } from './api.js';
 import { loadHomepage, initHomepage } from './homepage.js';
 import { loadTopics, initTopics, openTopicModal, closeTopicModal } from './topics.js';
 import { loadEvents, initEvents, openEventModal, closeEventModal } from './events.js';
@@ -7,6 +8,7 @@ import { loadGallery, initGallery, closeGalleryModal } from './gallery.js';
 import { loadBlessingTags, initBlessingTags, openBlessingTagModal, closeBlessingTagModal } from './blessing-tags.js';
 import { initImagePicker, openImagePicker, closeImagePicker, confirmImageSelection, clearImageField } from './image-picker.js';
 import { loadImpact, initImpact, openImpactModal, closeImpactModal } from './impact.js';
+import { loadUsers, initUsers, openUserModal, closeUserModal } from './users.js';
 
 // Section loaders map
 const sectionLoaders = {
@@ -16,7 +18,8 @@ const sectionLoaders = {
   blessings: loadBlessings,
   'blessing-tags': loadBlessingTags,
   gallery: loadGallery,
-  impact: loadImpact
+  impact: loadImpact,
+  users: loadUsers
 };
 
 // Navigation
@@ -41,6 +44,20 @@ function initNavigation() {
   });
 }
 
+// Show/hide users nav based on role
+function setupUserNav() {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const usersNav = document.querySelector('[data-section="users"]');
+  if (usersNav) {
+    usersNav.style.display = user.role === 'admin' ? '' : 'none';
+  }
+  // Display username in sidebar
+  const usernameEl = document.getElementById('current-username');
+  if (usernameEl) {
+    usernameEl.textContent = user.username || '';
+  }
+}
+
 // Expose functions to global scope for onclick handlers
 window.openTopicModal = openTopicModal;
 window.closeTopicModal = closeTopicModal;
@@ -57,9 +74,28 @@ window.openImagePicker = openImagePicker;
 window.closeImagePicker = closeImagePicker;
 window.confirmImageSelection = confirmImageSelection;
 window.clearImageField = clearImageField;
+window.openUserModal = openUserModal;
+window.closeUserModal = closeUserModal;
 
 // Initialize
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  // Auth check
+  try {
+    const data = await api.checkAuth();
+    localStorage.setItem('user', JSON.stringify(data.user));
+  } catch {
+    // authFetch already redirects on 401
+    return;
+  }
+
+  setupUserNav();
+
+  // Logout button
+  const logoutBtn = document.getElementById('logout-btn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => api.logout());
+  }
+
   initNavigation();
   initHomepage();
   initTopics();
@@ -68,6 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initBlessingTags();
   initGallery();
   initImpact();
+  initUsers();
   initImagePicker();
 
   // Load initial section

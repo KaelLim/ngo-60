@@ -11,6 +11,8 @@ import { galleryRoutes } from "./routes/gallery.ts";
 import { homepageRoutes } from "./routes/homepage.ts";
 import { blessingTagRoutes } from "./routes/blessing-tags.ts";
 import { agentRoutes } from "./routes/agent.ts";
+import { authRoutes } from "./routes/auth.ts";
+import { usersRoutes } from "./routes/users.ts";
 
 const app = new Hono();
 
@@ -40,6 +42,10 @@ app.route("/api/homepage", homepageRoutes);
 
 // AI Agent Routes
 app.route("/api/agent", agentRoutes);
+
+// Auth & Users Routes
+app.route("/api/auth", authRoutes);
+app.route("/api/users", usersRoutes);
 
 // Health check
 app.get("/health", (c) => c.json({ status: "ok" }));

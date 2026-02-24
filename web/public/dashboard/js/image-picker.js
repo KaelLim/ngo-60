@@ -1,9 +1,11 @@
 // Image Picker Module
 import { api } from './api.js';
+import { showToast } from './toast.js';
 
 let targetField = null;
 let selectedImage = null;
 let galleryCache = [];
+let currentPickerCategory = '';
 
 export function openImagePicker(fieldId, defaultCategory = '') {
   targetField = fieldId;
@@ -14,6 +16,7 @@ export function openImagePicker(fieldId, defaultCategory = '') {
     tab.classList.toggle('active', tab.dataset.category === defaultCategory);
   });
 
+  currentPickerCategory = defaultCategory;
   loadPickerGallery(defaultCategory);
   document.getElementById('image-picker-modal').classList.add('active');
 }
@@ -97,13 +100,49 @@ export function updateImagePreview(fieldId, imageUrl) {
   }
 }
 
-// Initialize category tab clicks
+// Initialize category tab clicks + upload button
 export function initImagePicker() {
   document.querySelectorAll('.picker-category-tab').forEach(tab => {
     tab.addEventListener('click', () => {
       document.querySelectorAll('.picker-category-tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
+      currentPickerCategory = tab.dataset.category;
       loadPickerGallery(tab.dataset.category);
     });
   });
+
+  // Upload from desktop in picker
+  const uploadBtn = document.getElementById('picker-upload-btn');
+  const uploadInput = document.getElementById('picker-upload-input');
+  if (uploadBtn && uploadInput) {
+    uploadBtn.addEventListener('click', () => uploadInput.click());
+    uploadInput.addEventListener('change', async () => {
+      const file = uploadInput.files[0];
+      if (!file) return;
+
+      const statusEl = document.getElementById('picker-upload-status');
+      statusEl.textContent = '上傳中...';
+      uploadBtn.disabled = true;
+
+      try {
+        // Upload to the currently active category (or 'events' as default)
+        const category = currentPickerCategory || 'events';
+        const result = await api.uploadGalleryImage(file, category);
+        statusEl.textContent = '上傳成功';
+
+        // Reload picker gallery and auto-select the new image
+        await loadPickerGallery(currentPickerCategory);
+        if (result && result.id) {
+          selectPickerImage(result.id);
+        }
+        setTimeout(() => { statusEl.textContent = ''; }, 2000);
+      } catch (e) {
+        statusEl.textContent = '';
+        showToast(e.message || '上傳失敗', 'error');
+      } finally {
+        uploadBtn.disabled = false;
+        uploadInput.value = '';
+      }
+    });
+  }
 }
