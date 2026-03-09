@@ -1,6 +1,6 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
-import { ImpactSection, ImpactConfig, BlessingTag } from '../services/api.js';
+import { customElement, property, state } from 'lit/decorators.js';
+import { api, ImpactSection, ImpactConfig, BlessingTag } from '../services/api.js';
 
 @customElement('desktop-impact')
 export class DesktopImpact extends LitElement {
@@ -12,6 +12,15 @@ export class DesktopImpact extends LitElement {
 
   @property({ type: Array })
   blessingTags: BlessingTag[] = [];
+
+  @state()
+  private blessInput = '';
+
+  @state()
+  private blessSubmitted = false;
+
+  @state()
+  private blessSubmitting = false;
 
   private countAnimated = false;
   private observer: IntersectionObserver | null = null;
@@ -32,15 +41,15 @@ export class DesktopImpact extends LitElement {
     .report-section {
       display: flex;
       gap: 20px;
-      align-items: flex-start;
+      align-items: center;
     }
 
     /* Left: Title */
     .title-section {
       flex: 1;
-      padding-bottom: 60px;
       display: flex;
       flex-direction: column;
+      justify-content: center;
       gap: 20px;
     }
 
@@ -249,6 +258,129 @@ export class DesktopImpact extends LitElement {
       height: 24px;
     }
 
+    /* Video gallery section */
+    .video-gallery {
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    .video-gallery-title {
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      color: black;
+      margin: 0;
+      line-height: normal;
+    }
+
+    .video-gallery-content {
+      display: flex;
+      align-items: stretch;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    .video-featured {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .video-thumb {
+      position: relative;
+      border-radius: 20px;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .video-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .video-thumb-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 20px;
+    }
+
+    .video-play-btn {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 51px;
+      height: 42px;
+      pointer-events: none;
+    }
+
+    .video-featured .video-thumb {
+      aspect-ratio: 764 / 430;
+    }
+
+    .video-featured-title {
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: #121212;
+      line-height: 1.25;
+      margin: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .video-divider {
+      width: 1px;
+      align-self: stretch;
+      background: #c0c0c0;
+      flex-shrink: 0;
+      margin: 0 20px;
+      min-height: 100%;
+    }
+
+    .video-side-list {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      width: 214px;
+      flex-shrink: 0;
+    }
+
+    .video-side-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .video-side-item .video-thumb {
+      width: 214px;
+      height: 121px;
+    }
+
+    .video-side-item .video-thumb .video-play-btn {
+      width: 30px;
+      height: 25px;
+    }
+
+    .video-side-title {
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: #121212;
+      line-height: 1.25;
+      margin: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
     /* Blessings section */
     .blessings-section {
       border: 4px solid white;
@@ -257,22 +389,44 @@ export class DesktopImpact extends LitElement {
       box-sizing: border-box;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 32px;
+      transition: border-color 0.3s;
+    }
+
+    .blessings-section.submitted {
+      border-color: #1bb06b;
+    }
+
+    .blessings-header {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
     }
 
     .blessings-title {
       font-family: 'Noto Sans TC', sans-serif;
       font-size: 24px;
       font-weight: 500;
-      color: #0e2669;
-      line-height: 1.6;
+      color: black;
+      line-height: normal;
+      margin: 0;
+    }
+
+    .blessings-subtitle {
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(0, 0, 0, 0.6);
+      line-height: 1.28;
       margin: 0;
     }
 
     .dialogs-wrapper {
       display: flex;
       flex-wrap: wrap;
-      gap: 16px 20px;
+      gap: 12px 20px;
+      align-items: center;
+      justify-content: center;
     }
 
     .dialog-item {
@@ -298,6 +452,7 @@ export class DesktopImpact extends LitElement {
       font-weight: 400;
       color: black;
       line-height: 1.25;
+      white-space: nowrap;
     }
 
     .dialog-pointer {
@@ -312,6 +467,91 @@ export class DesktopImpact extends LitElement {
     .dialog-pointer svg {
       width: 12px;
       height: 16px;
+    }
+
+    /* Input section */
+    .bless-input-section {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .bless-feedback-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .bless-feedback-title svg {
+      width: 38px;
+      height: 38px;
+      flex-shrink: 0;
+    }
+
+    .bless-feedback-title span {
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: 24px;
+      font-weight: 500;
+      color: #1bb06b;
+      line-height: 1.6;
+      white-space: nowrap;
+    }
+
+    .bless-input-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .bless-input-row input {
+      flex: 1;
+      padding: 8px 16px;
+      border: 1px solid rgba(14, 38, 105, 0.6);
+      border-radius: 4px;
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: black;
+      line-height: 1.25;
+      outline: none;
+      background: white;
+    }
+
+    .bless-input-row input::placeholder {
+      color: rgba(0, 0, 0, 0.38);
+      font-weight: 400;
+    }
+
+    .bless-submit-btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: white;
+      line-height: 1.25;
+      cursor: pointer;
+      white-space: nowrap;
+      background: rgba(0, 0, 0, 0.38);
+      transition: background 0.2s;
+    }
+
+    .bless-submit-btn.active {
+      background: #0e2669;
+    }
+
+    .bless-submit-btn:disabled {
+      cursor: not-allowed;
+    }
+
+    .bless-disclaimer {
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(0, 0, 0, 0.6);
+      line-height: 1.28;
+      margin: 0;
     }
   `;
 
@@ -364,6 +604,21 @@ export class DesktopImpact extends LitElement {
       (el as HTMLElement).textContent = isPercent ? '0%' : '0';
       requestAnimationFrame(step);
     });
+  }
+
+  private async handleBlessSubmit() {
+    const msg = this.blessInput.trim();
+    if (!msg || this.blessSubmitting) return;
+    this.blessSubmitting = true;
+    try {
+      await api.createBlessingTag(msg);
+      this.blessSubmitted = true;
+      this.blessInput = '';
+    } catch (e) {
+      console.error('Failed to submit blessing:', e);
+    } finally {
+      this.blessSubmitting = false;
+    }
   }
 
   render() {
@@ -464,10 +719,51 @@ export class DesktopImpact extends LitElement {
         </div>
         ` : ''}
 
+        <!-- Video Gallery Section -->
+        <div class="video-gallery">
+          <h3 class="video-gallery-title">來自全球的祝福</h3>
+          <div class="video-gallery-content">
+            <div class="video-featured">
+              <div class="video-thumb">
+                <img src="/uploads/gallery/87d68e25-1782-4080-8ad3-6619a1bfc3e8.webp" alt="" />
+                <div class="video-thumb-overlay"></div>
+                <div class="video-play-btn">
+                  <svg viewBox="0 0 51 42" fill="none">
+                    <rect width="51" height="42" rx="10" fill="rgba(0,0,0,0.5)"/>
+                    <path d="M20 12L36 21L20 30V12Z" fill="white"/>
+                  </svg>
+                </div>
+              </div>
+              <p class="video-featured-title">影片標題影片標題影片標題影片標題</p>
+            </div>
+            <div class="video-divider"></div>
+            <div class="video-side-list">
+              ${[1, 2, 3].map(() => html`
+                <div class="video-side-item">
+                  <div class="video-thumb">
+                    <img src="/uploads/gallery/87d68e25-1782-4080-8ad3-6619a1bfc3e8.webp" alt="" />
+                    <div class="video-thumb-overlay"></div>
+                    <div class="video-play-btn">
+                      <svg viewBox="0 0 51 42" fill="none">
+                        <rect width="51" height="42" rx="10" fill="rgba(0,0,0,0.5)"/>
+                        <path d="M20 12L36 21L20 30V12Z" fill="white"/>
+                      </svg>
+                    </div>
+                  </div>
+                  <p class="video-side-title">精選回顧影片標題</p>
+                </div>
+              `)}
+            </div>
+          </div>
+        </div>
+
         <!-- Blessings Section -->
         ${this.config?.blessing_published === 1 ? html`
-        <div class="blessings-section">
-          <h3 class="blessings-title">${this.config?.blessing_title || '傳送祝福 灌溉希望'}</h3>
+        <div class="blessings-section ${this.blessSubmitted ? 'submitted' : ''}">
+          <div class="blessings-header">
+            <h3 class="blessings-title">${this.config?.blessing_title || '傳送希望 獻上對世界的祝福'}</h3>
+            <p class="blessings-subtitle">聽見您對世界的輕聲祝福（以下祝福語為隨機呈現）</p>
+          </div>
           <div class="dialogs-wrapper">
             ${blessingTexts.map(msg => html`
               <div class="dialog-item">
@@ -479,6 +775,36 @@ export class DesktopImpact extends LitElement {
                 </div>
               </div>
             `)}
+          </div>
+          <div class="bless-input-section">
+            ${this.blessSubmitted ? html`
+              <div class="bless-feedback-title">
+                <svg viewBox="0 0 38 38" fill="none">
+                  <circle cx="19" cy="19" r="16" fill="#1bb06b"/>
+                  <path d="M12 19.5L16.5 24L26 14.5" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>已送出祝福！</span>
+              </div>
+            ` : ''}
+            <div class="bless-input-row">
+              <input
+                type="text"
+                placeholder="輸入祝福語"
+                .value=${this.blessInput}
+                @input=${(e: InputEvent) => { this.blessInput = (e.target as HTMLInputElement).value; }}
+                @keydown=${(e: KeyboardEvent) => { if (e.key === 'Enter') this.handleBlessSubmit(); }}
+              />
+              ${this.blessSubmitted ? html`
+                <button class="bless-submit-btn" disabled>完成</button>
+              ` : html`
+                <button
+                  class="bless-submit-btn ${this.blessInput.trim() ? 'active' : ''}"
+                  ?disabled=${!this.blessInput.trim() || this.blessSubmitting}
+                  @click=${this.handleBlessSubmit}
+                >送出</button>
+              `}
+            </div>
+            <p class="bless-disclaimer">* AI執勤中，唯有溫暖、正向語彙可通關。</p>
           </div>
         </div>
         ` : ''}

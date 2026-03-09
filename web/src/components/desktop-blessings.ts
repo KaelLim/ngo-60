@@ -7,6 +7,9 @@ export class DesktopBlessings extends LitElement {
   @property({ type: Array })
   blessings: Blessing[] = [];
 
+  @property({ type: String, attribute: 'section-name' })
+  sectionName: string = '';
+
   @state()
   private currentIndex = 0;
 
@@ -67,13 +70,28 @@ export class DesktopBlessings extends LitElement {
       padding: 0 20px;
     }
 
+    .card-name {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      flex: 1;
+      min-width: 0;
+      line-height: 1.25;
+      color: black;
+    }
+
+    .card-section-name {
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: 14px;
+      font-weight: 400;
+      margin: 0;
+    }
+
     .card-author {
       font-family: 'Noto Sans TC', sans-serif;
       font-size: 20px;
       font-weight: 500;
-      color: black;
-      line-height: 1.25;
-      flex: 1;
+      margin: 0;
     }
 
     .card-photo {
@@ -191,7 +209,12 @@ export class DesktopBlessings extends LitElement {
           ${visibleBlessings.map(b => html`
             <div class="card" @click=${() => this.handleCardClick(b)}>
               <div class="card-title">
-                <span class="card-author">${b.author}</span>
+                <div class="card-name">
+                  ${this.sectionName ? html`
+                    <p class="card-section-name">${this.sectionName}</p>
+                  ` : html``}
+                  <p class="card-author">${b.author}</p>
+                </div>
                 ${b.image_url ? html`
                   <div class="card-photo">
                     <img src="${b.image_url}" alt="${b.author}" />

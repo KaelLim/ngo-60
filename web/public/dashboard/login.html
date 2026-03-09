@@ -4,21 +4,23 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>登入 - 慈濟60週年後台</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Noto Sans TC', sans-serif;
-      background: #f0f2f5;
+      background: #09090b;
+      color: #fafafa;
       display: flex;
       align-items: center;
       justify-content: center;
       min-height: 100vh;
     }
     .login-card {
-      background: #fff;
+      background: #18181b;
       border-radius: 12px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+      border: 1px solid rgba(255,255,255,0.08);
       padding: 48px 40px;
       width: 100%;
       max-width: 400px;
@@ -26,12 +28,12 @@
     .login-card h1 {
       font-size: 24px;
       font-weight: 700;
-      color: #1a1a1a;
+      color: #fafafa;
       margin-bottom: 8px;
       text-align: center;
     }
     .login-card p {
-      color: #666;
+      color: #71717a;
       text-align: center;
       margin-bottom: 32px;
       font-size: 14px;
@@ -41,42 +43,49 @@
     }
     .form-group label {
       display: block;
-      font-size: 14px;
+      font-size: 12px;
       font-weight: 500;
-      color: #333;
+      color: #a1a1aa;
       margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
     }
     .form-group input {
       width: 100%;
       padding: 10px 14px;
-      border: 1px solid #d9d9d9;
-      border-radius: 8px;
-      font-size: 15px;
+      background: #09090b;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 6px;
+      font-size: 14px;
       font-family: inherit;
+      color: #fafafa;
       outline: none;
-      transition: border-color 0.2s;
+      transition: all 0.15s;
+    }
+    .form-group input::placeholder {
+      color: #52525b;
     }
     .form-group input:focus {
-      border-color: #1677ff;
-      box-shadow: 0 0 0 2px rgba(22,119,255,0.1);
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 2px rgba(59,130,246,0.15);
     }
     .btn-login {
       width: 100%;
       padding: 12px;
-      background: #1677ff;
+      background: #3b82f6;
       color: #fff;
       border: none;
-      border-radius: 8px;
-      font-size: 16px;
+      border-radius: 6px;
+      font-size: 14px;
       font-weight: 600;
       font-family: inherit;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: background 0.15s;
     }
-    .btn-login:hover { background: #0958d9; }
-    .btn-login:disabled { background: #91caff; cursor: not-allowed; }
+    .btn-login:hover { background: #2563eb; }
+    .btn-login:disabled { background: rgba(59,130,246,0.4); cursor: not-allowed; }
     .error-msg {
-      color: #ff4d4f;
+      color: #ef4444;
       font-size: 14px;
       text-align: center;
       margin-bottom: 16px;

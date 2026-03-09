@@ -218,6 +218,7 @@ export class DesktopLayout extends LitElement {
         <div class="section-card">
           <desktop-blessings
             .blessings=${this.blessings}
+            .sectionName=${this.impactConfig?.blessing_section_name || ''}
             @blessing-click=${this.handleBlessingClick}
           ></desktop-blessings>
         </div>

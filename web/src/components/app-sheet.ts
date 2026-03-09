@@ -40,7 +40,7 @@ export class AppSheet extends LitElement {
     }
 
     .sheet-section.full {
-      border-radius: 0;
+      border-radius: 40px 40px 0 0;
     }
 
     /* Preview area wrapper - fits within visible 25vh */

@@ -35,7 +35,7 @@ export class AppPoster extends LitElement {
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      padding: 20px 0 40px;
+      padding: 20px 0 16px;
       box-sizing: border-box;
       position: relative;
       overflow: hidden;

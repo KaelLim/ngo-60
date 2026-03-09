@@ -89,7 +89,7 @@ export class SheetContent extends LitElement {
     }
 
     /* Card stagger animation */
-    .topic-card, .impact-card, .schedule-card, .bless-card {
+    .topic-card, .impact-card, .schedule-card {
       animation: cardSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
     }
 
@@ -144,22 +144,6 @@ export class SheetContent extends LitElement {
 
     .impact-card:active {
       transform: translateY(-2px) scale(0.98);
-    }
-
-    /* Bless card hover */
-    .bless-card {
-      transition:
-        transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
-        box-shadow 0.25s ease;
-    }
-
-    .bless-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-    }
-
-    .bless-card:active {
-      transform: translateY(-1px) scale(0.98);
     }
 
     /* Month card hover */
@@ -664,6 +648,100 @@ export class SheetContent extends LitElement {
       height: 24px;
     }
 
+    /* Video Section */
+    .video-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+      animation-delay: 0.2s;
+    }
+
+    .video-section-title {
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: 20px;
+      font-weight: 500;
+      color: black;
+      margin: 0;
+      line-height: 1.25;
+    }
+
+    .video-scroll-wrapper {
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      margin: 0 -12px;
+      padding: 0 12px;
+      scrollbar-width: none;
+    }
+
+    .video-scroll-wrapper::-webkit-scrollbar {
+      display: none;
+    }
+
+    .video-scroll-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .video-card {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex-shrink: 0;
+      width: 305px;
+    }
+
+    .video-card-thumb {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 305 / 172;
+      border-radius: 20px;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .video-card-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .video-card-thumb-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 20px;
+    }
+
+    .video-card-play {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 51px;
+      height: 42px;
+      pointer-events: none;
+    }
+
+    .video-card-play svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .video-card-title {
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: 18px;
+      font-weight: 500;
+      color: #121212;
+      line-height: 1.28;
+      margin: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
     /* Bless Section */
     .bless-section {
       display: flex;
@@ -709,35 +787,6 @@ export class SheetContent extends LitElement {
       overflow: hidden;
       position: relative;
       cursor: pointer;
-      transition:
-        transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
-        box-shadow 0.25s ease;
-      animation: blessCardIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-    }
-
-    .bless-card:nth-child(1) { animation-delay: 0.4s; }
-    .bless-card:nth-child(2) { animation-delay: 0.5s; }
-    .bless-card:nth-child(3) { animation-delay: 0.6s; }
-    .bless-card:nth-child(4) { animation-delay: 0.7s; }
-
-    @keyframes blessCardIn {
-      from {
-        opacity: 0;
-        transform: translateX(20px) scale(0.95);
-      }
-      to {
-        opacity: 1;
-        transform: translateX(0) scale(1);
-      }
-    }
-
-    .bless-card:hover {
-      transform: translateY(-6px);
-      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
-    }
-
-    .bless-card:active {
-      transform: scale(0.98);
     }
 
     .bless-dialogs {
@@ -879,14 +928,14 @@ export class SheetContent extends LitElement {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 32px;
-      padding: 48px 24px 36px;
+      gap: 16px;
+      padding: 48px 16px 24px;
     }
 
-    .bless-modal-content {
+    .bless-modal-header {
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 4px;
       align-items: center;
       width: 100%;
     }
@@ -898,6 +947,17 @@ export class SheetContent extends LitElement {
       color: black;
       line-height: 1.25;
       margin: 0;
+      text-align: center;
+    }
+
+    .bless-modal-subtitle {
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(0, 0, 0, 0.6);
+      line-height: 1.28;
+      margin: 0;
+      text-align: center;
     }
 
     .bless-modal-dialogs {
@@ -947,9 +1007,8 @@ export class SheetContent extends LitElement {
 
     .bless-modal-input-row {
       display: flex;
-      gap: 8px;
+      gap: 4px;
       align-items: center;
-      justify-content: center;
       width: 100%;
     }
 
@@ -992,6 +1051,54 @@ export class SheetContent extends LitElement {
 
     .bless-modal-submit:active {
       opacity: 0.8;
+    }
+
+    .bless-modal-submit.done {
+      background: rgba(0, 0, 0, 0.38);
+    }
+
+    .bless-modal-input-section {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .bless-modal-input-section.submitted {
+      border: 2px solid #1bb06b;
+      border-radius: 8px;
+      padding: 16px;
+      align-items: center;
+    }
+
+    .bless-modal-feedback {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .bless-modal-feedback span {
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: 20px;
+      font-weight: 500;
+      color: #1bb06b;
+      line-height: 1.6;
+    }
+
+    .bless-modal-input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .bless-modal-disclaimer {
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(0, 0, 0, 0.6);
+      line-height: 1.28;
+      margin: 0;
     }
 
     /* ========== Schedule Tab Styles ========== */
@@ -1283,6 +1390,9 @@ export class SheetContent extends LitElement {
   @state()
   private blessInputValue = '';
 
+  @state()
+  private blessSubmitted = false;
+
   connectedCallback() {
     super.connectedCallback();
     this.storeController = new StoreController(this, this.appStore);
@@ -1412,6 +1522,7 @@ export class SheetContent extends LitElement {
     if (dialog?.open) dialog.close();
     this.blessModalOpen = false;
     this.blessInputValue = '';
+    this.blessSubmitted = false;
   }
 
   private async submitBlessing() {
@@ -1420,8 +1531,7 @@ export class SheetContent extends LitElement {
     try {
       await api.createBlessingTag(msg);
       this.blessMessages = [...this.blessMessages, msg];
-      this.blessInputValue = '';
-      this.closeBlessModal();
+      this.blessSubmitted = true;
     } catch (e) {
       console.error('Failed to submit blessing:', e);
     }
@@ -1652,6 +1762,30 @@ export class SheetContent extends LitElement {
         </div>
         ` : ''}
 
+        <!-- Video Section -->
+        <div class="video-section">
+          <h3 class="video-section-title">來自全球的祝福</h3>
+          <div class="video-scroll-wrapper">
+            <div class="video-scroll-row">
+              ${[1, 2, 3].map(() => html`
+                <div class="video-card">
+                  <div class="video-card-thumb">
+                    <img src="/uploads/gallery/87d68e25-1782-4080-8ad3-6619a1bfc3e8.webp" alt="" />
+                    <div class="video-card-thumb-overlay"></div>
+                    <div class="video-card-play">
+                      <svg viewBox="0 0 51 42" fill="none">
+                        <rect width="51" height="42" rx="10" fill="rgba(0,0,0,0.5)"/>
+                        <path d="M20 12L36 21L20 30V12Z" fill="white"/>
+                      </svg>
+                    </div>
+                  </div>
+                  <p class="video-card-title">精選回顧影片標題</p>
+                </div>
+              `)}
+            </div>
+          </div>
+        </div>
+
         <!-- Bless Section -->
         ${this.impactConfig?.blessing_published === 1 ? html`
         <div class="bless-section">
@@ -1743,33 +1877,55 @@ export class SheetContent extends LitElement {
           </svg>
         </button>
         <div class="bless-modal-inner">
-          <div class="bless-modal-content">
-            <p class="bless-modal-title">${this.impactConfig?.blessing_title || '傳送祝福 灌溉希望'}</p>
-            <div class="bless-modal-dialogs">
-              ${this.blessMessages.map(msg => html`
-                <div class="bless-modal-dialog-item">
-                  <div class="bless-modal-dialog-bubble">
-                    <span>${msg}</span>
-                  </div>
-                  <div class="bless-modal-dialog-pointer">
-                    <svg viewBox="0 0 12 16" fill="none">
-                      <path d="M12 8L0 0V16L12 8Z" fill="white"/>
-                    </svg>
-                  </div>
-                </div>
-              `)}
-            </div>
+          <!-- Title + Subtitle -->
+          <div class="bless-modal-header">
+            <p class="bless-modal-title">${this.impactConfig?.blessing_title || '傳送希望 獻上對世界的祝福'}</p>
+            <p class="bless-modal-subtitle">聽見您對世界的輕聲祝福（以下祝福語為隨機呈現）</p>
           </div>
-          <div class="bless-modal-input-row">
-            <input
-              class="bless-modal-input"
-              type="text"
-              placeholder="輸入祝福語"
-              .value=${this.blessInputValue}
-              @input=${(e: InputEvent) => { this.blessInputValue = (e.target as HTMLInputElement).value; }}
-              @keydown=${(e: KeyboardEvent) => { if (e.key === 'Enter') this.submitBlessing(); }}
-            />
-            <button class="bless-modal-submit" @click=${() => this.submitBlessing()}>送出</button>
+          <!-- Dialog bubbles -->
+          <div class="bless-modal-dialogs">
+            ${this.blessMessages.map(msg => html`
+              <div class="bless-modal-dialog-item">
+                <div class="bless-modal-dialog-bubble">
+                  <span>${msg}</span>
+                </div>
+                <div class="bless-modal-dialog-pointer">
+                  <svg viewBox="0 0 12 16" fill="none">
+                    <path d="M12 8L0 0V16L12 8Z" fill="white"/>
+                  </svg>
+                </div>
+              </div>
+            `)}
+          </div>
+          <!-- Input section -->
+          <div class="bless-modal-input-section ${this.blessSubmitted ? 'submitted' : ''}">
+            ${this.blessSubmitted ? html`
+              <div class="bless-modal-feedback">
+                <svg viewBox="0 0 24 24" fill="none" width="24" height="24">
+                  <circle cx="12" cy="12" r="10" fill="#1bb06b"/>
+                  <path d="M7.5 12.5L10.5 15.5L16.5 9.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>已送出祝福！</span>
+              </div>
+            ` : ''}
+            <div class="bless-modal-input-group">
+              <div class="bless-modal-input-row">
+                <input
+                  class="bless-modal-input"
+                  type="text"
+                  placeholder="輸入祝福語"
+                  .value=${this.blessInputValue}
+                  @input=${(e: InputEvent) => { this.blessInputValue = (e.target as HTMLInputElement).value; }}
+                  @keydown=${(e: KeyboardEvent) => { if (e.key === 'Enter') this.submitBlessing(); }}
+                />
+                ${this.blessSubmitted ? html`
+                  <button class="bless-modal-submit done" @click=${() => this.closeBlessModal()}>完成</button>
+                ` : html`
+                  <button class="bless-modal-submit" @click=${() => this.submitBlessing()}>送出</button>
+                `}
+              </div>
+              <p class="bless-modal-disclaimer">* AI執勤中，唯有溫暖、正向語彙可通關。</p>
+            </div>
           </div>
         </div>
       </dialog>

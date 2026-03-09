@@ -130,7 +130,6 @@ export class DesktopHeader extends LitElement {
       line-height: 1.1;
       letter-spacing: 2px;
       color: #e4ddd4;
-      white-space: pre-line;
       animation: sloganFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.3s backwards;
     }
 
@@ -210,7 +209,9 @@ export class DesktopHeader extends LitElement {
         </div>
 
         <div class="slogan">
-          <div class="slogan-text">${this.slogan}</div>
+          <div class="slogan-text">
+            ${this.slogan.split(' ').map(word => html`<div>${word}</div>`)}
+          </div>
         </div>
       </div>
     `;

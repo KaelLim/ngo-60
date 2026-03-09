@@ -25,18 +25,23 @@ export class GestureController implements ReactiveController {
     document.removeEventListener('mouseup', this.onMouseUp);
   }
 
+  private isTouchOnScrollContent(e: TouchEvent): boolean {
+    const scrollContent = this.getScrollContent();
+    if (!scrollContent) return false;
+    // composedPath() crosses shadow DOM boundaries
+    return e.composedPath().includes(scrollContent);
+  }
+
   // Touch handlers
   onTouchStart = (e: TouchEvent) => {
     if (this.store.currentPage) return;
 
-    // In full state, check if touch is on scrollable content
+    // In full state, let scrollable content scroll naturally
     if (this.store.sheetState === 'full') {
-      const scrollContent = this.getScrollContent();
-      if (scrollContent && scrollContent.contains(e.target as Node)) {
-        if (scrollContent.scrollTop <= 0) {
-          this.contentTouchStartY = e.touches[0].clientY;
-          this.isContentDragging = true;
-        }
+      if (this.isTouchOnScrollContent(e)) {
+        // Record start; only activate pull-to-close later if at top + pulling down
+        this.contentTouchStartY = e.touches[0].clientY;
+        this.isContentDragging = false;
         return;
       }
     }
@@ -48,14 +53,24 @@ export class GestureController implements ReactiveController {
 
   onTouchMove = (e: TouchEvent) => {
     // Handle pull-to-close in full state
-    if (this.isContentDragging && this.store.sheetState === 'full') {
+    if (this.store.sheetState === 'full' && this.contentTouchStartY > 0) {
       const scrollContent = this.getScrollContent();
       const deltaY = e.touches[0].clientY - this.contentTouchStartY;
 
-      if (deltaY > 0 && scrollContent && scrollContent.scrollTop <= 0) {
+      // Only activate pull-to-close when pulling down AND content is at top
+      if (deltaY > 10 && scrollContent && scrollContent.scrollTop <= 0) {
+        this.isContentDragging = true;
         e.preventDefault();
         const fullPos = this.store.getSnapPosition('full');
-        this.store.setContainerY(fullPos + (deltaY * 0.3));
+        this.store.setContainerY(fullPos + (deltaY * 0.4));
+      }
+
+      if (this.isContentDragging) {
+        if (deltaY > 0) {
+          e.preventDefault();
+          const fullPos = this.store.getSnapPosition('full');
+          this.store.setContainerY(fullPos + (deltaY * 0.4));
+        }
       }
       return;
     }
@@ -85,16 +100,20 @@ export class GestureController implements ReactiveController {
 
   onTouchEnd = (e: TouchEvent) => {
     // Handle pull-to-close in full state
-    if (this.isContentDragging && this.store.sheetState === 'full') {
+    if (this.store.sheetState === 'full' && this.contentTouchStartY > 0) {
       const deltaY = e.changedTouches[0].clientY - this.contentTouchStartY;
+      const wasDragging = this.isContentDragging;
       this.isContentDragging = false;
+      this.contentTouchStartY = 0;
 
-      if (deltaY > 80) {
-        this.store.setSheetState('preview');
-      } else {
-        this.store.setSheetState('full');
+      if (wasDragging) {
+        if (deltaY > 80) {
+          this.store.setSheetState('preview');
+        } else {
+          this.store.setSheetState('full');
+        }
+        return;
       }
-      return;
     }
 
     if (!this.store.isDragging) return;

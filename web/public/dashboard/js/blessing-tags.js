@@ -8,6 +8,7 @@ async function loadBlessingConfig() {
   try {
     const config = await api.getImpactConfig();
     document.getElementById('blessing-config-title').value = config.blessing_title || '';
+    document.getElementById('blessing-config-section-name').value = config.blessing_section_name || '';
     document.getElementById('blessing-config-published').checked = config.blessing_published === 1;
   } catch (e) {
     console.error('Failed to load blessing config:', e);
@@ -17,12 +18,14 @@ async function loadBlessingConfig() {
 async function handleBlessingConfigSubmit(e) {
   e.preventDefault();
   const title = document.getElementById('blessing-config-title').value;
+  const sectionName = document.getElementById('blessing-config-section-name').value;
   const published = document.getElementById('blessing-config-published').checked ? 1 : 0;
-  const data = { blessing_title: title, blessing_published: published };
+  const data = { blessing_title: title, blessing_section_name: sectionName || null, blessing_published: published };
   try {
     const result = await api.updateImpactConfig(data);
     // Reload form with saved values from server
     document.getElementById('blessing-config-title').value = result.blessing_title || '';
+    document.getElementById('blessing-config-section-name').value = result.blessing_section_name || '';
     document.getElementById('blessing-config-published').checked = result.blessing_published === 1;
     showToast('祝福區塊設定已儲存');
   } catch (e) {

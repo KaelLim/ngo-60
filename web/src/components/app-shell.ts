@@ -24,8 +24,12 @@ export class AppShell extends LitElement {
   @query('.main-container')
   private mainContainer!: HTMLElement;
 
-  @query('.homepage-content')
-  private homepageContent!: HTMLElement;
+  private get homepageContent(): HTMLElement | null {
+    return this.shadowRoot
+      ?.querySelector('app-sheet')
+      ?.shadowRoot
+      ?.querySelector('.homepage-content') as HTMLElement | null;
+  }
 
   static styles = css`
     :host {

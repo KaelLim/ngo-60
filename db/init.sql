@@ -286,6 +286,7 @@ CREATE TABLE public.impact_config (
     subtitle character varying(200),
     published integer DEFAULT 1,
     blessing_title character varying(200) DEFAULT '傳送祝福 灌溉希望',
+    blessing_section_name character varying(200) DEFAULT '對社會的祝福',
     blessing_published integer DEFAULT 1,
     updated_at timestamp without time zone DEFAULT now()
 );
@@ -606,8 +607,8 @@ COPY public.impact_sections (id, name, icon, stat_label, stat_value, stat_unit, 
 -- Data for Name: impact_config; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.impact_config (id, main_title, subtitle, published, blessing_title, blessing_published) FROM stdin;
-1	慈濟 60 年帶來哪些影響？	慈濟用三大主軸回應臺灣社會脈絡	1	傳送祝福 灌溉希望	1
+COPY public.impact_config (id, main_title, subtitle, published, blessing_title, blessing_section_name, blessing_published) FROM stdin;
+1	慈濟 60 年帶來哪些影響？	慈濟用三大主軸回應臺灣社會脈絡	1	傳送祝福 灌溉希望	對社會的祝福	1
 \.
 
 

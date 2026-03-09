@@ -7,6 +7,7 @@ interface ImpactConfig {
   subtitle: string | null;
   published: number;
   blessing_title: string | null;
+  blessing_section_name: string | null;
   blessing_published: number;
   updated_at: string | null;
 }
@@ -18,7 +19,7 @@ impactConfigRoutes.get("/", async (c) => {
   const rows = await query<ImpactConfig>(
     "SELECT * FROM impact_config WHERE id = 1"
   );
-  return rows[0] ? c.json(rows[0]) : c.json({ id: 1, main_title: null, subtitle: null, published: 1, blessing_title: '傳送祝福 灌溉希望', blessing_published: 1 });
+  return rows[0] ? c.json(rows[0]) : c.json({ id: 1, main_title: null, subtitle: null, published: 1, blessing_title: '傳送祝福 灌溉希望', blessing_section_name: '對社會的祝福', blessing_published: 1 });
 });
 
 // PUT /api/impact-config - 更新影響力設定
@@ -29,10 +30,10 @@ impactConfigRoutes.put("/", async (c) => {
 
   if (!existing[0]) {
     // Create if not exists
-    const { main_title, subtitle, published = 1, blessing_title = '傳送祝福 灌溉希望', blessing_published = 1 } = body;
+    const { main_title, subtitle, published = 1, blessing_title = '傳送祝福 灌溉希望', blessing_section_name = '對社會的祝福', blessing_published = 1 } = body;
     const rows = await query<ImpactConfig>(
-      `INSERT INTO impact_config (id, main_title, subtitle, published, blessing_title, blessing_published) VALUES (1, $1, $2, $3, $4, $5) RETURNING *`,
-      [main_title || null, subtitle || null, published, blessing_title, blessing_published]
+      `INSERT INTO impact_config (id, main_title, subtitle, published, blessing_title, blessing_section_name, blessing_published) VALUES (1, $1, $2, $3, $4, $5, $6) RETURNING *`,
+      [main_title || null, subtitle || null, published, blessing_title, blessing_section_name, blessing_published]
     );
     return c.json(rows[0], 201);
   }
@@ -42,12 +43,13 @@ impactConfigRoutes.put("/", async (c) => {
     subtitle = existing[0].subtitle,
     published = existing[0].published,
     blessing_title = existing[0].blessing_title,
+    blessing_section_name = existing[0].blessing_section_name,
     blessing_published = existing[0].blessing_published
   } = body;
 
   const rows = await query<ImpactConfig>(
-    `UPDATE impact_config SET main_title = $1, subtitle = $2, published = $3, blessing_title = $4, blessing_published = $5, updated_at = now() WHERE id = 1 RETURNING *`,
-    [main_title, subtitle, published, blessing_title, blessing_published]
+    `UPDATE impact_config SET main_title = $1, subtitle = $2, published = $3, blessing_title = $4, blessing_section_name = $5, blessing_published = $6, updated_at = now() WHERE id = 1 RETURNING *`,
+    [main_title, subtitle, published, blessing_title, blessing_section_name, blessing_published]
   );
 
   return c.json(rows[0]);

@@ -51,6 +51,7 @@ export interface ImpactConfig {
   subtitle: string | null;
   published: number;
   blessing_title: string | null;
+  blessing_section_name: string | null;
   blessing_published: number;
   updated_at: string | null;
 }
