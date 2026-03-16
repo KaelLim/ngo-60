@@ -288,6 +288,9 @@ CREATE TABLE public.impact_config (
     blessing_title character varying(200) DEFAULT '傳送祝福 灌溉希望',
     blessing_section_name character varying(200) DEFAULT '對社會的祝福',
     blessing_published integer DEFAULT 1,
+    video_playlist_id character varying(100),
+    video_section_title character varying(200) DEFAULT '來自全球的祝福',
+    video_published integer DEFAULT 1,
     updated_at timestamp without time zone DEFAULT now()
 );
 
@@ -433,6 +436,9 @@ COPY public.blessing_tags (id, message, is_active) FROM stdin;
 7	攜手為地球環境盡一份力量	t
 8	帶領大家做應該做但沒人做的	t
 9	Just Do It!	t
+10	天天	t
+11	天天	t
+12	天天開勳	t
 \.
 
 
@@ -588,7 +594,7 @@ COPY public.gallery (id, filename, original_name, mime_type, category, uploaded_
 --
 
 COPY public.homepage (id, slogan, title, content, updated_at) FROM stdin;
-1	跨越六十    願行恆常	六十年的願行長河    感恩有您一路隨行	回首過去，瞻望未來，內心只有滿滿的感動和感恩。\n感恩社會賢達、僧俗二眾弟子和長期捐款護持的會員大德，認同慈濟陸續展開的「慈善」、「醫療」、「教育」、「人文」志業，帶動社會往和平、正向光明的方向前進。\n——證嚴上人	2026-01-29 09:31:07.398738
+1	慈濟60 與善同行	六十年的願行長河    回顧初心攜手未來	誠邀您走進慈濟六十周年系列活動， 與我們一同回顧初心、展望未來， 攜手邁向下一個一甲子，將愛灑向全世界。	2026-03-10 07:25:44.746
 \.
 
 
@@ -607,8 +613,8 @@ COPY public.impact_sections (id, name, icon, stat_label, stat_value, stat_unit, 
 -- Data for Name: impact_config; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.impact_config (id, main_title, subtitle, published, blessing_title, blessing_section_name, blessing_published) FROM stdin;
-1	慈濟 60 年帶來哪些影響？	慈濟用三大主軸回應臺灣社會脈絡	1	傳送祝福 灌溉希望	對社會的祝福	1
+COPY public.impact_config (id, main_title, subtitle, published, blessing_title, blessing_section_name, blessing_published, video_playlist_id, video_section_title, video_published) FROM stdin;
+1	慈濟 60 年帶來哪些影響？	慈濟用三大主軸回應臺灣社會脈絡	1	傳送祝福 灌溉希望	對社會的祝福	1	PLYfJOvcvKb2RSIxJhMUScy10AJXEmEmrI	來自全球的祝福	1
 \.
 
 
@@ -634,7 +640,7 @@ SELECT pg_catalog.setval('public.agent_sessions_id_seq', 1, false);
 -- Name: blessing_tags_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.blessing_tags_id_seq', 9, true);
+SELECT pg_catalog.setval('public.blessing_tags_id_seq', 12, true);
 
 
 --

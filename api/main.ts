@@ -13,6 +13,7 @@ import { blessingTagRoutes } from "./routes/blessing-tags.ts";
 import { agentRoutes } from "./routes/agent.ts";
 import { authRoutes } from "./routes/auth.ts";
 import { usersRoutes } from "./routes/users.ts";
+import { tcToolRoutes } from "./routes/tc-tool.ts";
 
 const app = new Hono();
 
@@ -46,6 +47,9 @@ app.route("/api/agent", agentRoutes);
 // Auth & Users Routes
 app.route("/api/auth", authRoutes);
 app.route("/api/users", usersRoutes);
+
+// TC Tool Proxy (YouTube playlist API)
+app.route("/api/tc-tool", tcToolRoutes);
 
 // Health check
 app.get("/health", (c) => c.json({ status: "ok" }));

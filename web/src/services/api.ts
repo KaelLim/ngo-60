@@ -53,7 +53,20 @@ export interface ImpactConfig {
   blessing_title: string | null;
   blessing_section_name: string | null;
   blessing_published: number;
+  video_playlist_id: string | null;
+  video_section_title: string | null;
+  video_published: number;
   updated_at: string | null;
+}
+
+export interface PlaylistVideo {
+  title: string;
+  thumbnailUrl: string;
+  videoId: string;
+  channel: string;
+  lengthText: string;
+  viewCount: string;
+  uploadTime: string;
 }
 
 export interface Blessing {
@@ -211,6 +224,13 @@ export const api = {
 
   getGalleryImageUrl(filename: string): string {
     return `/uploads/gallery/${filename}`;
+  },
+
+  // YouTube Playlist (TC API proxy)
+  async getPlaylistVideos(playlistId: string): Promise<PlaylistVideo[]> {
+    const res = await fetch(`/api/tc-tool/youtube/fetch/playlist/${playlistId}`);
+    if (!res.ok) return [];
+    return res.json();
   },
 
   // Homepage (首頁)

@@ -4,7 +4,7 @@ import { consume } from '@lit/context';
 import { appContext } from '../contexts/app-context.js';
 import { AppStore } from '../stores/app-store.js';
 import { StoreController } from '../controllers/store-controller.js';
-import { api, Topic, Event, ImpactSection, ImpactConfig, Blessing, BlessingTag } from '../services/api.js';
+import { api, Topic, Event, ImpactSection, ImpactConfig, Blessing, BlessingTag, PlaylistVideo } from '../services/api.js';
 
 import './homepage-tabs.js';
 
@@ -37,6 +37,12 @@ export class SheetContent extends LitElement {
 
   @state()
   private activeMonths: number[] = [];
+
+  @state()
+  private videos: PlaylistVideo[] = [];
+
+  @state()
+  private playingMobileVideoId: string | null = null;
 
   @state()
   private loading = false;
@@ -690,6 +696,7 @@ export class SheetContent extends LitElement {
       gap: 4px;
       flex-shrink: 0;
       width: 305px;
+      cursor: pointer;
     }
 
     .video-card-thumb {
@@ -728,6 +735,14 @@ export class SheetContent extends LitElement {
     .video-card-play svg {
       width: 100%;
       height: 100%;
+    }
+
+    .video-card iframe {
+      width: 100%;
+      aspect-ratio: 305 / 172;
+      border: none;
+      border-radius: 20px;
+      display: block;
     }
 
     .video-card-title {
@@ -1476,6 +1491,13 @@ export class SheetContent extends LitElement {
       this.impactConfig = impactConfig;
       this.blessings = blessings;
       this.blessMessages = blessingTags.map((t: BlessingTag) => t.message);
+
+      // Load playlist videos if configured
+      if (impactConfig?.video_published === 1 && impactConfig?.video_playlist_id) {
+        api.getPlaylistVideos(impactConfig.video_playlist_id).then(videos => {
+          this.videos = videos;
+        }).catch(e => console.error('Failed to load playlist videos:', e));
+      }
     } catch (error) {
       console.error('Failed to load data:', error);
     } finally {
@@ -1763,28 +1785,38 @@ export class SheetContent extends LitElement {
         ` : ''}
 
         <!-- Video Section -->
+        ${this.impactConfig?.video_published === 1 && this.videos.length > 0 ? html`
         <div class="video-section">
-          <h3 class="video-section-title">來自全球的祝福</h3>
+          <h3 class="video-section-title">${this.impactConfig?.video_section_title || '來自全球的祝福'}</h3>
           <div class="video-scroll-wrapper">
             <div class="video-scroll-row">
-              ${[1, 2, 3].map(() => html`
+              ${this.videos.map(v => html`
                 <div class="video-card">
-                  <div class="video-card-thumb">
-                    <img src="/uploads/gallery/87d68e25-1782-4080-8ad3-6619a1bfc3e8.webp" alt="" />
-                    <div class="video-card-thumb-overlay"></div>
-                    <div class="video-card-play">
-                      <svg viewBox="0 0 51 42" fill="none">
-                        <rect width="51" height="42" rx="10" fill="rgba(0,0,0,0.5)"/>
-                        <path d="M20 12L36 21L20 30V12Z" fill="white"/>
-                      </svg>
+                  ${this.playingMobileVideoId === v.videoId ? html`
+                    <iframe
+                      src="https://www.youtube.com/embed/${v.videoId}?autoplay=1"
+                      allow="autoplay; encrypted-media"
+                      allowfullscreen
+                    ></iframe>
+                  ` : html`
+                    <div class="video-card-thumb" @click=${() => { this.playingMobileVideoId = v.videoId; }}>
+                      <img src="${v.thumbnailUrl}" alt="${v.title}" />
+                      <div class="video-card-thumb-overlay"></div>
+                      <div class="video-card-play">
+                        <svg viewBox="0 0 51 42" fill="none">
+                          <rect width="51" height="42" rx="10" fill="rgba(0,0,0,0.5)"/>
+                          <path d="M20 12L36 21L20 30V12Z" fill="white"/>
+                        </svg>
+                      </div>
                     </div>
-                  </div>
-                  <p class="video-card-title">精選回顧影片標題</p>
+                  `}
+                  <p class="video-card-title">${v.title}</p>
                 </div>
               `)}
             </div>
           </div>
         </div>
+        ` : ''}
 
         <!-- Bless Section -->
         ${this.impactConfig?.blessing_published === 1 ? html`

@@ -7,7 +7,7 @@
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/styles.css?v=20260316">
 </head>
 <body>
   <div class="layout">
@@ -34,21 +34,21 @@
           <span class="material-symbols-outlined">event</span>
           <span>活動管理</span>
         </div>
-        <div class="nav-item" data-section="blessings">
-          <span class="material-symbols-outlined">volunteer_activism</span>
-          <span>祝福語管理</span>
+        <div class="nav-item" data-section="impact">
+          <span class="material-symbols-outlined">hub</span>
+          <span>影響力管理</span>
         </div>
         <div class="nav-item" data-section="blessing-tags">
           <span class="material-symbols-outlined">chat_bubble</span>
           <span>祝福標籤管理</span>
         </div>
+        <div class="nav-item" data-section="blessings">
+          <span class="material-symbols-outlined">volunteer_activism</span>
+          <span>祝福語管理</span>
+        </div>
         <div class="nav-item" data-section="gallery">
           <span class="material-symbols-outlined">photo_library</span>
           <span>圖庫管理</span>
-        </div>
-        <div class="nav-item" data-section="impact">
-          <span class="material-symbols-outlined">hub</span>
-          <span>影響力管理</span>
         </div>
         <div class="nav-item" data-section="users">
           <span class="material-symbols-outlined">group</span>
@@ -145,26 +145,84 @@
         </div>
       </section>
 
-      <!-- Blessings Section -->
-      <section id="section-blessings" class="section">
+      <!-- Impact Section -->
+      <section id="section-impact" class="section">
+        <!-- Impact Config -->
         <div class="page-header">
-          <h2>祝福語管理</h2>
-          <button class="btn btn-primary" onclick="openBlessingModal()">+ 新增祝福語</button>
+          <h2>影響力設定</h2>
         </div>
         <div class="card">
-          <div class="table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>排序</th>
-                  <th>標題</th>
-                  <th>內容預覽</th>
-                  <th>顯示</th>
-                  <th>操作</th>
-                </tr>
-              </thead>
-              <tbody id="blessings-table"></tbody>
-            </table>
+          <div class="card-body">
+            <form id="impact-config-form">
+              <div class="form-group">
+                <label>主標題</label>
+                <input type="text" id="impact-config-main-title" placeholder="例：慈濟 60 年帶來哪些影響？">
+              </div>
+              <div class="form-group">
+                <label>副標題</label>
+                <input type="text" id="impact-config-subtitle" placeholder="例：慈濟用三大主軸回應臺灣社會脈絡">
+              </div>
+              <div class="form-group">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="impact-config-published" checked>
+                  顯示影響力區塊
+                </label>
+              </div>
+              <button type="submit" class="btn btn-primary">儲存設定</button>
+            </form>
+
+            <!-- 影響力節點 -->
+            <div style="margin-top: 24px; display: flex; justify-content: space-between; align-items: center;">
+              <h3 style="margin: 0; font-size: 16px; font-weight: 600;">影響力節點</h3>
+              <button class="btn btn-primary btn-sm" onclick="openImpactModal()">+ 新增</button>
+            </div>
+            <div class="table-container" style="margin-top: 12px;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>排序</th>
+                    <th>圖示</th>
+                    <th>名稱</th>
+                    <th>統計標籤</th>
+                    <th>統計數值</th>
+                    <th>統計單位</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="impact-table"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- 雲端影音 -->
+        <div class="page-header" style="margin-top: 24px;">
+          <h2>雲端影音</h2>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <form id="video-config-form">
+              <div class="form-group">
+                <label>區塊標題</label>
+                <input type="text" id="video-section-title" placeholder="例：來自全球的祝福">
+              </div>
+              <div class="form-group">
+                <label>YouTube 播放清單 ID</label>
+                <input type="text" id="video-playlist-id" placeholder="例：PLxxxxxxxxxxxxxx">
+                <small style="color: #888;">YouTube 播放清單網址中 list= 後的 ID</small>
+              </div>
+              <div class="form-group">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="video-published" checked>
+                  顯示雲端影音區塊
+                </label>
+              </div>
+              <div id="video-preview" style="margin-top: 12px; display: none;">
+                <label style="font-weight: 600; margin-bottom: 8px; display: block;">預覽</label>
+                <div id="video-preview-content" style="display: flex; gap: 8px; overflow-x: auto;"></div>
+              </div>
+              <button type="submit" class="btn btn-primary" style="margin-top: 12px;">儲存設定</button>
+            </form>
           </div>
         </div>
       </section>
@@ -207,6 +265,30 @@
                 </tr>
               </thead>
               <tbody id="blessing-tags-table"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Blessings Section -->
+      <section id="section-blessings" class="section">
+        <div class="page-header">
+          <h2>祝福語管理</h2>
+          <button class="btn btn-primary" onclick="openBlessingModal()">+ 新增祝福語</button>
+        </div>
+        <div class="card">
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>排序</th>
+                  <th>標題</th>
+                  <th>內容預覽</th>
+                  <th>顯示</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="blessings-table"></tbody>
             </table>
           </div>
         </div>
@@ -269,59 +351,6 @@
               <button class="btn btn-secondary btn-sm" id="gallery-cancel-select-btn">取消</button>
             </div>
             <div class="gallery-grid" id="gallery-grid"></div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Impact Section -->
-      <section id="section-impact" class="section">
-        <!-- Impact Config -->
-        <div class="page-header">
-          <h2>影響力設定</h2>
-        </div>
-        <div class="card">
-          <div class="card-body">
-            <form id="impact-config-form">
-              <div class="form-group">
-                <label>主標題</label>
-                <input type="text" id="impact-config-main-title" placeholder="例：慈濟 60 年帶來哪些影響？">
-              </div>
-              <div class="form-group">
-                <label>副標題</label>
-                <input type="text" id="impact-config-subtitle" placeholder="例：慈濟用三大主軸回應臺灣社會脈絡">
-              </div>
-              <div class="form-group">
-                <label class="checkbox-label">
-                  <input type="checkbox" id="impact-config-published" checked>
-                  顯示影響力區塊
-                </label>
-              </div>
-              <button type="submit" class="btn btn-primary">儲存設定</button>
-            </form>
-          </div>
-        </div>
-
-        <!-- Impact Sections (triangle nodes) -->
-        <div class="page-header" style="margin-top: 24px;">
-          <h2>影響力節點</h2>
-          <button class="btn btn-primary" onclick="openImpactModal()">+ 新增</button>
-        </div>
-        <div class="card">
-          <div class="table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>排序</th>
-                  <th>圖示</th>
-                  <th>名稱</th>
-                  <th>統計標籤</th>
-                  <th>統計數值</th>
-                  <th>統計單位</th>
-                  <th>操作</th>
-                </tr>
-              </thead>
-              <tbody id="impact-table"></tbody>
-            </table>
           </div>
         </div>
       </section>
@@ -738,6 +767,6 @@
   <!-- Toast -->
   <div class="toast" id="toast"></div>
 
-  <script type="module" src="js/main.js"></script>
+  <script type="module" src="js/main.js?v=20260316"></script>
 </body>
 </html>

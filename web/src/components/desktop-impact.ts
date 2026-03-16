@@ -1,6 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { api, ImpactSection, ImpactConfig, BlessingTag } from '../services/api.js';
+import { api, ImpactSection, ImpactConfig, BlessingTag, PlaylistVideo } from '../services/api.js';
 
 @customElement('desktop-impact')
 export class DesktopImpact extends LitElement {
@@ -22,8 +22,18 @@ export class DesktopImpact extends LitElement {
   @state()
   private blessSubmitting = false;
 
+  @state()
+  private videos: PlaylistVideo[] = [];
+
+  @state()
+  private activeVideoIndex = 0;
+
+  @state()
+  private playingVideo = false;
+
   private countAnimated = false;
   private observer: IntersectionObserver | null = null;
+  private videosLoaded = false;
 
   static styles = css`
     :host {
@@ -278,7 +288,7 @@ export class DesktopImpact extends LitElement {
       display: flex;
       align-items: stretch;
       justify-content: space-between;
-      overflow: hidden;
+      height: 460px;
     }
 
     .video-featured {
@@ -321,7 +331,16 @@ export class DesktopImpact extends LitElement {
     }
 
     .video-featured .video-thumb {
-      aspect-ratio: 764 / 430;
+      aspect-ratio: 16 / 9;
+    }
+
+    .video-featured iframe {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      max-height: calc(100% - 32px);
+      border: none;
+      border-radius: 20px;
+      display: block;
     }
 
     .video-featured-title {
@@ -348,15 +367,49 @@ export class DesktopImpact extends LitElement {
     .video-side-list {
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
+      gap: 12px;
       width: 214px;
       flex-shrink: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding-right: 12px;
+    }
+
+    .video-side-list::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .video-side-list::-webkit-scrollbar-track {
+      background: #e8e8e8;
+      border-radius: 4px;
+    }
+
+    .video-side-list::-webkit-scrollbar-thumb {
+      background: #0e2669;
+      border-radius: 4px;
+      min-height: 40px;
+    }
+
+    .video-side-list::-webkit-scrollbar-thumb:hover {
+      background: #1a3a8f;
     }
 
     .video-side-item {
       display: flex;
       flex-direction: column;
       gap: 4px;
+      flex-shrink: 0;
+      cursor: pointer;
+      border-radius: 12px;
+      transition: background 0.2s;
+    }
+
+    .video-side-item:hover {
+      background: rgba(0, 0, 0, 0.04);
+    }
+
+    .video-side-item.active {
+      background: rgba(14, 38, 105, 0.08);
     }
 
     .video-side-item .video-thumb {
@@ -376,6 +429,7 @@ export class DesktopImpact extends LitElement {
       color: #121212;
       line-height: 1.25;
       margin: 0;
+      padding: 0 4px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -561,6 +615,10 @@ export class DesktopImpact extends LitElement {
   }
 
   updated() {
+    if (!this.videosLoaded && this.config?.video_published === 1 && this.config?.video_playlist_id) {
+      this.videosLoaded = true;
+      this.loadVideos(this.config.video_playlist_id);
+    }
     if (!this.countAnimated && this.sections.length > 0) {
       const card = this.shadowRoot?.querySelector('.graphic-card');
       if (!card) return;
@@ -604,6 +662,24 @@ export class DesktopImpact extends LitElement {
       (el as HTMLElement).textContent = isPercent ? '0%' : '0';
       requestAnimationFrame(step);
     });
+  }
+
+  private async loadVideos(playlistId: string) {
+    try {
+      const videos = await api.getPlaylistVideos(playlistId);
+      this.videos = videos;
+    } catch (e) {
+      console.error('Failed to load playlist videos:', e);
+    }
+  }
+
+  private selectSideVideo(index: number) {
+    this.activeVideoIndex = index;
+    this.playingVideo = true;
+  }
+
+  private playFeatured() {
+    this.playingVideo = true;
   }
 
   private async handleBlessSubmit() {
@@ -720,28 +796,38 @@ export class DesktopImpact extends LitElement {
         ` : ''}
 
         <!-- Video Gallery Section -->
+        ${this.config?.video_published === 1 && this.videos.length > 0 ? html`
         <div class="video-gallery">
-          <h3 class="video-gallery-title">來自全球的祝福</h3>
+          <h3 class="video-gallery-title">${this.config?.video_section_title || '來自全球的祝福'}</h3>
           <div class="video-gallery-content">
             <div class="video-featured">
-              <div class="video-thumb">
-                <img src="/uploads/gallery/87d68e25-1782-4080-8ad3-6619a1bfc3e8.webp" alt="" />
-                <div class="video-thumb-overlay"></div>
-                <div class="video-play-btn">
-                  <svg viewBox="0 0 51 42" fill="none">
-                    <rect width="51" height="42" rx="10" fill="rgba(0,0,0,0.5)"/>
-                    <path d="M20 12L36 21L20 30V12Z" fill="white"/>
-                  </svg>
+              ${this.playingVideo ? html`
+                <iframe
+                  src="https://www.youtube.com/embed/${this.videos[this.activeVideoIndex].videoId}?autoplay=1"
+                  allow="autoplay; encrypted-media"
+                  allowfullscreen
+                ></iframe>
+              ` : html`
+                <div class="video-thumb" @click=${() => this.playFeatured()}>
+                  <img src="${this.videos[this.activeVideoIndex].thumbnailUrl}" alt="${this.videos[this.activeVideoIndex].title}" />
+                  <div class="video-thumb-overlay"></div>
+                  <div class="video-play-btn">
+                    <svg viewBox="0 0 51 42" fill="none">
+                      <rect width="51" height="42" rx="10" fill="rgba(0,0,0,0.5)"/>
+                      <path d="M20 12L36 21L20 30V12Z" fill="white"/>
+                    </svg>
+                  </div>
                 </div>
-              </div>
-              <p class="video-featured-title">影片標題影片標題影片標題影片標題</p>
+              `}
+              <p class="video-featured-title">${this.videos[this.activeVideoIndex].title}</p>
             </div>
+            ${this.videos.length > 1 ? html`
             <div class="video-divider"></div>
             <div class="video-side-list">
-              ${[1, 2, 3].map(() => html`
-                <div class="video-side-item">
+              ${this.videos.slice(0).map((v, i) => html`
+                <div class="video-side-item ${i === this.activeVideoIndex ? 'active' : ''}" @click=${() => this.selectSideVideo(i)}>
                   <div class="video-thumb">
-                    <img src="/uploads/gallery/87d68e25-1782-4080-8ad3-6619a1bfc3e8.webp" alt="" />
+                    <img src="${v.thumbnailUrl}" alt="${v.title}" />
                     <div class="video-thumb-overlay"></div>
                     <div class="video-play-btn">
                       <svg viewBox="0 0 51 42" fill="none">
@@ -750,12 +836,14 @@ export class DesktopImpact extends LitElement {
                       </svg>
                     </div>
                   </div>
-                  <p class="video-side-title">精選回顧影片標題</p>
+                  <p class="video-side-title">${v.title}</p>
                 </div>
               `)}
             </div>
+            ` : ''}
           </div>
         </div>
+        ` : ''}
 
         <!-- Blessings Section -->
         ${this.config?.blessing_published === 1 ? html`

@@ -30,6 +30,7 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
       DB_NAME: ${DB_NAME:-events_app}
       JWT_SECRET: ${JWT_SECRET:-tzuchi-60-jwt-secret-change-in-production}
+      TC_API_BASE: ${TC_API_BASE:-https://tcapipublic.tcstorege.synology.me/tool}
     volumes:
       - uploads_data:/app/uploads
       - claude_config:/root/.claude

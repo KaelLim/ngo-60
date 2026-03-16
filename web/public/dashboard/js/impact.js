@@ -12,8 +12,37 @@ async function loadImpactConfig() {
     document.getElementById('impact-config-main-title').value = config.main_title || '';
     document.getElementById('impact-config-subtitle').value = config.subtitle || '';
     document.getElementById('impact-config-published').checked = config.published === 1;
+    document.getElementById('video-section-title').value = config.video_section_title || '';
+    document.getElementById('video-playlist-id').value = config.video_playlist_id || '';
+    document.getElementById('video-published').checked = config.video_published === 1;
+
+    // Load video preview if playlist ID exists
+    if (config.video_playlist_id) {
+      loadVideoPreview(config.video_playlist_id);
+    }
   } catch (e) {
     console.error('Failed to load impact config:', e);
+  }
+}
+
+async function loadVideoPreview(playlistId) {
+  const previewEl = document.getElementById('video-preview');
+  const contentEl = document.getElementById('video-preview-content');
+  try {
+    const res = await fetch(`/api/tc-tool/youtube/fetch/playlist/${playlistId}`);
+    if (!res.ok) throw new Error('Fetch failed');
+    const videos = await res.json();
+    if (videos.length > 0) {
+      previewEl.style.display = 'block';
+      contentEl.innerHTML = videos.slice(0, 5).map(v => `
+        <div style="flex-shrink: 0; width: 160px;">
+          <img src="${v.thumbnailUrl}" alt="${v.title}" style="width: 160px; height: 90px; object-fit: cover; border-radius: 8px;">
+          <p style="font-size: 12px; margin: 4px 0 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${v.title}</p>
+        </div>
+      `).join('') + `<div style="flex-shrink: 0; display: flex; align-items: center; padding: 0 12px; color: #888; font-size: 13px;">共 ${videos.length} 部影片</div>`;
+    }
+  } catch (e) {
+    previewEl.style.display = 'none';
   }
 }
 
@@ -128,7 +157,27 @@ async function handleSubmit(e) {
   }
 }
 
+async function handleVideoConfigSubmit(e) {
+  e.preventDefault();
+  const data = {
+    video_section_title: document.getElementById('video-section-title').value || '來自全球的祝福',
+    video_playlist_id: document.getElementById('video-playlist-id').value || null,
+    video_published: document.getElementById('video-published').checked ? 1 : 0
+  };
+  try {
+    await api.updateImpactConfig(data);
+    showToast('雲端影音設定已儲存');
+    // Refresh preview
+    if (data.video_playlist_id) {
+      loadVideoPreview(data.video_playlist_id);
+    }
+  } catch (e) {
+    showToast('儲存失敗', 'error');
+  }
+}
+
 export function initImpact() {
   document.getElementById('impact-form').addEventListener('submit', handleSubmit);
   document.getElementById('impact-config-form').addEventListener('submit', handleConfigSubmit);
+  document.getElementById('video-config-form').addEventListener('submit', handleVideoConfigSubmit);
 }
