@@ -20,7 +20,8 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(import.meta.dirname!, 'index.html'),
-        'dashboard/admin': resolve(import.meta.dirname!, 'dashboard/admin.html')
+        'dashboard/admin': resolve(import.meta.dirname!, 'dashboard/admin.html'),
+        'report/index': resolve(import.meta.dirname!, 'report/index.html')
       }
     }
   }

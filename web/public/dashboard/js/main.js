@@ -9,6 +9,7 @@ import { loadBlessingTags, initBlessingTags, openBlessingTagModal, closeBlessing
 import { initImagePicker, openImagePicker, closeImagePicker, confirmImageSelection, clearImageField } from './image-picker.js';
 import { loadImpact, initImpact, openImpactModal, closeImpactModal } from './impact.js';
 import { loadUsers, initUsers, openUserModal, closeUserModal } from './users.js';
+import { loadReportPages, initReportPages } from './report-pages.js';
 
 // Section loaders map
 const sectionLoaders = {
@@ -19,6 +20,7 @@ const sectionLoaders = {
   'blessing-tags': loadBlessingTags,
   gallery: loadGallery,
   impact: loadImpact,
+  report: loadReportPages,
   users: loadUsers
 };
 
@@ -105,6 +107,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initGallery();
   initImpact();
   initUsers();
+  initReportPages();
   initImagePicker();
 
   // Load initial section

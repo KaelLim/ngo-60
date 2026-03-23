@@ -14,6 +14,7 @@ import { agentRoutes } from "./routes/agent.ts";
 import { authRoutes } from "./routes/auth.ts";
 import { usersRoutes } from "./routes/users.ts";
 import { tcToolRoutes } from "./routes/tc-tool.ts";
+import { reportPagesRoutes } from "./routes/report-pages.ts";
 
 const app = new Hono();
 
@@ -47,6 +48,9 @@ app.route("/api/agent", agentRoutes);
 // Auth & Users Routes
 app.route("/api/auth", authRoutes);
 app.route("/api/users", usersRoutes);
+
+// Report Pages Routes
+app.route("/api/report-pages", reportPagesRoutes);
 
 // TC Tool Proxy (YouTube playlist API)
 app.route("/api/tc-tool", tcToolRoutes);

@@ -330,5 +330,87 @@ export const api = {
       throw new Error(err.error);
     }
     return res.json();
+  },
+
+  // Report Chapters
+  async getReportChapters() {
+    const res = await authFetch(`${API_BASE}/report-pages/chapters`);
+    return res.json();
+  },
+
+  async createReportChapter(data) {
+    const res = await authFetch(`${API_BASE}/report-pages/chapters`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    return res.json();
+  },
+
+  async updateReportChapter(chapterId, data) {
+    const res = await authFetch(`${API_BASE}/report-pages/chapters/${chapterId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    return res.json();
+  },
+
+  async deleteReportChapter(chapterId) {
+    const res = await authFetch(`${API_BASE}/report-pages/chapters/${chapterId}`, {
+      method: 'DELETE'
+    });
+    return res.json();
+  },
+
+  // Report Pages
+  async getReportPages() {
+    const res = await authFetch(`${API_BASE}/report-pages`);
+    return res.json();
+  },
+
+  async getReportPagesByChapter(chapterId) {
+    const res = await authFetch(`${API_BASE}/report-pages/${chapterId}`);
+    return res.json();
+  },
+
+  async getReportPage(chapterId, pageId) {
+    const res = await authFetch(`${API_BASE}/report-pages/${chapterId}/${pageId}`);
+    return res.json();
+  },
+
+  async createReportPage(chapterId, data) {
+    const res = await authFetch(`${API_BASE}/report-pages/${chapterId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    return res.json();
+  },
+
+  async uploadReportPage(chapterId, pageId, file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await authFetch(`${API_BASE}/report-pages/${chapterId}/${pageId}`, {
+      method: 'PUT',
+      body: formData
+    });
+    return res.json();
+  },
+
+  async updateReportPageTitle(chapterId, pageId, title) {
+    const res = await authFetch(`${API_BASE}/report-pages/${chapterId}/${pageId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title })
+    });
+    return res.json();
+  },
+
+  async deleteReportPage(chapterId, pageId) {
+    const res = await authFetch(`${API_BASE}/report-pages/${chapterId}/${pageId}`, {
+      method: 'DELETE'
+    });
+    return res.json();
   }
 };

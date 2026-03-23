@@ -63,10 +63,12 @@ export interface PlaylistVideo {
   title: string;
   thumbnailUrl: string;
   videoId: string;
+  videoLink: string;
   channel: string;
   lengthText: string;
-  viewCount: string;
+  viewCount: number | string;
   uploadTime: string;
+  isShort: boolean;
 }
 
 export interface Blessing {
@@ -230,7 +232,11 @@ export const api = {
   async getPlaylistVideos(playlistId: string): Promise<PlaylistVideo[]> {
     const res = await fetch(`/api/tc-tool/youtube/fetch/playlist/${playlistId}`);
     if (!res.ok) return [];
-    return res.json();
+    const data = await res.json();
+    return (data as any[]).map(item => ({
+      ...item,
+      isShort: typeof item.videoLink === 'string' && item.videoLink.includes('/shorts/'),
+    }));
   },
 
   // Homepage (首頁)

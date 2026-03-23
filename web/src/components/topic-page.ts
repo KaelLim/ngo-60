@@ -171,12 +171,18 @@ export class TopicPage extends LitElement {
     .activity-card {
       position: relative;
       overflow: visible;
+      cursor: pointer;
+    }
+
+    .activity-card.no-link {
+      cursor: default;
     }
 
     .activity-card-shape {
       position: absolute;
       inset: 0;
       z-index: 0;
+      pointer-events: none;
     }
 
     .activity-card-shape svg {
@@ -273,8 +279,9 @@ export class TopicPage extends LitElement {
       overflow: hidden;
     }
 
-    /* Link button */
+    /* Link button - visual only, card handles click */
     .link-button {
+      pointer-events: none;
       position: absolute;
       top: 0;
       right: 2%;
@@ -732,23 +739,23 @@ export class TopicPage extends LitElement {
 
           <div class="activities-list">
             ${topic.events.map(event => html`
-              <div class="activity-card">
+              <div class="activity-card ${event.link_url ? '' : 'no-link'}" @click=${() => this.handleEventClick(event)}>
                 <div class="activity-card-shape">
                   <svg viewBox="0 0 351 317" fill="none" preserveAspectRatio="none">
                     <path d="M273 0C284.046 0 293 8.95431 293 20V26C293 43.6731 307.327 58 325 58H331C342.046 58 351 66.9543 351 78V297C351 308.046 342.046 317 331 317H20C8.95431 317 0 308.046 0 297V20C0 8.9543 8.95431 0 20 0H273Z" fill="white"/>
                   </svg>
                 </div>
                 ${event.link_url ? html`
-                  <button class="link-button" @click=${() => this.handleEventClick(event)}>
+                  <div class="link-button">
                     ${linkArrow}
-                  </button>
+                  </div>
                 ` : html`
                   <div class="link-button coming-soon">
                     <span>敬請
 期待</span>
                   </div>
                 `}
-                <div class="activity-card-bg">
+                <div class="activity-card-bg" @click=${() => this.handleEventClick(event)}>
                   <div class="activity-card-content">
                     <div class="activity-info">
                       <div class="activity-title-row">

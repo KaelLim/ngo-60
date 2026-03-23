@@ -706,6 +706,7 @@ export class SheetContent extends LitElement {
       border-radius: 20px;
       overflow: hidden;
       cursor: pointer;
+      background: #000;
     }
 
     .video-card-thumb img {
@@ -715,11 +716,37 @@ export class SheetContent extends LitElement {
       display: block;
     }
 
+    .video-card-thumb.is-short-thumb {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .video-card-thumb.is-short-thumb .thumb-bg-blur {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: blur(20px) brightness(0.4);
+      transform: scale(1.1);
+      z-index: 0;
+    }
+
+    .video-card-thumb.is-short-thumb img.thumb-main {
+      position: relative;
+      width: auto;
+      height: 100%;
+      object-fit: contain;
+      z-index: 1;
+    }
+
     .video-card-thumb-overlay {
       position: absolute;
       inset: 0;
       background: rgba(0, 0, 0, 0.4);
       border-radius: 20px;
+      z-index: 2;
     }
 
     .video-card-play {
@@ -730,6 +757,7 @@ export class SheetContent extends LitElement {
       width: 51px;
       height: 42px;
       pointer-events: none;
+      z-index: 3;
     }
 
     .video-card-play svg {
@@ -1270,29 +1298,6 @@ export class SheetContent extends LitElement {
       transition:
         transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
         box-shadow 0.2s ease;
-      animation: eventCardIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-    }
-
-    .event-card:nth-child(1) { animation-delay: 0.15s; }
-    .event-card:nth-child(2) { animation-delay: 0.22s; }
-    .event-card:nth-child(3) { animation-delay: 0.29s; }
-    .event-card:nth-child(4) { animation-delay: 0.36s; }
-    .event-card:nth-child(5) { animation-delay: 0.43s; }
-
-    @keyframes eventCardIn {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .event-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
     }
 
     .event-card:active {
@@ -1775,8 +1780,8 @@ export class SheetContent extends LitElement {
 
             <!-- Buttons -->
             <div class="impact-buttons">
-              <button class="impact-report-btn">影響力報告</button>
-              <button class="impact-link-btn">
+              <button class="impact-report-btn" @click=${() => { window.open(window.location.origin + '/report/', '_blank'); }}>影響力報告</button>
+              <button class="impact-link-btn" @click=${() => { window.open(window.location.origin + '/report/', '_blank'); }}>
                 ${arrowIcon}
               </button>
             </div>
@@ -1799,8 +1804,17 @@ export class SheetContent extends LitElement {
                       allowfullscreen
                     ></iframe>
                   ` : html`
-                    <div class="video-card-thumb" @click=${() => { this.playingMobileVideoId = v.videoId; }}>
-                      <img src="${v.thumbnailUrl}" alt="${v.title}" />
+                    <div class="video-card-thumb ${v.isShort ? 'is-short-thumb' : ''}" @click=${() => { this.playingMobileVideoId = v.videoId; }}>
+                      ${v.isShort ? html`
+                        <img class="thumb-bg-blur" src="https://i.ytimg.com/vi/${v.videoId}/hqdefault.jpg" alt="" />
+                      ` : ''}
+                      <img
+                        class="thumb-main"
+                        src="https://i.ytimg.com/vi/${v.videoId}/maxresdefault.jpg"
+                        alt="${v.title}"
+                        @error=${(e: Event) => { const img = e.target as HTMLImageElement; if (img.src.includes('maxresdefault')) img.src = `https://i.ytimg.com/vi/${v.videoId}/hqdefault.jpg`; }}
+                        @load=${(e: Event) => { const img = e.target as HTMLImageElement; if (img.src.includes('maxresdefault') && img.naturalWidth <= 120) img.src = `https://i.ytimg.com/vi/${v.videoId}/hqdefault.jpg`; }}
+                      />
                       <div class="video-card-thumb-overlay"></div>
                       <div class="video-card-play">
                         <svg viewBox="0 0 51 42" fill="none">

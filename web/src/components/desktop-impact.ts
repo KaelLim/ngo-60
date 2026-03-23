@@ -31,6 +31,9 @@ export class DesktopImpact extends LitElement {
   @state()
   private playingVideo = false;
 
+  @state()
+  private isAllShorts = false;
+
   private countAnimated = false;
   private observer: IntersectionObserver | null = null;
   private videosLoaded = false;
@@ -287,10 +290,15 @@ export class DesktopImpact extends LitElement {
     .video-gallery-content {
       display: flex;
       align-items: stretch;
-      justify-content: space-between;
-      height: 460px;
     }
 
+    .video-gallery-content.single {
+      justify-content: center;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    /* Featured (main player) */
     .video-featured {
       display: flex;
       flex-direction: column;
@@ -299,11 +307,20 @@ export class DesktopImpact extends LitElement {
       min-width: 0;
     }
 
+    .video-divider {
+      width: 1px;
+      align-self: stretch;
+      background: #c0c0c0;
+      flex-shrink: 0;
+      margin: 0 20px;
+    }
+
     .video-thumb {
       position: relative;
       border-radius: 20px;
       overflow: hidden;
       cursor: pointer;
+      background: #000;
     }
 
     .video-thumb img {
@@ -313,11 +330,38 @@ export class DesktopImpact extends LitElement {
       display: block;
     }
 
+    /* Shorts: blurred background + centered contain */
+    .video-thumb.is-short-thumb {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .video-thumb.is-short-thumb .thumb-bg-blur {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: blur(20px) brightness(0.4);
+      transform: scale(1.1);
+      z-index: 0;
+    }
+
+    .video-thumb.is-short-thumb img.thumb-main {
+      position: relative;
+      width: auto;
+      height: 100%;
+      object-fit: contain;
+      z-index: 1;
+    }
+
     .video-thumb-overlay {
       position: absolute;
       inset: 0;
       background: rgba(0, 0, 0, 0.4);
       border-radius: 20px;
+      z-index: 2;
     }
 
     .video-play-btn {
@@ -325,19 +369,22 @@ export class DesktopImpact extends LitElement {
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 51px;
-      height: 42px;
       pointer-events: none;
+      z-index: 3;
     }
 
     .video-featured .video-thumb {
       aspect-ratio: 16 / 9;
     }
 
+    .video-featured .video-play-btn {
+      width: 68px;
+      height: 48px;
+    }
+
     .video-featured iframe {
       width: 100%;
       aspect-ratio: 16 / 9;
-      max-height: calc(100% - 32px);
       border: none;
       border-radius: 20px;
       display: block;
@@ -355,50 +402,19 @@ export class DesktopImpact extends LitElement {
       white-space: nowrap;
     }
 
-    .video-divider {
-      width: 1px;
-      align-self: stretch;
-      background: #c0c0c0;
-      flex-shrink: 0;
-      margin: 0 20px;
-      min-height: 100%;
-    }
-
-    .video-side-list {
+    /* Side list */
+    .video-side {
       display: flex;
       flex-direction: column;
-      gap: 12px;
       width: 214px;
       flex-shrink: 0;
-      overflow-y: auto;
-      overflow-x: hidden;
-      padding-right: 12px;
-    }
-
-    .video-side-list::-webkit-scrollbar {
-      width: 8px;
-    }
-
-    .video-side-list::-webkit-scrollbar-track {
-      background: #e8e8e8;
-      border-radius: 4px;
-    }
-
-    .video-side-list::-webkit-scrollbar-thumb {
-      background: #0e2669;
-      border-radius: 4px;
-      min-height: 40px;
-    }
-
-    .video-side-list::-webkit-scrollbar-thumb:hover {
-      background: #1a3a8f;
+      gap: 12px;
     }
 
     .video-side-item {
       display: flex;
       flex-direction: column;
       gap: 4px;
-      flex-shrink: 0;
       cursor: pointer;
       border-radius: 12px;
       transition: background 0.2s;
@@ -413,11 +429,18 @@ export class DesktopImpact extends LitElement {
     }
 
     .video-side-item .video-thumb {
-      width: 214px;
-      height: 121px;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border-radius: 20px;
     }
 
-    .video-side-item .video-thumb .video-play-btn {
+    .video-side-item .video-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .video-side-item .video-play-btn {
       width: 30px;
       height: 25px;
     }
@@ -429,10 +452,163 @@ export class DesktopImpact extends LitElement {
       color: #121212;
       line-height: 1.25;
       margin: 0;
-      padding: 0 4px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+
+    /* View more button row */
+    .video-more-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: auto;
+    }
+
+    .video-more-btn {
+      flex: 1;
+      height: 48px;
+      background: #0e2669;
+      color: white;
+      border: none;
+      border-radius: 24px;
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: 18px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+    }
+
+    .video-more-btn:hover {
+      background: #1a3a8f;
+      transform: scale(1.02);
+    }
+
+    .video-more-arrow {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: #0e2669;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+      flex-shrink: 0;
+    }
+
+    .video-more-arrow:hover {
+      background: #1a3a8f;
+      transform: scale(1.05);
+    }
+
+    .video-more-arrow svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    /* ── Shorts-only mode ── */
+    .shorts-gallery-content {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
+
+    .shorts-featured {
+      flex-shrink: 0;
+      width: 340px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .shorts-featured .video-thumb {
+      aspect-ratio: 9 / 16;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px -10px rgba(0,0,0,0.25);
+    }
+
+    .shorts-featured iframe {
+      width: 100%;
+      aspect-ratio: 9 / 16;
+      border: none;
+      border-radius: 20px;
+      display: block;
+      box-shadow: 0 20px 40px -10px rgba(0,0,0,0.25);
+    }
+
+    .shorts-sidebar {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+      min-width: 0;
+      justify-content: center;
+    }
+
+    .shorts-sidebar-title {
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: #121212;
+      margin: 0;
+    }
+
+    .shorts-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .shorts-card {
+      flex: 1 0 0;
+      min-width: 120px;
+      background: white;
+      border: 1px solid rgba(149,170,255,0.2);
+      border-radius: 14px;
+      padding: 11px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+
+    .shorts-card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      transform: translateY(-2px);
+    }
+
+    .shorts-card.active {
+      border-color: #0e2669;
+      box-shadow: 0 0 0 1px #0e2669;
+    }
+
+    .shorts-card .video-thumb {
+      width: 100%;
+      aspect-ratio: 9 / 16;
+      border-radius: 7px;
+    }
+
+    .shorts-card .video-play-btn {
+      width: 32px;
+      height: 26px;
+    }
+
+    .shorts-card-title {
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: #121212;
+      line-height: 1.25;
+      margin: 0;
+      width: 100%;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
 
     /* Blessings section */
@@ -668,18 +844,45 @@ export class DesktopImpact extends LitElement {
     try {
       const videos = await api.getPlaylistVideos(playlistId);
       this.videos = videos;
+      this.isAllShorts = videos.length > 0 && videos.every(v => v.isShort);
     } catch (e) {
       console.error('Failed to load playlist videos:', e);
     }
   }
 
-  private selectSideVideo(index: number) {
+  private handleVideoSelect(index: number) {
     this.activeVideoIndex = index;
     this.playingVideo = true;
   }
 
   private playFeatured() {
     this.playingVideo = true;
+  }
+
+  private getThumbSrc(videoId: string): string {
+    return `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`;
+  }
+
+  private getThumbFallback(videoId: string): string {
+    return `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+  }
+
+  private getEmbedUrl(video: PlaylistVideo): string {
+    return `https://www.youtube.com/embed/${video.videoId}?autoplay=1`;
+  }
+
+  private handleThumbError(e: Event, videoId: string) {
+    const img = e.target as HTMLImageElement;
+    if (img.src.includes('maxresdefault')) {
+      img.src = this.getThumbFallback(videoId);
+    }
+  }
+
+  private handleThumbLoad(e: Event, videoId: string) {
+    const img = e.target as HTMLImageElement;
+    if (img.src.includes('maxresdefault') && img.naturalWidth <= 120) {
+      img.src = this.getThumbFallback(videoId);
+    }
   }
 
   private async handleBlessSubmit() {
@@ -786,8 +989,8 @@ export class DesktopImpact extends LitElement {
 
             <!-- Buttons -->
             <div class="button-row">
-              <button class="report-btn">影響力報告</button>
-              <button class="link-btn">
+              <button class="report-btn" @click=${() => { window.open(window.location.origin + '/report/', '_blank'); }}>影響力報告</button>
+              <button class="link-btn" @click=${() => { window.open(window.location.origin + '/report/', '_blank'); }}>
                 ${arrowIcon}
               </button>
             </div>
@@ -799,22 +1002,150 @@ export class DesktopImpact extends LitElement {
         ${this.config?.video_published === 1 && this.videos.length > 0 ? html`
         <div class="video-gallery">
           <h3 class="video-gallery-title">${this.config?.video_section_title || '來自全球的祝福'}</h3>
-          <div class="video-gallery-content">
-            <div class="video-featured">
+
+          ${this.isAllShorts ? html`
+          <!-- ═══ SHORTS MODE ═══ -->
+          ${this.videos.length === 1 ? html`
+          <!-- Single short: vertical stack, centered -->
+          <div style="display:flex;flex-direction:column;gap:12px;max-width:340px;margin:0 auto;">
+            <div class="shorts-featured">
               ${this.playingVideo ? html`
                 <iframe
-                  src="https://www.youtube.com/embed/${this.videos[this.activeVideoIndex].videoId}?autoplay=1"
+                  src="${this.getEmbedUrl(this.videos[0])}"
                   allow="autoplay; encrypted-media"
                   allowfullscreen
                 ></iframe>
               ` : html`
                 <div class="video-thumb" @click=${() => this.playFeatured()}>
-                  <img src="${this.videos[this.activeVideoIndex].thumbnailUrl}" alt="${this.videos[this.activeVideoIndex].title}" />
+                  <img class="thumb-main"
+                    src="${this.getThumbSrc(this.videos[0].videoId)}"
+                    alt="${this.videos[0].title}"
+                    @error=${(e: Event) => this.handleThumbError(e, this.videos[0].videoId)}
+                    @load=${(e: Event) => this.handleThumbLoad(e, this.videos[0].videoId)}
+                  />
+                  <div class="video-thumb-overlay"></div>
+                  <div class="video-play-btn" style="width:51px;height:42px;">
+                    <svg viewBox="0 0 68 48" fill="none">
+                      <path d="M66.52 7.74c-.78-2.93-2.49-5.41-5.42-6.19C55.79.13 34 0 34 0S12.21.13 6.9 1.55c-2.93.78-4.63 3.26-5.42 6.19C.06 13.05 0 24 0 24s.06 10.95 1.48 16.26c.78 2.93 2.49 5.41 5.42 6.19C12.21 47.87 34 48 34 48s21.79-.13 27.1-1.55c2.93-.78 4.64-3.26 5.42-6.19C67.94 34.95 68 24 68 24s-.06-10.95-1.48-16.26z" fill="red"/>
+                      <path d="M45 24L27 14v20" fill="white"/>
+                    </svg>
+                  </div>
+                </div>
+              `}
+            </div>
+            <p class="video-featured-title">${this.videos[0].title}</p>
+            ${this.config?.video_playlist_id ? html`
+            <div class="video-more-row">
+              <button class="video-more-btn" @click=${() => window.open(`https://www.youtube.com/playlist?list=${this.config!.video_playlist_id}`, '_blank')}>觀看更多</button>
+              <button class="video-more-arrow" @click=${() => window.open(`https://www.youtube.com/playlist?list=${this.config!.video_playlist_id}`, '_blank')}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M7 17L17 7M17 7H7M17 7V17"/>
+                </svg>
+              </button>
+            </div>
+            ` : ''}
+          </div>
+
+          ` : html`
+          <!-- 2+ shorts: featured left + sidebar right -->
+          <div class="shorts-gallery-content">
+            <div class="shorts-featured">
+              ${this.playingVideo ? html`
+                <iframe
+                  src="${this.getEmbedUrl(this.videos[this.activeVideoIndex])}"
+                  allow="autoplay; encrypted-media"
+                  allowfullscreen
+                ></iframe>
+              ` : html`
+                <div class="video-thumb" @click=${() => this.playFeatured()}>
+                  <img class="thumb-main"
+                    src="${this.getThumbSrc(this.videos[this.activeVideoIndex].videoId)}"
+                    alt="${this.videos[this.activeVideoIndex].title}"
+                    @error=${(e: Event) => this.handleThumbError(e, this.videos[this.activeVideoIndex].videoId)}
+                    @load=${(e: Event) => this.handleThumbLoad(e, this.videos[this.activeVideoIndex].videoId)}
+                  />
+                  <div class="video-thumb-overlay"></div>
+                  <div class="video-play-btn" style="width:51px;height:42px;">
+                    <svg viewBox="0 0 68 48" fill="none">
+                      <path d="M66.52 7.74c-.78-2.93-2.49-5.41-5.42-6.19C55.79.13 34 0 34 0S12.21.13 6.9 1.55c-2.93.78-4.63 3.26-5.42 6.19C.06 13.05 0 24 0 24s.06 10.95 1.48 16.26c.78 2.93 2.49 5.41 5.42 6.19C12.21 47.87 34 48 34 48s21.79-.13 27.1-1.55c2.93-.78 4.64-3.26 5.42-6.19C67.94 34.95 68 24 68 24s-.06-10.95-1.48-16.26z" fill="red"/>
+                      <path d="M45 24L27 14v20" fill="white"/>
+                    </svg>
+                  </div>
+                </div>
+              `}
+              <p class="video-featured-title">${this.videos[this.activeVideoIndex].title}</p>
+            </div>
+
+            <div class="shorts-sidebar">
+              <h4 class="shorts-sidebar-title">影音列表</h4>
+              <div class="shorts-grid">
+                ${this.videos.filter((_, i) => i !== this.activeVideoIndex).slice(0, 4).map((v) => {
+                  const origIndex = this.videos.indexOf(v);
+                  return html`
+                  <div
+                    class="shorts-card"
+                    @click=${() => this.handleVideoSelect(origIndex)}
+                  >
+                    <div class="video-thumb">
+                      <img class="thumb-main"
+                        src="${this.getThumbSrc(v.videoId)}"
+                        alt="${v.title}"
+                        @error=${(e: Event) => this.handleThumbError(e, v.videoId)}
+                        @load=${(e: Event) => this.handleThumbLoad(e, v.videoId)}
+                      />
+                      <div class="video-thumb-overlay"></div>
+                      <div class="video-play-btn">
+                        <svg viewBox="0 0 51 42" fill="none">
+                          <rect width="51" height="42" rx="10" fill="rgba(0,0,0,0.5)"/>
+                          <path d="M20 12L36 21L20 30V12Z" fill="white"/>
+                        </svg>
+                      </div>
+                    </div>
+                    <p class="shorts-card-title">${v.title}</p>
+                  </div>
+                `; })}
+              </div>
+              ${this.config?.video_playlist_id ? html`
+              <div class="video-more-row" style="justify-content:stretch;">
+                <button class="video-more-btn" @click=${() => window.open(`https://www.youtube.com/playlist?list=${this.config!.video_playlist_id}`, '_blank')}>觀看更多</button>
+                <button class="video-more-arrow" @click=${() => window.open(`https://www.youtube.com/playlist?list=${this.config!.video_playlist_id}`, '_blank')}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M7 17L17 7M17 7H7M17 7V17"/>
+                  </svg>
+                </button>
+              </div>
+              ` : ''}
+            </div>
+          </div>
+          `}
+
+          ` : html`
+          <!-- ═══ VIDEO MODE ═══ -->
+          <div class="video-gallery-content ${this.videos.length === 1 ? 'single' : ''}">
+            <div class="video-featured">
+              ${this.playingVideo ? html`
+                <iframe
+                  src="${this.getEmbedUrl(this.videos[this.activeVideoIndex])}"
+                  allow="autoplay; encrypted-media"
+                  allowfullscreen
+                ></iframe>
+              ` : html`
+                <div class="video-thumb ${this.videos[this.activeVideoIndex]?.isShort ? 'is-short-thumb' : ''}" @click=${() => this.playFeatured()}>
+                  ${this.videos[this.activeVideoIndex]?.isShort ? html`
+                    <img class="thumb-bg-blur" src="${this.getThumbSrc(this.videos[this.activeVideoIndex].videoId)}" alt="" />
+                  ` : ''}
+                  <img
+                    class="thumb-main"
+                    src="${this.getThumbSrc(this.videos[this.activeVideoIndex].videoId)}"
+                    alt="${this.videos[this.activeVideoIndex].title}"
+                    @error=${(e: Event) => this.handleThumbError(e, this.videos[this.activeVideoIndex].videoId)}
+                    @load=${(e: Event) => this.handleThumbLoad(e, this.videos[this.activeVideoIndex].videoId)}
+                  />
                   <div class="video-thumb-overlay"></div>
                   <div class="video-play-btn">
-                    <svg viewBox="0 0 51 42" fill="none">
-                      <rect width="51" height="42" rx="10" fill="rgba(0,0,0,0.5)"/>
-                      <path d="M20 12L36 21L20 30V12Z" fill="white"/>
+                    <svg viewBox="0 0 68 48" fill="none">
+                      <path d="M66.52 7.74c-.78-2.93-2.49-5.41-5.42-6.19C55.79.13 34 0 34 0S12.21.13 6.9 1.55c-2.93.78-4.63 3.26-5.42 6.19C.06 13.05 0 24 0 24s.06 10.95 1.48 16.26c.78 2.93 2.49 5.41 5.42 6.19C12.21 47.87 34 48 34 48s21.79-.13 27.1-1.55c2.93-.78 4.64-3.26 5.42-6.19C67.94 34.95 68 24 68 24s-.06-10.95-1.48-16.26z" fill="red"/>
+                      <path d="M45 24L27 14v20" fill="white"/>
                     </svg>
                   </div>
                 </div>
@@ -823,11 +1154,25 @@ export class DesktopImpact extends LitElement {
             </div>
             ${this.videos.length > 1 ? html`
             <div class="video-divider"></div>
-            <div class="video-side-list">
-              ${this.videos.slice(0).map((v, i) => html`
-                <div class="video-side-item ${i === this.activeVideoIndex ? 'active' : ''}" @click=${() => this.selectSideVideo(i)}>
-                  <div class="video-thumb">
-                    <img src="${v.thumbnailUrl}" alt="${v.title}" />
+            <div class="video-side">
+              ${this.videos.filter((_, i) => i !== this.activeVideoIndex).slice(0, 3).map((v) => {
+                const origIndex = this.videos.indexOf(v);
+                return html`
+                <div
+                  class="video-side-item"
+                  @click=${() => this.handleVideoSelect(origIndex)}
+                >
+                  <div class="video-thumb ${v.isShort ? 'is-short-thumb' : ''}">
+                    ${v.isShort ? html`
+                      <img class="thumb-bg-blur" src="${this.getThumbSrc(v.videoId)}" alt="" />
+                    ` : ''}
+                    <img
+                      class="thumb-main"
+                      src="${this.getThumbSrc(v.videoId)}"
+                      alt="${v.title}"
+                      @error=${(e: Event) => this.handleThumbError(e, v.videoId)}
+                      @load=${(e: Event) => this.handleThumbLoad(e, v.videoId)}
+                    />
                     <div class="video-thumb-overlay"></div>
                     <div class="video-play-btn">
                       <svg viewBox="0 0 51 42" fill="none">
@@ -838,10 +1183,21 @@ export class DesktopImpact extends LitElement {
                   </div>
                   <p class="video-side-title">${v.title}</p>
                 </div>
-              `)}
+              `; })}
+              ${this.config?.video_playlist_id ? html`
+              <div class="video-more-row">
+                <button class="video-more-btn" @click=${() => window.open(`https://www.youtube.com/playlist?list=${this.config!.video_playlist_id}`, '_blank')}>觀看更多</button>
+                <button class="video-more-arrow" @click=${() => window.open(`https://www.youtube.com/playlist?list=${this.config!.video_playlist_id}`, '_blank')}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M7 17L17 7M17 7H7M17 7V17"/>
+                  </svg>
+                </button>
+              </div>
+              ` : ''}
             </div>
             ` : ''}
           </div>
+          `}
         </div>
         ` : ''}
 

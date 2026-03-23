@@ -614,7 +614,7 @@ COPY public.impact_sections (id, name, icon, stat_label, stat_value, stat_unit, 
 --
 
 COPY public.impact_config (id, main_title, subtitle, published, blessing_title, blessing_section_name, blessing_published, video_playlist_id, video_section_title, video_published) FROM stdin;
-1	慈濟 60 年帶來哪些影響？	慈濟用三大主軸回應臺灣社會脈絡	1	傳送祝福 灌溉希望	對社會的祝福	1	PLYfJOvcvKb2RSIxJhMUScy10AJXEmEmrI	來自全球的祝福	1
+1	慈濟 60 年帶來哪些影響？	慈濟用三大主軸回應臺灣社會脈絡	1	傳送祝福 灌溉希望	對社會的祝福	1	PL8fkyzZpQvT0q4YrUxhPpo5DvB0t7pQn0	來自全球的祝福	1
 \.
 
 
@@ -798,6 +798,38 @@ ALTER TABLE public.users OWNER TO postgres;
 
 INSERT INTO public.users (username, password_hash, role) VALUES
 ('admin', '$2b$10$fUW15z5RyUH9xdh7ZYCSRO5Fp4sGrA.NsGIgHDVThSgP.N2ZIirAm', 'admin');
+
+
+--
+-- Name: report_chapters; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.report_chapters (
+    id SERIAL PRIMARY KEY,
+    chapter_id VARCHAR(50) UNIQUE NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    sort_order INTEGER DEFAULT 0,
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+ALTER TABLE public.report_chapters OWNER TO postgres;
+
+--
+-- Name: report_pages; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.report_pages (
+    id SERIAL PRIMARY KEY,
+    chapter_id VARCHAR(50) NOT NULL,
+    page_id VARCHAR(50) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL DEFAULT '',
+    sort_order INTEGER DEFAULT 0,
+    updated_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE(chapter_id, page_id)
+);
+
+ALTER TABLE public.report_pages OWNER TO postgres;
 
 
 \unrestrict kYyuLV9fF0UcsSzBPIdElSjCE6cZdgwyQfXYVCm1lwbwcrHS5kV3r3kZwKgxVYd
