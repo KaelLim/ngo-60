@@ -1,5 +1,13 @@
 -- seed-report-pages.sql
--- Creates and seeds the report_pages table with markdown content
+-- Seeds report_chapters and report_pages tables
+
+CREATE TABLE IF NOT EXISTS public.report_chapters (
+    id SERIAL PRIMARY KEY,
+    chapter_id VARCHAR(50) UNIQUE NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    sort_order INTEGER DEFAULT 0,
+    updated_at TIMESTAMP DEFAULT NOW()
+);
 
 CREATE TABLE IF NOT EXISTS public.report_pages (
     id SERIAL PRIMARY KEY,
@@ -14,6 +22,15 @@ CREATE TABLE IF NOT EXISTS public.report_pages (
 
 -- Clear existing data
 TRUNCATE public.report_pages RESTART IDENTITY CASCADE;
+TRUNCATE public.report_chapters RESTART IDENTITY CASCADE;
+
+-- Seed chapters
+INSERT INTO public.report_chapters (chapter_id, title, sort_order) VALUES
+('about', '關於本報告書', 0),
+('framework', '影響力主軸', 1),
+('environment', '永續環境', 2),
+('community', '社區網絡', 3),
+('humanitarian', '人道救援', 4);
 
 -- Chapter: about
 INSERT INTO public.report_pages (chapter_id, page_id, title, content, sort_order) VALUES
