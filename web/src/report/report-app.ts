@@ -309,18 +309,18 @@ export class ReportApp extends LitElement {
       padding: 20px; overflow-y: auto;
     }
     .sidebar-heading {
-      font-size: 16px; font-weight: 600;
+      font-size: 13px; font-weight: 600;
       color: var(--navy); text-transform: uppercase;
-      letter-spacing: 0.1em; margin-bottom: 8px;
+      letter-spacing: 0.1em; margin-bottom: 6px;
     }
     .sidebar-link {
       display: flex; align-items: center;
-      width: 100%; padding: 10px 12px;
-      border: none; background: transparent; border-radius: 10px;
+      width: 100%; padding: 8px 10px;
+      border: none; background: transparent; border-radius: 8px;
       font-family: 'Noto Sans TC', sans-serif;
-      font-size: 18px; font-weight: 400;
+      font-size: 14px; font-weight: 400;
       color: var(--text-body); cursor: pointer;
-      text-align: left; line-height: 24px;
+      text-align: left; line-height: 22px;
       transition: background 0.15s, color 0.15s;
     }
     .sidebar-link:hover { background: var(--beige-bg); }
