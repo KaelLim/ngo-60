@@ -155,12 +155,12 @@ export class DesktopImpact extends LitElement {
     }
 
     .impact-node.bottom-left {
-      top: 176px;
+      bottom: 0;
       left: 0;
     }
 
     .impact-node.bottom-right {
-      top: 176px;
+      bottom: 0;
       right: 0;
     }
 
@@ -168,6 +168,7 @@ export class DesktopImpact extends LitElement {
       background: #0e2669;
       padding: 8px;
       border-radius: 30px;
+      text-align: center;
     }
 
     .impact-node-inner {
@@ -175,6 +176,7 @@ export class DesktopImpact extends LitElement {
       padding: 8px 14px;
       border-radius: 20px;
       box-shadow: inset 0 0 4px rgba(255, 255, 255, 0.4);
+      text-align: center;
     }
 
     .impact-node-inner span {
@@ -182,6 +184,8 @@ export class DesktopImpact extends LitElement {
       font-size: 18px;
       font-weight: 500;
       color: white;
+      text-align: center;
+      display: block;
       line-height: 1.2;
     }
 
