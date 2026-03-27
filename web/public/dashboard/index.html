@@ -131,7 +131,6 @@
             <table>
               <thead>
                 <tr>
-                  <th class="sortable" data-sort="created_at">建立時間 <span class="sort-icons"><span class="arrow-up">▲</span><span class="arrow-down">▼</span></span></th>
                   <th class="sortable" data-sort="updated_at">最後更新 <span class="sort-icons"><span class="arrow-up">▲</span><span class="arrow-down">▼</span></span></th>
                   <th class="sortable" data-sort="is_new">NEW <span class="sort-icons"><span class="arrow-up">▲</span><span class="arrow-down">▼</span></span></th>
                   <th class="sortable" data-sort="month">月/年 <span class="sort-icons"><span class="arrow-up">▲</span><span class="arrow-down">▼</span></span></th>
@@ -740,6 +739,9 @@
               </select>
             </div>
           </div>
+        </div>
+        <div id="event-created-row" class="form-group" style="display:none; padding: 0 24px 8px;">
+          <label style="color:#888; font-size:12px;">建立時間：<span id="event-created-at"></span></label>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" onclick="closeEventModal()">取消</button>

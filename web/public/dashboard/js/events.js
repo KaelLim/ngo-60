@@ -95,7 +95,6 @@ function renderEventsTable(topicsCache) {
       : `<button class="badge-toggle badge-toggle-privacy-public" data-action="toggle-privacy" data-id="${e.id}" data-privacy="0" title="點擊切換為慈濟人">所有人</button>`;
     return `
       <tr class="${e.published ? '' : 'row-draft'}">
-        <td>${formatDateTimeForDisplay(e.created_at)}</td>
         <td>${formatDateTimeForDisplay(e.updated_at)}</td>
         <td>${isNewToggle}</td>
         <td>${e.month}月 / ${e.year}</td>
@@ -154,6 +153,14 @@ export function openEventModal(event = null) {
   document.getElementById('event-published').checked = event?.published ?? true;
   document.getElementById('event-privacy').value = event?.privacy ?? 0;
   updateImagePreview('event-image', event?.image_url);
+  const createdRow = document.getElementById('event-created-row');
+  const createdAt = document.getElementById('event-created-at');
+  if (event?.created_at) {
+    createdAt.textContent = formatDateTimeForDisplay(event.created_at);
+    createdRow.style.display = '';
+  } else {
+    createdRow.style.display = 'none';
+  }
   document.getElementById('event-modal').classList.add('active');
 }
 
