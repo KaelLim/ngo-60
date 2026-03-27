@@ -31,6 +31,7 @@ export interface Event {
   month: number;
   year: number;
   sort_order: number;
+  is_new: boolean;
   created_at: string | null;
   updated_at: string | null;
 }

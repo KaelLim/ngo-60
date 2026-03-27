@@ -109,7 +109,8 @@ eventsRoutes.post("/", async (c) => {
     month,
     year,
     published = true,
-    privacy = 0
+    privacy = 0,
+    is_new = true
   } = body;
 
   if (!title || !date_start || !month || !year) {
@@ -117,10 +118,10 @@ eventsRoutes.post("/", async (c) => {
   }
 
   const rows = await query<Event>(
-    `INSERT INTO events (title, description, date_start, date_end, participation_type, image_url, link_url, topic_id, month, year, published, privacy, created_at, updated_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), NULL)
+    `INSERT INTO events (title, description, date_start, date_end, participation_type, image_url, link_url, topic_id, month, year, published, privacy, is_new, created_at, updated_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW(), NULL)
      RETURNING *`,
-    [title, description || null, date_start, date_end || null, participation_type || null, image_url || null, link_url || null, topic_id || null, month, year, published, privacy]
+    [title, description || null, date_start, date_end || null, participation_type || null, image_url || null, link_url || null, topic_id || null, month, year, published, privacy, is_new]
   );
 
   return c.json(rows[0], 201);
@@ -149,7 +150,8 @@ eventsRoutes.put("/:id", async (c) => {
     month = existing[0].month,
     year = existing[0].year,
     published = existing[0].published,
-    privacy = existing[0].privacy
+    privacy = existing[0].privacy,
+    is_new = existing[0].is_new
   } = body;
 
   const rows = await query<Event>(
@@ -166,10 +168,11 @@ eventsRoutes.put("/:id", async (c) => {
       year = $10,
       published = $11,
       privacy = $12,
+      is_new = $13,
       updated_at = NOW()
-     WHERE id = $13
+     WHERE id = $14
      RETURNING *`,
-    [title, description, date_start, date_end, participation_type, image_url, link_url, topic_id, month, year, published, privacy, id]
+    [title, description, date_start, date_end, participation_type, image_url, link_url, topic_id, month, year, published, privacy, is_new, id]
   );
 
   return c.json(rows[0]);

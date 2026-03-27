@@ -651,10 +651,7 @@ export class TopicPage extends LitElement {
   }
 
   private isNewEvent(event: Event): boolean {
-    const dateStr = event.updated_at || event.created_at;
-    if (!dateStr) return false;
-    const diff = Date.now() - new Date(dateStr).getTime();
-    return diff <= 7 * 24 * 60 * 60 * 1000;
+    return !!event.is_new;
   }
 
   private handleEventClick(event: Event) {

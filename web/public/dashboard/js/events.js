@@ -86,6 +86,7 @@ function renderEventsTable(topicsCache) {
 
   tbody.innerHTML = sortedEvents.map(e => {
     const topic = topicsCache.find(t => t.id === e.topic_id);
+    const isNewToggle = `<button class="toggle-switch ${e.is_new ? 'toggle-on' : 'toggle-off'}" data-action="toggle-new" data-id="${e.id}" data-is-new="${e.is_new}" title="${e.is_new ? '點擊取消 NEW' : '點擊標記 NEW'}"></button>`;
     const publishedToggle = e.published
       ? `<button class="badge-toggle badge-toggle-on" data-action="toggle-publish" data-id="${e.id}" data-published="true" title="點擊取消發布">已發布</button>`
       : `<button class="badge-toggle badge-toggle-off" data-action="toggle-publish" data-id="${e.id}" data-published="false" title="點擊發布">草稿</button>`;
@@ -96,6 +97,7 @@ function renderEventsTable(topicsCache) {
       <tr class="${e.published ? '' : 'row-draft'}">
         <td>${formatDateTimeForDisplay(e.created_at)}</td>
         <td>${formatDateTimeForDisplay(e.updated_at)}</td>
+        <td>${isNewToggle}</td>
         <td>${e.month}月 / ${e.year}</td>
         <td>${e.title}</td>
         <td>${formatDateForInput(e.date_start)}${e.date_end ? ' ~ ' + formatDateForInput(e.date_end) : ''}</td>
@@ -117,6 +119,9 @@ function renderEventsTable(topicsCache) {
   });
   tbody.querySelectorAll('[data-action="delete"]').forEach(btn => {
     btn.addEventListener('click', () => deleteEvent(parseInt(btn.dataset.id)));
+  });
+  tbody.querySelectorAll('[data-action="toggle-new"]').forEach(btn => {
+    btn.addEventListener('click', () => toggleNew(parseInt(btn.dataset.id), btn.dataset.isNew === 'true'));
   });
   tbody.querySelectorAll('[data-action="toggle-publish"]').forEach(btn => {
     btn.addEventListener('click', () => togglePublish(parseInt(btn.dataset.id), btn.dataset.published === 'true'));
@@ -169,6 +174,16 @@ async function deleteEvent(id) {
     loadEvents();
   } catch (e) {
     showToast('刪除失敗', 'error');
+  }
+}
+
+async function toggleNew(id, currentIsNew) {
+  try {
+    await api.updateEvent(id, { is_new: !currentIsNew });
+    showToast(currentIsNew ? '已取消 NEW' : '已標記 NEW');
+    loadEvents();
+  } catch (e) {
+    showToast('操作失敗', 'error');
   }
 }
 

@@ -153,6 +153,7 @@ CREATE TABLE public.events (
     year integer DEFAULT 2026 NOT NULL,
     published boolean DEFAULT true,
     privacy integer DEFAULT 0,
+    is_new boolean DEFAULT true,
     created_at timestamp without time zone DEFAULT now(),
     updated_at timestamp without time zone,
     CONSTRAINT events_month_check CHECK (((month >= 1) AND (month <= 12)))

@@ -466,10 +466,7 @@ export class DesktopTopics extends LitElement {
   }
 
   private isNewEvent(event: Event): boolean {
-    const dateStr = event.updated_at || event.created_at;
-    if (!dateStr) return false;
-    const diff = Date.now() - new Date(dateStr).getTime();
-    return diff <= 7 * 24 * 60 * 60 * 1000;
+    return !!event.is_new;
   }
 
   private getParticipationText(event: Event): string {
@@ -477,36 +474,22 @@ export class DesktopTopics extends LitElement {
   }
 
   private calculateScrollPages() {
-    if (!this.eventsContainer) return;
-    const { scrollWidth, clientWidth } = this.eventsContainer;
-    const cardWidth = 328 + 16; // card width + gap
-    const visibleCards = Math.floor(clientWidth / cardWidth) || 1;
-    const totalCards = this.topicEvents.length;
-    this.totalScrollPages = Math.max(1, Math.ceil(totalCards / visibleCards));
+    this.totalScrollPages = Math.max(1, this.topicEvents.length);
   }
 
   private handleEventScroll() {
     if (!this.eventsContainer) return;
-    const { scrollLeft, scrollWidth, clientWidth } = this.eventsContainer;
-    const maxScroll = scrollWidth - clientWidth;
-    if (maxScroll <= 0) {
-      this.activeScrollPage = 0;
-      return;
-    }
-    const progress = scrollLeft / maxScroll;
-    this.activeScrollPage = Math.min(
-      Math.floor(progress * this.totalScrollPages),
-      this.totalScrollPages - 1
-    );
+    const cardWidth = 328 + 16; // card width + gap
+    const index = Math.round(this.eventsContainer.scrollLeft / cardWidth);
+    this.activeScrollPage = Math.min(index, this.totalScrollPages - 1);
   }
 
   private scrollEvents(direction: 'prev' | 'next') {
     if (!this.eventsContainer) return;
-    const { clientWidth } = this.eventsContainer;
-    const scrollAmount = clientWidth * 0.8; // scroll 80% of visible width
+    const cardWidth = 328 + 16; // card width + gap
     const newScroll = direction === 'next'
-      ? this.eventsContainer.scrollLeft + scrollAmount
-      : this.eventsContainer.scrollLeft - scrollAmount;
+      ? this.eventsContainer.scrollLeft + cardWidth
+      : this.eventsContainer.scrollLeft - cardWidth;
     this.eventsContainer.scrollTo({ left: newScroll, behavior: 'smooth' });
   }
 
