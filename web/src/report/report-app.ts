@@ -342,24 +342,24 @@ export class ReportApp extends LitElement {
 
     /* ── Desktop: Right TOC ── */
     .right-toc {
-      width: 180px; flex-shrink: 0;
-      padding: 40px 20px 40px 0;
+      width: 160px; flex-shrink: 0;
+      padding: 32px 16px 32px 0;
       border-left: 1px solid #F0EDE8; overflow-y: auto;
     }
     .toc-label {
-      font-size: 15px; font-weight: 600;
+      font-size: 12px; font-weight: 600;
       color: var(--text-muted); text-transform: uppercase;
-      letter-spacing: 0.08em; margin-bottom: 14px; padding-left: 16px;
+      letter-spacing: 0.08em; margin-bottom: 10px; padding-left: 14px;
     }
     .toc-link {
       display: block; width: 100%;
-      padding: 5px 0 5px 16px;
+      padding: 4px 0 4px 14px;
       border: none; background: none;
       border-left: 2px solid transparent; margin-left: -1px;
       font-family: 'Noto Sans TC', sans-serif;
-      font-size: 17px; font-weight: 400;
+      font-size: 13px; font-weight: 400;
       color: var(--text-sub); cursor: pointer;
-      text-align: left; line-height: 24px;
+      text-align: left; line-height: 20px;
       transition: color 0.15s, border-color 0.15s;
     }
     .toc-link:hover { color: var(--navy); }
