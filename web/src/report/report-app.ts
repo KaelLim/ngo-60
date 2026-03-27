@@ -337,7 +337,7 @@ export class ReportApp extends LitElement {
     }
     .content {
       flex: 1; overflow-y: auto;
-      padding: 40px 40px 40px 48px; min-width: 0;
+      padding: 32px 32px 32px 36px; min-width: 0;
     }
 
     /* ── Desktop: Right TOC ── */
@@ -397,29 +397,29 @@ export class ReportApp extends LitElement {
     /* ── Desktop: Markdown ── */
     .md h1 {
       font-family: 'Noto Serif TC', serif;
-      font-size: 44px; font-weight: 700; line-height: 58px; color: var(--navy);
-      margin: 0 0 16px; padding-bottom: 20px; border-bottom: 2px solid var(--navy);
+      font-size: 28px; font-weight: 700; line-height: 38px; color: var(--navy);
+      margin: 0 0 12px; padding-bottom: 14px; border-bottom: 2px solid var(--navy);
     }
     .md h2 {
-      font-size: 28px; font-weight: 700; line-height: 40px; color: var(--navy);
-      margin: 44px 0 16px; padding-left: 14px; border-left: 4px solid var(--navy);
+      font-size: 20px; font-weight: 700; line-height: 30px; color: var(--navy);
+      margin: 32px 0 12px; padding-left: 12px; border-left: 3px solid var(--navy);
     }
-    .md h3 { font-size: 22px; font-weight: 700; color: var(--text-dark); margin: 32px 0 12px; }
-    .md h4 { font-size: 20px; font-weight: 700; color: var(--text-dark); margin: 24px 0 10px; }
-    .md p { font-size: 19px; line-height: 34px; color: var(--text-dark); margin: 0 0 18px; }
-    .md ul, .md ol { padding-left: 30px; margin: 0 0 18px; }
-    .md li { font-size: 19px; line-height: 34px; color: var(--text-dark); margin-bottom: 6px; }
+    .md h3 { font-size: 17px; font-weight: 700; color: var(--text-dark); margin: 24px 0 10px; }
+    .md h4 { font-size: 16px; font-weight: 700; color: var(--text-dark); margin: 20px 0 8px; }
+    .md p { font-size: 15px; line-height: 28px; color: var(--text-dark); margin: 0 0 14px; }
+    .md ul, .md ol { padding-left: 24px; margin: 0 0 14px; }
+    .md li { font-size: 15px; line-height: 28px; color: var(--text-dark); margin-bottom: 4px; }
     .md strong { font-weight: 700; }
-    .md hr { border: none; border-top: 1px solid var(--border-light); margin: 28px 0; }
+    .md hr { border: none; border-top: 1px solid var(--border-light); margin: 24px 0; }
     .md blockquote {
-      border-left: 3px solid var(--navy); padding: 12px 16px; margin: 16px 0;
-      background: var(--beige-bg); border-radius: 0 10px 10px 0;
+      border-left: 3px solid var(--navy); padding: 10px 14px; margin: 14px 0;
+      background: var(--beige-bg); border-radius: 0 8px 8px 0;
     }
-    .md blockquote p { color: var(--text-body); margin-bottom: 6px; font-size: 18px; line-height: 32px; }
-    .md table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 17px; }
-    .md th, .md td { border: 1px solid var(--border-light); padding: 14px 16px; text-align: left; line-height: 1.6; }
-    .md th { background: var(--navy); font-weight: 600; color: white; font-size: 16px; }
-    .md td { color: var(--text-dark); font-size: 17px; }
+    .md blockquote p { color: var(--text-body); margin-bottom: 4px; font-size: 14px; line-height: 26px; }
+    .md table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 14px; }
+    .md th, .md td { border: 1px solid var(--border-light); padding: 10px 14px; text-align: left; line-height: 1.6; }
+    .md th { background: var(--navy); font-weight: 600; color: white; font-size: 13px; }
+    .md td { color: var(--text-dark); font-size: 14px; }
     .md tr:nth-child(even) td { background: var(--beige-bg); }
     .md a { color: var(--navy); text-decoration: none; }
     .md a:hover { text-decoration: underline; }
