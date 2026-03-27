@@ -36,6 +36,16 @@ Docker 專案名稱：`tzuchi-60`
 └── nginx/                  # Nginx 反向代理
 ```
 
+## Cache Busting (IMPORTANT)
+
+Dashboard 靜態檔案不經過 Vite 打包，瀏覽器會快取舊版本。每次更新 dashboard 相關程式碼後，**必須**更新版本號：
+
+- 檔案：`web/public/dashboard/index.html`
+- 位置：`css/styles.css?v=X.X` 和 `js/main.js?v=X.X`
+- **當前版本：`1.1`**
+
+每次 push 有修改到 dashboard 的 CSS/JS 時，版本號 +0.1。
+
 ## Key API Endpoints
 
 | Endpoint | Description |
