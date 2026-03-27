@@ -117,7 +117,7 @@ export class DesktopLayout extends LitElement {
         api.getActiveMonths(this.appStore.selectedYear),
         api.getImpactSections(),
         api.getImpactConfig(),
-        api.getBlessings(),
+        api.getBlessings(true),
         api.getBlessingTags()
       ]);
 

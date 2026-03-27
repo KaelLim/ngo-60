@@ -15,11 +15,18 @@ interface Event {
   year: number;
   published: boolean;
   privacy: number;
+  is_new: boolean;
+  new_set_at: string | null;
   created_at: string | null;
   updated_at: string | null;
 }
 
 export const eventsRoutes = new Hono();
+
+// Computed is_new: true only if is_new=true AND within 5 days of new_set_at
+const IS_NEW_EXPR = `(is_new = true AND new_set_at IS NOT NULL AND new_set_at + INTERVAL '5 days' > NOW())`;
+const EVENT_COLS = `id, title, description, date_start, date_end, participation_type, image_url, link_url, topic_id, month, year, published, privacy, ${IS_NEW_EXPR} as is_new, new_set_at, sort_order, created_at, updated_at`;
+const SELECT_EVENTS = `SELECT ${EVENT_COLS} FROM events`;
 
 // GET /api/events - 取得活動列表
 // 支援篩選: ?month=8&year=2026 或 ?topic_id=1
@@ -37,7 +44,7 @@ eventsRoutes.get("/", async (c) => {
   // 依主題篩選
   if (topicId) {
     const rows = await query<Event>(
-      `SELECT * FROM events WHERE topic_id = $1 ${publishedCondition} ORDER BY date_start`,
+      `${SELECT_EVENTS} WHERE topic_id = $1 ${publishedCondition} ORDER BY date_start`,
       [parseInt(topicId)]
     );
     return c.json(rows);
@@ -46,7 +53,7 @@ eventsRoutes.get("/", async (c) => {
   // 依月份和年份篩選 (只顯示起始月份的活動)
   if (month && year) {
     const rows = await query<Event>(
-      `SELECT * FROM events
+      `${SELECT_EVENTS}
        WHERE month = $1 AND year = $2
          ${publishedCondition}
        ORDER BY date_start`,
@@ -58,7 +65,7 @@ eventsRoutes.get("/", async (c) => {
   // 僅依月份篩選 (假設當年)
   if (month) {
     const rows = await query<Event>(
-      `SELECT * FROM events
+      `${SELECT_EVENTS}
        WHERE month = $1 AND year = $2
          ${publishedCondition}
        ORDER BY date_start`,
@@ -70,8 +77,8 @@ eventsRoutes.get("/", async (c) => {
   // 取得所有活動
   const rows = await query<Event>(
     showAll
-      ? "SELECT * FROM events ORDER BY date_start"
-      : "SELECT * FROM events WHERE published = true ORDER BY date_start"
+      ? `${SELECT_EVENTS} ORDER BY date_start`
+      : `${SELECT_EVENTS} WHERE published = true ORDER BY date_start`
   );
   return c.json(rows);
 });
@@ -90,7 +97,7 @@ eventsRoutes.get("/active-months", async (c) => {
 // GET /api/events/:id - 取得單一活動詳情
 eventsRoutes.get("/:id", async (c) => {
   const id = c.req.param("id");
-  const rows = await query<Event>("SELECT * FROM events WHERE id = $1", [id]);
+  const rows = await query<Event>(`${SELECT_EVENTS} WHERE id = $1`, [id]);
   return rows[0] ? c.json(rows[0]) : c.json({ error: "Not found" }, 404);
 });
 
@@ -118,9 +125,9 @@ eventsRoutes.post("/", async (c) => {
   }
 
   const rows = await query<Event>(
-    `INSERT INTO events (title, description, date_start, date_end, participation_type, image_url, link_url, topic_id, month, year, published, privacy, is_new, created_at, updated_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW(), NULL)
-     RETURNING *`,
+    `INSERT INTO events (title, description, date_start, date_end, participation_type, image_url, link_url, topic_id, month, year, published, privacy, is_new, new_set_at, created_at, updated_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, ${is_new ? "NOW()" : "NULL"}, NOW(), NULL)
+     RETURNING ${EVENT_COLS}`,
     [title, description || null, date_start, date_end || null, participation_type || null, image_url || null, link_url || null, topic_id || null, month, year, published, privacy, is_new]
   );
 
@@ -151,8 +158,12 @@ eventsRoutes.put("/:id", async (c) => {
     year = existing[0].year,
     published = existing[0].published,
     privacy = existing[0].privacy,
-    is_new = existing[0].is_new
   } = body;
+
+  // is_new: if toggled to true, reset new_set_at; if toggled to false, keep old new_set_at
+  const isNewChanged = body.is_new !== undefined;
+  const newIsNew = body.is_new ?? existing[0].is_new;
+  const newSetAtExpr = (isNewChanged && newIsNew) ? "NOW()" : (newIsNew && !existing[0].is_new) ? "NOW()" : "new_set_at";
 
   const rows = await query<Event>(
     `UPDATE events SET
@@ -169,10 +180,11 @@ eventsRoutes.put("/:id", async (c) => {
       published = $11,
       privacy = $12,
       is_new = $13,
+      new_set_at = ${newSetAtExpr},
       updated_at = NOW()
      WHERE id = $14
-     RETURNING *`,
-    [title, description, date_start, date_end, participation_type, image_url, link_url, topic_id, month, year, published, privacy, is_new, id]
+     RETURNING ${EVENT_COLS}`,
+    [title, description, date_start, date_end, participation_type, image_url, link_url, topic_id, month, year, published, privacy, newIsNew, id]
   );
 
   return c.json(rows[0]);
@@ -188,5 +200,5 @@ eventsRoutes.delete("/:id", async (c) => {
   }
 
   await query("DELETE FROM events WHERE id = $1", [id]);
-  return c.json({ message: "Event deleted", id: parseInt(id) });
+  return c.json({ success: true });
 });

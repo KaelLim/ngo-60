@@ -465,7 +465,7 @@ export class BlessingPage extends LitElement {
 
   private async loadAllBlessings() {
     try {
-      this.allBlessings = await api.getBlessings();
+      this.allBlessings = await api.getBlessings(true);
     } catch (error) {
       console.error('Failed to load blessings list:', error);
     }

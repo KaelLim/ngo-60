@@ -924,7 +924,7 @@ export class DesktopImpact extends LitElement {
     return html`
       <div class="section-container">
         <!-- Section Title (always visible) -->
-        <div class="section-title">看影響</div>
+        <div class="section-title">${this.config?.published === 1 ? '看影響' : '與善同行'}</div>
 
         <!-- Report Section -->
         ${this.config?.published === 1 ? html`
@@ -953,7 +953,7 @@ export class DesktopImpact extends LitElement {
                 </div>
                 <div class="impact-node-badge">
                   <div class="impact-node-inner">
-                    <span>${this.sections[0]?.name || ''}</span>
+                    <span>${(this.sections[0]?.name || '').split(' ').map((w: string, i: number) => i === 0 ? w : html`<br>${w}`)}</span>
                   </div>
                 </div>
               </div>
@@ -962,7 +962,7 @@ export class DesktopImpact extends LitElement {
               <div class="impact-node bottom-left">
                 <div class="impact-node-badge">
                   <div class="impact-node-inner">
-                    <span>${this.sections[1]?.name || ''}</span>
+                    <span>${(this.sections[1]?.name || '').split(' ').map((w: string, i: number) => i === 0 ? w : html`<br>${w}`)}</span>
                   </div>
                 </div>
                 <div class="impact-node-stat">
@@ -976,7 +976,7 @@ export class DesktopImpact extends LitElement {
               <div class="impact-node bottom-right">
                 <div class="impact-node-badge">
                   <div class="impact-node-inner">
-                    <span>${this.sections[2]?.name || ''}</span>
+                    <span>${(this.sections[2]?.name || '').split(' ').map((w: string, i: number) => i === 0 ? w : html`<br>${w}`)}</span>
                   </div>
                 </div>
                 <div class="impact-node-stat">

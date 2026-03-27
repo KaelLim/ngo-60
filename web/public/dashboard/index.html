@@ -126,6 +126,7 @@
           <h2>活動管理</h2>
           <button class="btn btn-primary" onclick="openEventModal()">+ 新增活動</button>
         </div>
+        <p style="color:#71717a;font-size:13px;margin-bottom:12px;">** NEW 標籤開啟後 5 天自動關閉；新建活動預設為 NEW。</p>
         <div class="card">
           <div class="table-container">
             <table>
@@ -288,7 +289,7 @@
                   <th>排序</th>
                   <th>標題</th>
                   <th>內容預覽</th>
-                  <th>顯示</th>
+                  <th>發佈</th>
                   <th>操作</th>
                 </tr>
               </thead>
@@ -554,8 +555,8 @@
           <input type="hidden" id="impact-id">
           <div class="form-row">
             <div class="form-group">
-              <label>名稱 *</label>
-              <input type="text" id="impact-name" placeholder="例：永續環境" required>
+              <label>名稱 *<small style="font-weight:400;color:#71717a;margin-left:6px">（用空格分隔每行）</small></label>
+              <input type="text" id="impact-name" placeholder="例：永續 環境" required>
             </div>
             <div class="form-group">
               <label>圖示 *</label>
@@ -774,7 +775,7 @@
           <div class="form-group">
             <label class="checkbox-label">
               <input type="checkbox" id="blessing-featured">
-              顯示於前台
+              發佈
             </label>
           </div>
           <div class="form-group">

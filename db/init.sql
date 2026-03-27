@@ -154,6 +154,7 @@ CREATE TABLE public.events (
     published boolean DEFAULT true,
     privacy integer DEFAULT 0,
     is_new boolean DEFAULT true,
+    new_set_at timestamp without time zone DEFAULT now(),
     created_at timestamp without time zone DEFAULT now(),
     updated_at timestamp without time zone,
     CONSTRAINT events_month_check CHECK (((month >= 1) AND (month <= 12)))
