@@ -182,7 +182,9 @@ export class ReportApp extends LitElement {
     const content = this.shadowRoot?.querySelector('.content');
     const el = content?.querySelector(`#${id}`);
     if (el && content) {
-      const top = (el as HTMLElement).offsetTop - 20;
+      const rect = (el as HTMLElement).getBoundingClientRect();
+      const containerRect = content.getBoundingClientRect();
+      const top = content.scrollTop + rect.top - containerRect.top - 16;
       content.scrollTo({ top, behavior: 'smooth' });
       setTimeout(() => { this._scrollingToHeading = false; }, 600);
     }
