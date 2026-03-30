@@ -324,7 +324,7 @@ export class DesktopImpact extends LitElement {
       border-radius: 20px;
       overflow: hidden;
       cursor: pointer;
-      background: #000;
+      background: transparent;
     }
 
     .video-thumb img {
@@ -332,6 +332,7 @@ export class DesktopImpact extends LitElement {
       height: 100%;
       object-fit: cover;
       display: block;
+      transform: scale(1.02);
     }
 
     /* Shorts: blurred background + centered contain */
@@ -362,9 +363,8 @@ export class DesktopImpact extends LitElement {
 
     .video-thumb-overlay {
       position: absolute;
-      inset: 0;
+      inset: -1px;
       background: rgba(0, 0, 0, 0.4);
-      border-radius: 20px;
       z-index: 2;
     }
 
@@ -591,6 +591,20 @@ export class DesktopImpact extends LitElement {
     .shorts-card .video-thumb {
       width: 100%;
       aspect-ratio: 9 / 16;
+      border-radius: 7px;
+      overflow: hidden;
+      background: transparent;
+    }
+
+    .shorts-card .video-thumb img {
+      width: calc(100% + 2px);
+      height: calc(100% + 2px);
+      margin: -1px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .shorts-card .video-thumb .video-thumb-overlay {
       border-radius: 7px;
     }
 
