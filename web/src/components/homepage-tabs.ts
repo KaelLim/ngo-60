@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
+import { api } from '../services/api.js';
 
 type TabType = 'schedule' | 'topics' | 'impact';
 
@@ -7,6 +8,19 @@ type TabType = 'schedule' | 'topics' | 'impact';
 export class HomepageTabs extends LitElement {
   @property({ type: String })
   activeTab: TabType = 'topics';
+
+  @state()
+  private impactPublished = false;
+
+  async connectedCallback() {
+    super.connectedCallback();
+    try {
+      const config = await api.getImpactConfig();
+      this.impactPublished = config?.published === 1;
+    } catch {
+      this.impactPublished = false;
+    }
+  }
 
   static styles = css`
     :host {
@@ -130,7 +144,7 @@ export class HomepageTabs extends LitElement {
           class="tab ${this.activeTab === 'impact' ? 'active' : ''}"
           @click=${() => this.handleClick('impact')}
         >
-          看影響
+          ${this.impactPublished ? '看影響' : '與善同行'}
         </button>
       </div>
     `;
