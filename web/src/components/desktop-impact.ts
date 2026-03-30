@@ -543,10 +543,9 @@ export class DesktopImpact extends LitElement {
     }
 
     .shorts-sidebar {
-      flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 32px;
+      gap: 20px;
       min-width: 0;
       justify-content: center;
     }
@@ -561,21 +560,20 @@ export class DesktopImpact extends LitElement {
 
     .shorts-grid {
       display: flex;
-      flex-wrap: wrap;
       gap: 12px;
     }
 
     .shorts-card {
-      flex: 1 0 0;
-      min-width: 120px;
+      width: 160px;
+      flex-shrink: 0;
       background: white;
       border: 1px solid rgba(149,170,255,0.2);
-      border-radius: 14px;
-      padding: 11px;
+      border-radius: 12px;
+      padding: 8px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       cursor: pointer;
       transition: box-shadow 0.2s, transform 0.2s;
     }
@@ -597,16 +595,16 @@ export class DesktopImpact extends LitElement {
     }
 
     .shorts-card .video-play-btn {
-      width: 32px;
-      height: 26px;
+      width: 28px;
+      height: 22px;
     }
 
     .shorts-card-title {
       font-family: 'Noto Sans TC', sans-serif;
-      font-size: 16px;
+      font-size: 13px;
       font-weight: 700;
       color: #121212;
-      line-height: 1.25;
+      line-height: 1.3;
       margin: 0;
       width: 100%;
       display: -webkit-box;
@@ -1110,7 +1108,7 @@ export class DesktopImpact extends LitElement {
                 `; })}
               </div>
               ${this.config?.video_playlist_id ? html`
-              <div class="video-more-row" style="justify-content:stretch;">
+              <div class="video-more-row">
                 <button class="video-more-btn" @click=${() => window.open(`https://www.youtube.com/playlist?list=${this.config!.video_playlist_id}`, '_blank')}>觀看更多</button>
                 <button class="video-more-arrow" @click=${() => window.open(`https://www.youtube.com/playlist?list=${this.config!.video_playlist_id}`, '_blank')}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

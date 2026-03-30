@@ -124,12 +124,22 @@ export class DesktopLayout extends LitElement {
       this.homepage = homepage;
       this.galleryImages = images;
       this.topics = topics;
-      this.events = events;
       this.activeMonths = activeMonths;
       this.impactSections = impact;
       this.impactConfig = impactConfig;
       this.blessings = blessings;
       this.blessingTags = blessingTags;
+
+      // If current month has no events, auto-select nearest future active month
+      if (activeMonths.length > 0 && !activeMonths.includes(this.appStore.selectedMonth)) {
+        const current = this.appStore.selectedMonth;
+        const futureMonth = activeMonths.find(m => m > current);
+        const fallback = activeMonths[0];
+        this.appStore.setSelectedMonth(futureMonth ?? fallback);
+        this.events = await api.getEvents({ month: this.appStore.selectedMonth, year: this.appStore.selectedYear });
+      } else {
+        this.events = events;
+      }
     } catch (e) {
       console.error('Failed to load desktop data:', e);
     } finally {

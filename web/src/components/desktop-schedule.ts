@@ -310,7 +310,7 @@ export class DesktopSchedule extends LitElement {
               const isActive = month.num === this.selectedMonth;
               return html`
                 <button
-                  class="month-tab ${isActive ? 'active' : !hasEvents ? 'disabled' : ''}"
+                  class="month-tab ${!hasEvents ? 'disabled' : isActive ? 'active' : ''}"
                   @click=${() => hasEvents ? this.handleMonthClick(month.num) : undefined}
                 >
                   <span class="month-num">
