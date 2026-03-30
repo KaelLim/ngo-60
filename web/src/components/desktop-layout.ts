@@ -109,12 +109,15 @@ export class DesktopLayout extends LitElement {
 
   private async loadData() {
     try {
+      const requestedMonth = this.appStore.selectedMonth;
+      const requestedYear = this.appStore.selectedYear;
+
       const [homepage, images, topics, events, activeMonths, impact, impactConfig, blessings, blessingTags] = await Promise.all([
         api.getHomepage(),
         api.getGalleryRandom(25, 'homepage'),
         api.getTopics(),
-        api.getEvents({ month: this.appStore.selectedMonth, year: this.appStore.selectedYear }),
-        api.getActiveMonths(this.appStore.selectedYear),
+        api.getEvents({ month: requestedMonth, year: requestedYear }),
+        api.getActiveMonths(requestedYear),
         api.getImpactSections(),
         api.getImpactConfig(),
         api.getBlessings(true),
@@ -130,14 +133,15 @@ export class DesktopLayout extends LitElement {
       this.blessings = blessings;
       this.blessingTags = blessingTags;
 
-      // If current month has no events, auto-select nearest future active month
-      if (activeMonths.length > 0 && !activeMonths.includes(this.appStore.selectedMonth)) {
-        const current = this.appStore.selectedMonth;
-        const futureMonth = activeMonths.find(m => m > current);
+      // If requested month has no events, auto-select nearest future active month
+      if (activeMonths.length > 0 && !activeMonths.includes(requestedMonth)) {
+        const futureMonth = activeMonths.find(m => m > requestedMonth);
         const fallback = activeMonths[0];
-        this.appStore.setSelectedMonth(futureMonth ?? fallback);
-        this.events = await api.getEvents({ month: this.appStore.selectedMonth, year: this.appStore.selectedYear });
+        const newMonth = futureMonth ?? fallback;
+        this.appStore.setSelectedMonth(newMonth);
+        this.events = await api.getEvents({ month: newMonth, year: requestedYear });
       } else {
+        this.appStore.setSelectedMonth(requestedMonth);
         this.events = events;
       }
     } catch (e) {

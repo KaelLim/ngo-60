@@ -42,6 +42,12 @@ export class SheetContent extends LitElement {
   private videos: PlaylistVideo[] = [];
 
   @state()
+  private isAllShorts = false;
+
+  @state()
+  private activeMobileShortIndex = 0;
+
+  @state()
   private playingMobileVideoId: string | null = null;
 
   @state()
@@ -706,7 +712,7 @@ export class SheetContent extends LitElement {
       border-radius: 20px;
       overflow: hidden;
       cursor: pointer;
-      background: #000;
+      background: transparent;
     }
 
     .video-card-thumb img {
@@ -714,6 +720,7 @@ export class SheetContent extends LitElement {
       height: 100%;
       object-fit: cover;
       display: block;
+      transform: scale(1.02);
     }
 
     .video-card-thumb.is-short-thumb {
@@ -743,9 +750,8 @@ export class SheetContent extends LitElement {
 
     .video-card-thumb-overlay {
       position: absolute;
-      inset: 0;
+      inset: -1px;
       background: rgba(0, 0, 0, 0.4);
-      border-radius: 20px;
       z-index: 2;
     }
 
@@ -783,6 +789,192 @@ export class SheetContent extends LitElement {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+
+    /* ── Mobile Shorts Mode ── */
+    .mobile-shorts-featured {
+      width: 100%;
+      aspect-ratio: 9 / 16;
+      border-radius: 18px;
+      overflow: hidden;
+      position: relative;
+      cursor: pointer;
+      box-shadow: 0 19px 38px -9px rgba(0,0,0,0.25);
+    }
+
+    .mobile-shorts-featured img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transform: scale(1.02);
+    }
+
+    .mobile-shorts-featured iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+
+    .mobile-shorts-featured .shorts-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.1) 40%, transparent 60%);
+      z-index: 1;
+    }
+
+    .mobile-shorts-featured .shorts-play {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 51px;
+      height: 42px;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .mobile-shorts-featured .shorts-play svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .mobile-shorts-featured .shorts-title-overlay {
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+      right: 16px;
+      z-index: 2;
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: white;
+      line-height: 1.3;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+    }
+
+    .mobile-shorts-playlist-title {
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: #121212;
+      margin: 0;
+    }
+
+    .mobile-shorts-grid {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      margin: 0 -12px;
+      padding: 0 12px;
+    }
+
+    .mobile-shorts-grid::-webkit-scrollbar {
+      display: none;
+    }
+
+    .mobile-shorts-card {
+      width: 147px;
+      flex-shrink: 0;
+      background: white;
+      border: 1px solid rgba(149,170,255,0.2);
+      border-radius: 14px;
+      padding: 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      cursor: pointer;
+      box-sizing: border-box;
+    }
+
+    .mobile-shorts-card .shorts-thumb {
+      width: 100%;
+      aspect-ratio: 9 / 16;
+      border-radius: 7px;
+      overflow: hidden;
+      position: relative;
+      background: transparent;
+    }
+
+    .mobile-shorts-card .shorts-thumb img {
+      width: calc(100% + 2px);
+      height: calc(100% + 2px);
+      margin: -1px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .mobile-shorts-card .shorts-thumb .shorts-thumb-overlay {
+      position: absolute;
+      inset: -1px;
+      background: rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .mobile-shorts-card .shorts-thumb .shorts-thumb-play {
+      width: 32px;
+      height: 26px;
+    }
+
+    .mobile-shorts-card .shorts-thumb .shorts-thumb-play svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .mobile-shorts-card-title {
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: #121212;
+      line-height: 1.25;
+      margin: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .mobile-shorts-more-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .mobile-shorts-more-btn {
+      flex: 1;
+      background: #0e2669;
+      border: none;
+      border-radius: 24px;
+      padding: 13px;
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: 18px;
+      font-weight: 500;
+      color: white;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .mobile-shorts-more-arrow {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: #0e2669;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .mobile-shorts-more-arrow svg {
+      width: 20px;
+      height: 20px;
     }
 
     /* Bless Section */
@@ -1478,11 +1670,14 @@ export class SheetContent extends LitElement {
   private async loadData() {
     this.loading = true;
     try {
+      const requestedMonth = this.appStore.selectedMonth;
+      const requestedYear = this.appStore.selectedYear;
+
       // Load all data in parallel
       const [topics, events, activeMonths, impactSections, impactConfig, blessings, blessingTags] = await Promise.all([
         api.getTopics(),
-        api.getEvents({ month: this.appStore.selectedMonth, year: this.appStore.selectedYear }),
-        api.getActiveMonths(this.appStore.selectedYear),
+        api.getEvents({ month: requestedMonth, year: requestedYear }),
+        api.getActiveMonths(requestedYear),
         api.getImpactSections(),
         api.getImpactConfig(),
         api.getBlessings(true), // Get featured blessings
@@ -1493,14 +1688,15 @@ export class SheetContent extends LitElement {
       this.activeMonths = activeMonths;
       this.impactSections = impactSections;
 
-      // If current month has no events, auto-select nearest future active month
-      if (activeMonths.length > 0 && !activeMonths.includes(this.appStore.selectedMonth)) {
-        const current = this.appStore.selectedMonth;
-        const futureMonth = activeMonths.find(m => m > current);
+      // If requested month has no events, auto-select nearest future active month
+      if (activeMonths.length > 0 && !activeMonths.includes(requestedMonth)) {
+        const futureMonth = activeMonths.find(m => m > requestedMonth);
         const fallback = activeMonths[0];
-        this.appStore.setSelectedMonth(futureMonth ?? fallback);
-        this.events = await api.getEvents({ month: this.appStore.selectedMonth, year: this.appStore.selectedYear });
+        const newMonth = futureMonth ?? fallback;
+        this.appStore.setSelectedMonth(newMonth);
+        this.events = await api.getEvents({ month: newMonth, year: requestedYear });
       } else {
+        this.appStore.setSelectedMonth(requestedMonth);
         this.events = events;
       }
       this.impactConfig = impactConfig;
@@ -1511,6 +1707,7 @@ export class SheetContent extends LitElement {
       if (impactConfig?.video_published === 1 && impactConfig?.video_playlist_id) {
         api.getPlaylistVideos(impactConfig.video_playlist_id).then(videos => {
           this.videos = videos;
+          this.isAllShorts = videos.length > 0 && videos.every(v => v.isShort);
         }).catch(e => console.error('Failed to load playlist videos:', e));
       }
     } catch (error) {
@@ -1803,6 +2000,78 @@ export class SheetContent extends LitElement {
         ${this.impactConfig?.video_published === 1 && this.videos.length > 0 ? html`
         <div class="video-section">
           <h3 class="video-section-title">${this.impactConfig?.video_section_title || '來自全球的祝福'}</h3>
+
+          ${this.isAllShorts ? html`
+          <!-- ═══ MOBILE SHORTS MODE ═══ -->
+          <!-- Featured Short -->
+          <div class="mobile-shorts-featured">
+            ${this.playingMobileVideoId === this.videos[this.activeMobileShortIndex].videoId ? html`
+              <iframe
+                src="https://www.youtube.com/embed/${this.videos[this.activeMobileShortIndex].videoId}?autoplay=1"
+                allow="autoplay; encrypted-media"
+                allowfullscreen
+              ></iframe>
+            ` : html`
+              <img
+                src="https://i.ytimg.com/vi/${this.videos[this.activeMobileShortIndex].videoId}/maxresdefault.jpg"
+                alt="${this.videos[this.activeMobileShortIndex].title}"
+                @error=${(e: Event) => { const img = e.target as HTMLImageElement; if (img.src.includes('maxresdefault')) img.src = `https://i.ytimg.com/vi/${this.videos[this.activeMobileShortIndex].videoId}/hqdefault.jpg`; }}
+                @click=${() => { this.playingMobileVideoId = this.videos[this.activeMobileShortIndex].videoId; }}
+              />
+              <div class="shorts-overlay"></div>
+              <div class="shorts-play" @click=${() => { this.playingMobileVideoId = this.videos[this.activeMobileShortIndex].videoId; }}>
+                <svg viewBox="0 0 68 48" fill="none">
+                  <path d="M66.52 7.74c-.78-2.93-2.49-5.41-5.42-6.19C55.79.13 34 0 34 0S12.21.13 6.9 1.55c-2.93.78-4.63 3.26-5.42 6.19C.06 13.05 0 24 0 24s.06 10.95 1.48 16.26c.78 2.93 2.49 5.41 5.42 6.19C12.21 47.87 34 48 34 48s21.79-.13 27.1-1.55c2.93-.78 4.64-3.26 5.42-6.19C67.94 34.95 68 24 68 24s-.06-10.95-1.48-16.26z" fill="red"/>
+                  <path d="M45 24L27 14v20" fill="white"/>
+                </svg>
+              </div>
+              <div class="shorts-title-overlay">${this.videos[this.activeMobileShortIndex].title}</div>
+            `}
+          </div>
+
+          <!-- Playlist Grid -->
+          ${this.videos.length > 1 ? html`
+          <h4 class="mobile-shorts-playlist-title">影音列表</h4>
+          <div class="mobile-shorts-grid">
+            ${this.videos.filter((_, i) => i !== this.activeMobileShortIndex).slice(0, 4).map((v) => {
+              const origIndex = this.videos.indexOf(v);
+              return html`
+              <div class="mobile-shorts-card" @click=${() => { this.activeMobileShortIndex = origIndex; this.playingMobileVideoId = null; }}>
+                <div class="shorts-thumb">
+                  <img
+                    src="https://i.ytimg.com/vi/${v.videoId}/maxresdefault.jpg"
+                    alt="${v.title}"
+                    @error=${(e: Event) => { const img = e.target as HTMLImageElement; if (img.src.includes('maxresdefault')) img.src = `https://i.ytimg.com/vi/${v.videoId}/hqdefault.jpg`; }}
+                  />
+                  <div class="shorts-thumb-overlay">
+                    <div class="shorts-thumb-play">
+                      <svg viewBox="0 0 51 42" fill="none">
+                        <rect width="51" height="42" rx="10" fill="rgba(0,0,0,0.5)"/>
+                        <path d="M20 12L36 21L20 30V12Z" fill="white"/>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+                <p class="mobile-shorts-card-title">${v.title}</p>
+              </div>
+            `; })}
+          </div>
+          ` : ''}
+
+          <!-- 觀看更多 -->
+          ${this.impactConfig?.video_playlist_id ? html`
+          <div class="mobile-shorts-more-row">
+            <button class="mobile-shorts-more-btn" @click=${() => window.open(`https://www.youtube.com/playlist?list=${this.impactConfig!.video_playlist_id}`, '_blank')}>觀看更多</button>
+            <button class="mobile-shorts-more-arrow" @click=${() => window.open(`https://www.youtube.com/playlist?list=${this.impactConfig!.video_playlist_id}`, '_blank')}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M7 17L17 7M17 7H7M17 7V17"/>
+              </svg>
+            </button>
+          </div>
+          ` : ''}
+
+          ` : html`
+          <!-- ═══ NORMAL VIDEO MODE ═══ -->
           <div class="video-scroll-wrapper">
             <div class="video-scroll-row">
               ${this.videos.map(v => html`
@@ -1839,6 +2108,7 @@ export class SheetContent extends LitElement {
               `)}
             </div>
           </div>
+          `}
         </div>
         ` : ''}
 
