@@ -864,17 +864,25 @@ export class SheetContent extends LitElement {
 
     .mobile-shorts-grid {
       display: flex;
+      flex-wrap: wrap;
       gap: 8px;
+      justify-content: center;
+    }
+
+    .mobile-shorts-grid.scrollable {
+      flex-wrap: nowrap;
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
       scrollbar-width: none;
+      justify-content: flex-start;
       margin: 0 -12px;
       padding: 0 12px;
     }
 
-    .mobile-shorts-grid::-webkit-scrollbar {
+    .mobile-shorts-grid.scrollable::-webkit-scrollbar {
       display: none;
     }
+
 
     .mobile-shorts-card {
       width: 147px;
@@ -2032,7 +2040,7 @@ export class SheetContent extends LitElement {
           <!-- Playlist Grid -->
           ${this.videos.length > 1 ? html`
           <h4 class="mobile-shorts-playlist-title">影音列表</h4>
-          <div class="mobile-shorts-grid">
+          <div class="mobile-shorts-grid ${this.videos.filter((_, i) => i !== this.activeMobileShortIndex).slice(0, 4).length > 2 ? 'scrollable' : ''}">
             ${this.videos.filter((_, i) => i !== this.activeMobileShortIndex).slice(0, 4).map((v) => {
               const origIndex = this.videos.indexOf(v);
               return html`

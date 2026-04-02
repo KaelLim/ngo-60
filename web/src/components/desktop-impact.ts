@@ -368,6 +368,7 @@ export class DesktopImpact extends LitElement {
       z-index: 2;
     }
 
+
     .video-play-btn {
       position: absolute;
       top: 50%;
@@ -404,6 +405,20 @@ export class DesktopImpact extends LitElement {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+
+    .shorts-featured .video-thumb .video-featured-title {
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+      right: 16px;
+      z-index: 3;
+      color: white;
+      white-space: normal;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.5);
     }
 
     /* Side list */
@@ -517,11 +532,13 @@ export class DesktopImpact extends LitElement {
       display: flex;
       align-items: center;
       gap: 32px;
+      width: fit-content;
+      margin: 0 auto;
     }
 
     .shorts-featured {
       flex-shrink: 0;
-      width: 340px;
+      width: 300px;
       display: flex;
       flex-direction: column;
       gap: 8px;
@@ -1046,10 +1063,10 @@ export class DesktopImpact extends LitElement {
                       <path d="M45 24L27 14v20" fill="white"/>
                     </svg>
                   </div>
+                  <p class="video-featured-title">${this.videos[0].title}</p>
                 </div>
               `}
             </div>
-            <p class="video-featured-title">${this.videos[0].title}</p>
             ${this.config?.video_playlist_id ? html`
             <div class="video-more-row">
               <button class="video-more-btn" @click=${() => window.open(`https://www.youtube.com/playlist?list=${this.config!.video_playlist_id}`, '_blank')}>觀看更多</button>
@@ -1087,9 +1104,9 @@ export class DesktopImpact extends LitElement {
                       <path d="M45 24L27 14v20" fill="white"/>
                     </svg>
                   </div>
+                  <p class="video-featured-title">${this.videos[this.activeVideoIndex].title}</p>
                 </div>
               `}
-              <p class="video-featured-title">${this.videos[this.activeVideoIndex].title}</p>
             </div>
 
             <div class="shorts-sidebar">
