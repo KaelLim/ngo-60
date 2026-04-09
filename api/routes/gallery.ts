@@ -97,10 +97,10 @@ galleryRoutes.post("/", async (c) => {
     // 儲存檔案
     await Deno.writeFile(uploadPath, processedBuffer);
 
-    // 寫入資料庫
+    // 寫入資料庫（使用 MAX(id)+1 避免 sequence 不同步問題）
     const rows = await query<GalleryImage>(
-      `INSERT INTO gallery (filename, original_name, mime_type, category)
-       VALUES ($1, $2, $3, $4)
+      `INSERT INTO gallery (id, filename, original_name, mime_type, category)
+       VALUES ((SELECT COALESCE(MAX(id), 0) + 1 FROM gallery), $1, $2, $3, $4)
        RETURNING *`,
       [filename, file.name, "image/webp", category]
     );
