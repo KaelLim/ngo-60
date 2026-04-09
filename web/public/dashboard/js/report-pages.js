@@ -4,10 +4,16 @@ import { showToast } from './toast.js';
 let chaptersData = [];
 let pagesData = [];
 let activeChapterId = null;
+let editorChapterId = null;
+let editorPageId = null;
 
 // ── Load ──
 
 export async function loadReportPages() {
+  // Close editor if open
+  if (editorChapterId) {
+    closeReportEditor();
+  }
   try {
     chaptersData = await api.getReportChapters();
     renderChapterTabs();
@@ -105,15 +111,15 @@ function renderPagesTable() {
             <input type="file" accept=".md,.markdown,.txt" style="display:none"
               onchange="handleReportUpload('${pg.chapter_id}', '${pg.page_id}', this)">
           </label>
+          <button class="btn btn-sm btn-primary" onclick="editReportPage('${pg.chapter_id}', '${pg.page_id}')">
+            <span class="material-symbols-outlined" style="font-size:15px;vertical-align:middle">edit</span>
+            編輯
+          </button>
           ${hasContent ? `
-            <button class="btn btn-sm btn-secondary" onclick="previewReportPage('${pg.chapter_id}', '${pg.page_id}')">
-              <span class="material-symbols-outlined" style="font-size:15px;vertical-align:middle">visibility</span>
-              預覽
+            <button class="btn btn-sm btn-secondary" onclick="downloadReportPageMd('${pg.chapter_id}', '${pg.page_id}', '${escapeHtml(pg.title)}')">
+              <span class="material-symbols-outlined" style="font-size:15px;vertical-align:middle">download</span>
             </button>
           ` : ''}
-          <button class="btn btn-sm btn-secondary" onclick="editReportPage('${pg.chapter_id}', '${pg.page_id}')">
-            <span class="material-symbols-outlined" style="font-size:15px;vertical-align:middle">edit</span>
-          </button>
           <button class="btn btn-sm btn-danger" onclick="deleteReportPage('${pg.chapter_id}', '${pg.page_id}')">
             <span class="material-symbols-outlined" style="font-size:15px;vertical-align:middle">delete</span>
           </button>
@@ -177,9 +183,46 @@ window.closeReportPageModal = function() {
   document.getElementById('report-page-modal').classList.remove('active');
 };
 
-window.editReportPage = function(chapterId, pageId) {
+window.editReportPage = async function(chapterId, pageId) {
   const page = pagesData.find(p => p.chapter_id === chapterId && p.page_id === pageId);
-  if (page) openReportPageModal(page);
+  if (!page) return;
+
+  editorChapterId = chapterId;
+  editorPageId = pageId;
+
+  // Fetch full content
+  let content = page.content || '';
+  try {
+    const data = await api.getReportPage(chapterId, pageId);
+    content = data.content || '';
+  } catch { /* use existing */ }
+
+  // Show editor, hide pages table + tabs
+  document.getElementById('report-pages-card').style.display = 'none';
+  document.getElementById('report-tabs').style.display = 'none';
+  document.getElementById('report-editor-card').style.display = 'block';
+
+  // Show breadcrumb: chapter > page
+  const chapter = chaptersData.find(c => c.chapter_id === chapterId);
+  document.getElementById('report-editor-title').textContent =
+    (chapter ? chapter.title + ' / ' : '') + page.title;
+
+  const textarea = document.getElementById('report-editor-textarea');
+  textarea.value = content;
+  updateReportPreview();
+  textarea.focus();
+
+  // Upload handler
+  const uploadInput = document.getElementById('report-editor-upload');
+  uploadInput.onchange = async function() {
+    const file = this.files[0];
+    if (!file) return;
+    const text = await file.text();
+    textarea.value = text;
+    updateReportPreview();
+    showToast('已載入檔案內容', 'success');
+    this.value = '';
+  };
 };
 
 window.deleteReportPage = async function(chapterId, pageId) {
@@ -223,6 +266,176 @@ window.previewReportPage = async function(chapterId, pageId) {
 
 window.closeReportPreview = function() {
   document.getElementById('report-preview-modal').classList.remove('active');
+};
+
+window.downloadReportPageMd = async function(chapterId, pageId, title) {
+  try {
+    const data = await api.getReportPage(chapterId, pageId);
+    const blob = new Blob([data.content || ''], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${pageId}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    showToast('下載失敗：' + err.message, 'error');
+  }
+};
+
+// ── Editor Functions ──
+
+window.closeReportEditor = function() {
+  document.getElementById('report-editor-card').style.display = 'none';
+  document.getElementById('report-pages-card').style.display = 'block';
+  document.getElementById('report-tabs').style.display = '';
+  editorChapterId = null;
+  editorPageId = null;
+};
+
+window.saveReportEditor = async function() {
+  if (!editorChapterId || !editorPageId) return;
+  const content = document.getElementById('report-editor-textarea').value;
+  try {
+    await api.updateReportPageContent(editorChapterId, editorPageId, content);
+    showToast('儲存成功！', 'success');
+    await loadChapterPages(activeChapterId);
+  } catch (err) {
+    showToast('儲存失敗：' + err.message, 'error');
+  }
+};
+
+window.downloadReportMd = function() {
+  const content = document.getElementById('report-editor-textarea').value;
+  const title = document.getElementById('report-editor-title').textContent || 'report';
+  const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${editorPageId || title}.md`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+window.updateReportPreview = function() {
+  const content = document.getElementById('report-editor-textarea').value;
+  const preview = document.getElementById('report-editor-preview');
+  if (typeof marked !== 'undefined') {
+    preview.innerHTML = marked.parse(content || '');
+  } else {
+    preview.textContent = content;
+  }
+};
+
+window.insertMd = function(type) {
+  const textarea = document.getElementById('report-editor-textarea');
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const selected = textarea.value.substring(start, end);
+  let insert = '';
+  let cursorOffset = 0;
+
+  switch (type) {
+    case 'bold':
+      insert = `**${selected || '粗體文字'}**`;
+      cursorOffset = selected ? insert.length : 2;
+      break;
+    case 'italic':
+      insert = `*${selected || '斜體文字'}*`;
+      cursorOffset = selected ? insert.length : 1;
+      break;
+    case 'h1':
+      insert = `# ${selected || '標題'}`;
+      cursorOffset = insert.length;
+      break;
+    case 'h2':
+      insert = `## ${selected || '標題'}`;
+      cursorOffset = insert.length;
+      break;
+    case 'h3':
+      insert = `### ${selected || '標題'}`;
+      cursorOffset = insert.length;
+      break;
+    case 'ul':
+      insert = `- ${selected || '項目'}`;
+      cursorOffset = insert.length;
+      break;
+    case 'ol':
+      insert = `1. ${selected || '項目'}`;
+      cursorOffset = insert.length;
+      break;
+    case 'link':
+      insert = `[${selected || '連結文字'}](https://)`;
+      cursorOffset = insert.length - 1;
+      break;
+    case 'image':
+      insert = `![${selected || '圖片描述'}](https://)`;
+      cursorOffset = insert.length - 1;
+      break;
+    case 'quote':
+      insert = `> ${selected || '引用文字'}`;
+      cursorOffset = insert.length;
+      break;
+    case 'code':
+      insert = selected.includes('\n')
+        ? `\`\`\`\n${selected || '程式碼'}\n\`\`\``
+        : `\`${selected || '程式碼'}\``;
+      cursorOffset = insert.length;
+      break;
+    case 'hr':
+      insert = '\n---\n';
+      cursorOffset = insert.length;
+      break;
+  }
+
+  textarea.value = textarea.value.substring(0, start) + insert + textarea.value.substring(end);
+  textarea.selectionStart = textarea.selectionEnd = start + cursorOffset;
+  textarea.focus();
+  updateReportPreview();
+};
+
+window.uploadEditorImage = async function(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const textarea = document.getElementById('report-editor-textarea');
+  const start = textarea.selectionStart;
+
+  // Show uploading placeholder
+  const placeholder = `![上傳中...](uploading)`;
+  textarea.value = textarea.value.substring(0, start) + placeholder + textarea.value.substring(start);
+  updateReportPreview();
+
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('category', 'report');
+
+    const token = localStorage.getItem('token');
+    const res = await fetch('/api/gallery', {
+      method: 'POST',
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      body: formData
+    });
+
+    if (!res.ok) throw new Error('上傳失敗');
+    const data = await res.json();
+
+    const imageUrl = `/uploads/gallery/${data.filename}`;
+    const imageMd = `![${file.name}](${imageUrl})`;
+
+    // Replace placeholder with actual image
+    textarea.value = textarea.value.replace(placeholder, imageMd);
+    updateReportPreview();
+    showToast('圖片上傳成功！', 'success');
+  } catch (err) {
+    // Remove placeholder on error
+    textarea.value = textarea.value.replace(placeholder, '');
+    updateReportPreview();
+    showToast('圖片上傳失敗：' + err.message, 'error');
+  }
+
+  input.value = '';
 };
 
 // ── Form Handlers ──

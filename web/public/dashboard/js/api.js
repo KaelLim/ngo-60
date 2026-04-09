@@ -407,6 +407,15 @@ export const api = {
     return res.json();
   },
 
+  async updateReportPageContent(chapterId, pageId, content) {
+    const res = await authFetch(`${API_BASE}/report-pages/${chapterId}/${pageId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content })
+    });
+    return res.json();
+  },
+
   async deleteReportPage(chapterId, pageId) {
     const res = await authFetch(`${API_BASE}/report-pages/${chapterId}/${pageId}`, {
       method: 'DELETE'
