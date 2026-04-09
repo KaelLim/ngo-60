@@ -341,6 +341,12 @@ export class ReportApp extends LitElement {
       flex: 1; overflow-y: auto;
       padding: 32px 32px 32px 36px; min-width: 0;
     }
+    .content img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      margin: 12px 0;
+    }
 
     /* ── Desktop: Right TOC ── */
     .right-toc {
@@ -624,11 +630,11 @@ export class ReportApp extends LitElement {
           <!-- Desktop: Sidebar -->
           <div class="sidebar-card ${this.sidebarOpen ? 'open' : ''}">
             <div class="sidebar-heading">${chapter?.title || ''}</div>
-            ${this.chapterPages.map(pg => html`
+            ${this.chapterPages.map((pg, i) => html`
               <button
                 class="sidebar-link ${pg.page_id === this.activePageId ? 'active' : ''}"
                 @click=${() => this.selectPage(pg.page_id)}
-              >${pg.title}</button>
+              >${['一', '二', '三', '四', '五', '六', '七', '八', '九', '十'][i] || i + 1}、${pg.title}</button>
             `)}
           </div>
 
