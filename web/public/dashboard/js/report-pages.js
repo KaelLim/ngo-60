@@ -62,11 +62,11 @@ async function loadChapterEditor(chapterId) {
   document.getElementById('report-empty-state').style.display = 'none';
   document.getElementById('report-chapter-actions').style.display = 'flex';
 
-  // Fetch the "main" page content for this chapter
+  // Fetch the "main" page - load content_raw for editing (fallback to content)
   let content = '';
   try {
     const data = await api.getReportPage(chapterId, 'main');
-    content = data.content || '';
+    content = data.content_raw || data.content || '';
   } catch {
     // Page might not exist yet - that's fine, start with empty
   }
@@ -316,6 +316,57 @@ function getReportEditor() {
   return tinymce.get('report-tinymce-editor');
 }
 
+// ── Convert Tables to Images (for frontend display) ──
+
+async function convertTablesToImages(htmlContent) {
+  const container = document.createElement('div');
+  container.style.cssText = 'position:fixed;left:-9999px;top:0;background:#fff;padding:0;z-index:-1;width:800px';
+  container.innerHTML = `<style>
+    * { font-family: 'Noto Sans TC', sans-serif; }
+    table { border-collapse: collapse; width: 100%; margin: 0; font-size: 14px; }
+    td, th { border: 1px solid #EEEAE4; padding: 10px 14px; text-align: left; line-height: 1.6; color: #3D3832; }
+    th, thead td { background: #2B3D6B; font-weight: 600; color: white; font-size: 13px; }
+    th p, th span, thead td p, thead td span { color: white; margin: 0; }
+    tr:nth-child(even) td { background: #F7F5F0; }
+    p { margin: 4px 0; }
+    strong { font-weight: 700; }
+  </style>` + htmlContent;
+  document.body.appendChild(container);
+
+  const tables = container.querySelectorAll('table');
+  const replacements = [];
+
+  for (const table of tables) {
+    try {
+      const canvas = await html2canvas(table, {
+        backgroundColor: '#ffffff',
+        scale: 2,
+        logging: false,
+        width: table.offsetWidth,
+      });
+      const dataUrl = canvas.toDataURL('image/png');
+
+      // Upload to gallery
+      const blob = await (await fetch(dataUrl)).blob();
+      const file = new File([blob], 'table-' + Date.now() + '-' + replacements.length + '.png', { type: 'image/png' });
+      const data = await api.uploadGalleryImage(file, 'report');
+      const imgUrl = '/uploads/gallery/' + data.filename;
+      const imgTag = '<p style="text-align:center"><img src="' + imgUrl + '" alt="資料表格" style="max-width:100%;display:block;margin:16px auto;border-radius:8px" /></p>';
+      replacements.push({ original: table.outerHTML, replacement: imgTag });
+    } catch (err) {
+      console.warn('Table to image failed:', err);
+    }
+  }
+
+  document.body.removeChild(container);
+
+  let result = htmlContent;
+  for (const { original, replacement } of replacements) {
+    result = result.replace(original, replacement);
+  }
+  return result;
+}
+
 // ── Save ──
 
 window.saveReportEditor = async function() {
@@ -323,16 +374,43 @@ window.saveReportEditor = async function() {
   const editor = getReportEditor();
   if (!editor) return;
 
-  const content = editor.getContent();
+  const contentRaw = editor.getContent(); // Tables as HTML (for editor)
 
   try {
+    // Ensure "main" page exists
     try {
       await api.getReportPage(activeChapterId, 'main');
     } catch {
       const chapter = chaptersData.find(c => c.chapter_id === activeChapterId);
       await api.createReportPage(activeChapterId, { page_id: 'main', title: chapter?.title || activeChapterId });
     }
-    await api.updateReportPageContent(activeChapterId, 'main', content);
+
+    // Convert tables to images for frontend display
+    let contentForFrontend = contentRaw;
+    const tableCount = (contentRaw.match(/<table/g) || []).length;
+    if (tableCount > 0) {
+      showToast(`轉換 ${tableCount} 個表格為圖片中...`, 'success');
+      try {
+        contentForFrontend = await convertTablesToImages(contentRaw);
+      } catch (err) {
+        console.warn('Table conversion failed, using raw:', err);
+      }
+    }
+
+    // Save both versions
+    const token = localStorage.getItem('token');
+    const res = await fetch('/api/report-pages/' + activeChapterId + '/main', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': 'Bearer ' + token } : {})
+      },
+      body: JSON.stringify({
+        content: contentForFrontend,   // tables as images (for /report/)
+        content_raw: contentRaw        // tables as HTML (for editor)
+      })
+    });
+    if (!res.ok) throw new Error('儲存失敗');
     showToast('儲存成功！', 'success');
   } catch (err) {
     showToast('儲存失敗：' + err.message, 'error');
@@ -502,7 +580,9 @@ window.exportReportDocx = function() {
     </style></head><body>${editor.getContent()}</body></html>`;
 
   try {
-    const blob = htmlDocx.asBlob(fullHtml, {
+    const docxLib = window.htmlDocx || window.HTMLDocx;
+    if (!docxLib) { showToast('匯出元件未載入，請重新整理頁面', 'error'); return; }
+    const blob = docxLib.asBlob(fullHtml, {
       orientation: 'portrait',
       margins: { top: 1440, right: 1440, bottom: 1440, left: 1440 }
     });

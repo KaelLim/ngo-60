@@ -15,6 +15,7 @@ interface ReportPage {
   page_id: string;
   title: string;
   content: string;
+  content_raw: string;
   sort_order: number;
   updated_at: string;
 }
@@ -168,6 +169,7 @@ reportPagesRoutes.put("/:chapterId/:pageId", async (c) => {
   try {
     const { chapterId, pageId } = c.req.param();
     let content: string | undefined;
+    let contentRaw: string | undefined;
     let title: string | undefined;
 
     const contentType = c.req.header("content-type") || "";
@@ -180,6 +182,7 @@ reportPagesRoutes.put("/:chapterId/:pageId", async (c) => {
     } else {
       const body = await c.req.json();
       content = body.content;
+      contentRaw = body.content_raw;
       title = body.title;
     }
 
@@ -194,6 +197,7 @@ reportPagesRoutes.put("/:chapterId/:pageId", async (c) => {
       const vals: unknown[] = [];
       let idx = 1;
       if (content !== undefined) { sets.push(`content = $${idx}`); vals.push(content); idx++; }
+      if (contentRaw !== undefined) { sets.push(`content_raw = $${idx}`); vals.push(contentRaw); idx++; }
       if (title !== undefined) { sets.push(`title = $${idx}`); vals.push(title); idx++; }
       vals.push(chapterId, pageId);
       rows = await query<ReportPage>(
@@ -203,11 +207,11 @@ reportPagesRoutes.put("/:chapterId/:pageId", async (c) => {
       );
     } else {
       rows = await query<ReportPage>(
-        `INSERT INTO report_pages (chapter_id, page_id, title, content, sort_order)
-         VALUES ($1, $2, $3, $4,
+        `INSERT INTO report_pages (chapter_id, page_id, title, content, content_raw, sort_order)
+         VALUES ($1, $2, $3, $4, $5,
            (SELECT COALESCE(MAX(sort_order), 0) + 1 FROM report_pages WHERE chapter_id = $1))
          RETURNING *`,
-        [chapterId, pageId, title || pageId, content || ""]
+        [chapterId, pageId, title || pageId, content || "", contentRaw || ""]
       );
     }
 

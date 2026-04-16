@@ -826,6 +826,7 @@ CREATE TABLE public.report_pages (
     page_id VARCHAR(50) NOT NULL,
     title VARCHAR(255) NOT NULL,
     content TEXT NOT NULL DEFAULT '',
+    content_raw TEXT NOT NULL DEFAULT '',
     sort_order INTEGER DEFAULT 0,
     updated_at TIMESTAMP DEFAULT NOW(),
     UNIQUE(chapter_id, page_id)
