@@ -484,6 +484,62 @@ function postProcessMammothHtml(html) {
   return doc.body.innerHTML;
 }
 
+/**
+ * Extract base64 images from HTML, upload to /api/gallery, replace with server URLs.
+ * Mammoth embeds docx images as data:image/... base64 strings.
+ */
+async function uploadEmbeddedImages(html) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  const images = doc.querySelectorAll('img[src^="data:image"]');
+
+  if (images.length === 0) return html;
+
+  showToast(`上傳 ${images.length} 張圖片中...`, 'success');
+  let uploaded = 0;
+
+  for (const img of images) {
+    try {
+      const src = img.getAttribute('src');
+      // Convert base64 to blob
+      const res = await fetch(src);
+      const blob = await res.blob();
+      const ext = blob.type.split('/')[1] || 'png';
+      const file = new File([blob], `docx-img-${Date.now()}-${uploaded}.${ext}`, { type: blob.type });
+
+      // Upload to gallery
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('category', 'report');
+
+      const token = localStorage.getItem('token');
+      const uploadRes = await fetch('/api/gallery', {
+        method: 'POST',
+        headers: token ? { 'Authorization': 'Bearer ' + token } : {},
+        body: formData
+      });
+
+      if (uploadRes.ok) {
+        const data = await uploadRes.json();
+        img.setAttribute('src', '/uploads/gallery/' + data.filename);
+        img.style.display = 'block';
+        img.style.margin = '16px auto';
+        img.style.maxWidth = '100%';
+        uploaded++;
+      }
+    } catch (err) {
+      console.warn('Image upload failed:', err);
+      // Keep base64 if upload fails
+    }
+  }
+
+  if (uploaded > 0) {
+    showToast(`已上傳 ${uploaded} 張圖片`, 'success');
+  }
+
+  return doc.body.innerHTML;
+}
+
 window.importReportDocx = async function(input) {
   const file = input.files[0];
   if (!file) return;
@@ -492,7 +548,6 @@ window.importReportDocx = async function(input) {
 
   try {
     const arrayBuffer = await file.arrayBuffer();
-    // Use mammoth with style mapping for headings
     const result = await mammoth.convertToHtml({ arrayBuffer }, {
       styleMap: [
         "p[style-name='Heading 1'] => h1:fresh",
@@ -503,7 +558,9 @@ window.importReportDocx = async function(input) {
         "p[style-name='Subtitle'] => h2:fresh",
       ]
     });
-    const processed = postProcessMammothHtml(result.value);
+    let processed = postProcessMammothHtml(result.value);
+    // Upload embedded base64 images to server
+    processed = await uploadEmbeddedImages(processed);
     editor.setContent(processed);
     showToast('已匯入 .docx 內容，請檢查標題格式（H1/H2）', 'success');
   } catch (err) {
@@ -676,7 +733,8 @@ function initChapterForm() {
                 "p[style-name='Subtitle'] => h2:fresh",
               ]
             });
-            const processed = postProcessMammothHtml(result.value);
+            let processed = postProcessMammothHtml(result.value);
+            processed = await uploadEmbeddedImages(processed);
             await api.updateReportPageContent(slug, 'main', processed);
             showToast('章節已新增並匯入 .docx', 'success');
           } catch (docxErr) {
