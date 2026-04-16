@@ -351,7 +351,7 @@ async function convertTablesToImages(htmlContent) {
       const file = new File([blob], 'table-' + Date.now() + '-' + replacements.length + '.png', { type: 'image/png' });
       const data = await api.uploadGalleryImage(file, 'report');
       const imgUrl = '/uploads/gallery/' + data.filename;
-      const imgTag = '<img src="' + imgUrl + '" alt="資料表格" style="width:100%;display:block" />';
+      const imgTag = '<img src="' + imgUrl + '" alt="資料表格" style="max-width:100%;display:block;margin:0 auto" />';
       replacements.push({ original: table.outerHTML, replacement: imgTag });
     } catch (err) {
       console.warn('Table to image failed:', err);

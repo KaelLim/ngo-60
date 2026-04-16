@@ -82,14 +82,20 @@ galleryRoutes.post("/", async (c) => {
     const inputBuffer = Buffer.from(arrayBuffer);
 
     // 使用 Sharp 處理圖片並轉為 WebP
+    // Report category uses higher quality for table screenshots
+    const isReport = category === 'report';
+    const maxW = isReport ? 3840 : IMAGE_CONFIG.maxWidth;
+    const maxH = isReport ? 2160 : IMAGE_CONFIG.maxHeight;
+    const quality = isReport ? 95 : IMAGE_CONFIG.quality;
+
     const filename = `${crypto.randomUUID()}.webp`;
 
     const processedBuffer = await sharp(inputBuffer)
-      .resize(IMAGE_CONFIG.maxWidth, IMAGE_CONFIG.maxHeight, {
+      .resize(maxW, maxH, {
         fit: 'inside',
         withoutEnlargement: true
       })
-      .webp({ quality: IMAGE_CONFIG.quality })
+      .webp({ quality })
       .toBuffer();
 
     const uploadPath = `./uploads/gallery/${filename}`;

@@ -443,10 +443,10 @@ export class ReportApp extends LitElement {
       padding: 32px 32px 32px 36px; min-width: 0;
     }
     .content img {
-      width: 100%;
+      max-width: 100%;
       height: auto;
       border-radius: 0;
-      margin: 0;
+      margin: 0 auto;
       display: block;
     }
 
