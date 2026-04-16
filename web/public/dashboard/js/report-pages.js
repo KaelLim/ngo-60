@@ -349,7 +349,7 @@ async function convertTablesToImages(htmlContent) {
       // Upload to gallery
       const blob = await (await fetch(dataUrl)).blob();
       const file = new File([blob], 'table-' + Date.now() + '-' + replacements.length + '.png', { type: 'image/png' });
-      const data = await api.uploadGalleryImage(file, 'report');
+      const data = await api.uploadGalleryImage(file, 'report-table');
       const imgUrl = '/uploads/gallery/' + data.filename;
       const imgTag = '<img src="' + imgUrl + '" alt="資料表格" style="max-width:100%;display:block;margin:0 auto" />';
       replacements.push({ original: table.outerHTML, replacement: imgTag });
@@ -384,6 +384,33 @@ window.saveReportEditor = async function() {
       const chapter = chaptersData.find(c => c.chapter_id === activeChapterId);
       await api.createReportPage(activeChapterId, { page_id: 'main', title: chapter?.title || activeChapterId });
     }
+
+    // Delete old table images from gallery before regenerating
+    try {
+      const existingData = await api.getReportPage(activeChapterId, 'main');
+      const oldContent = existingData.content || '';
+      const oldTableImgs = oldContent.match(/uploads\/gallery\/([a-zA-Z0-9._-]+)/g) || [];
+      const rawImgs = (contentRaw.match(/uploads\/gallery\/([a-zA-Z0-9._-]+)/g) || []);
+      // Only delete images that are table-generated (exist in content but not in content_raw)
+      const rawImgSet = new Set(rawImgs);
+      for (const imgPath of oldTableImgs) {
+        if (!rawImgSet.has(imgPath)) {
+          // This image was auto-generated (table→img), safe to delete
+          const filename = imgPath.replace('uploads/gallery/', '');
+          try {
+            const gallery = await api.getGallery('report-table');
+            const img = gallery.find(g => g.filename === filename);
+            if (img) {
+              const token = localStorage.getItem('token');
+              await fetch('/api/gallery/' + img.id, {
+                method: 'DELETE',
+                headers: token ? { 'Authorization': 'Bearer ' + token } : {}
+              });
+            }
+          } catch { /* ignore delete errors */ }
+        }
+      }
+    } catch { /* ignore */ }
 
     // Convert tables to images for frontend display
     let contentForFrontend = contentRaw;
@@ -514,7 +541,7 @@ async function uploadEmbeddedImages(html) {
       const file = new File([blob], `docx-img-${Date.now()}-${uploaded}.${ext}`, { type: blob.type });
 
       // Use same api.uploadGalleryImage as 圖庫管理
-      const data = await api.uploadGalleryImage(file, 'report');
+      const data = await api.uploadGalleryImage(file, 'general');
       img.setAttribute('src', '/uploads/gallery/' + data.filename);
       img.style.display = 'block';
       img.style.margin = '16px auto';
@@ -674,7 +701,7 @@ function initReportPickerUpload() {
       statusEl.textContent = '上傳中...';
       uploadBtn.disabled = true;
       try {
-        const result = await api.uploadGalleryImage(file, 'report');
+        const result = await api.uploadGalleryImage(file, 'general');
         statusEl.textContent = '上傳成功';
         const activeTab = document.querySelector('[data-report-picker-cat].active');
         await loadReportPickerGallery(activeTab?.dataset.reportPickerCat || '');

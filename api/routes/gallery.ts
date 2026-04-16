@@ -34,7 +34,7 @@ galleryRoutes.get("/", async (c) => {
   }
 
   const rows = await query<GalleryImage>(
-    "SELECT * FROM gallery WHERE is_active = true ORDER BY uploaded_at DESC"
+    "SELECT * FROM gallery WHERE is_active = true AND category != 'report-table' ORDER BY uploaded_at DESC"
   );
   return c.json(rows);
 });
@@ -83,7 +83,7 @@ galleryRoutes.post("/", async (c) => {
 
     // 使用 Sharp 處理圖片並轉為 WebP
     // Report category uses higher quality for table screenshots
-    const isReport = category === 'report';
+    const isReport = category === 'report' || category === 'report-table';
     const maxW = isReport ? 3840 : IMAGE_CONFIG.maxWidth;
     const maxH = isReport ? 2160 : IMAGE_CONFIG.maxHeight;
     const quality = isReport ? 95 : IMAGE_CONFIG.quality;
