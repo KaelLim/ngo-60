@@ -270,6 +270,9 @@ function initReportTinyMCE(content) {
       'alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | table link galleryimage | code fullscreen'
     ],
     block_formats: 'Paragraph=p; Heading 1=h1; Heading 2=h2; Heading 3=h3; Heading 4=h4; Blockquote=blockquote',
+    font_family_formats: 'Noto Sans TC=Noto Sans TC,sans-serif; Noto Serif TC=Noto Serif TC,serif; Arial=arial,helvetica,sans-serif; Times New Roman=times new roman,times,serif; Microsoft JhengHei=Microsoft JhengHei,微軟正黑體,sans-serif; DFKai-SB=DFKai-SB,標楷體,serif; PMingLiU=PMingLiU,新細明體,serif; Georgia=georgia,serif; Verdana=verdana,sans-serif; Courier New=courier new,courier,monospace',
+    font_size_formats: '8pt 9pt 10pt 11pt 12pt 13pt 14pt 15pt 16pt 18pt 20pt 22pt 24pt 28pt 32pt 36pt 48pt',
+    font_size_input_default_unit: 'pt',
     table_default_styles: { 'border-collapse': 'collapse', 'width': '100%' },
     table_default_attributes: { border: '1' },
     table_header_type: 'sectionCells',
@@ -313,72 +316,6 @@ function getReportEditor() {
   return tinymce.get('report-tinymce-editor');
 }
 
-// ── Convert Tables to Images ──
-
-async function convertTablesToImages(htmlContent) {
-  const container = document.createElement('div');
-  container.style.cssText = 'position:fixed;left:-9999px;top:0;background:#fff;padding:0;z-index:-1;width:800px';
-  container.innerHTML = `<style>
-    * { font-family: 'Noto Sans TC', sans-serif; }
-    table { border-collapse: collapse; width: 100%; margin: 0; font-size: 14px; }
-    td, th { border: 1px solid #EEEAE4; padding: 10px 14px; text-align: left; line-height: 1.6; color: #3D3832; }
-    th { background: #2B3D6B; font-weight: 600; color: white; font-size: 13px; }
-    thead td { background: #2B3D6B; font-weight: 600; color: white; font-size: 13px; }
-    tr:nth-child(even) td { background: #F7F5F0; }
-    p { margin: 4px 0; }
-    strong { font-weight: 700; }
-  </style>` + htmlContent;
-  document.body.appendChild(container);
-
-  const tables = container.querySelectorAll('table');
-  const replacements = [];
-
-  for (const table of tables) {
-    try {
-      const canvas = await html2canvas(table, {
-        backgroundColor: '#ffffff',
-        scale: 2,
-        logging: false,
-        width: table.offsetWidth,
-      });
-      const dataUrl = canvas.toDataURL('image/png');
-
-      // Upload the image to gallery
-      const blob = await (await fetch(dataUrl)).blob();
-      const file = new File([blob], 'table-' + Date.now() + '.png', { type: 'image/png' });
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('category', 'report');
-
-      const token = localStorage.getItem('token');
-      const res = await fetch('/api/gallery', {
-        method: 'POST',
-        headers: token ? { 'Authorization': 'Bearer ' + token } : {},
-        body: formData
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        const imgUrl = '/uploads/gallery/' + data.filename;
-        const imgTag = `<p style="text-align:center"><img src="${imgUrl}" alt="資料表格" style="max-width:100%;display:block;margin:16px auto;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.08)" /></p>`;
-        replacements.push({ original: table.outerHTML, replacement: imgTag });
-      }
-    } catch (err) {
-      console.warn('Table to image failed:', err);
-      // Keep table as-is if conversion fails
-    }
-  }
-
-  document.body.removeChild(container);
-
-  // Apply replacements to the original HTML
-  let result = htmlContent;
-  for (const { original, replacement } of replacements) {
-    result = result.replace(original, replacement);
-  }
-  return result;
-}
-
 // ── Save ──
 
 window.saveReportEditor = async function() {
@@ -386,23 +323,9 @@ window.saveReportEditor = async function() {
   const editor = getReportEditor();
   if (!editor) return;
 
-  let content = editor.getContent();
-
-  // Convert tables to images before saving
-  const tableCount = (content.match(/<table/g) || []).length;
-  if (tableCount > 0) {
-    showToast(`轉換 ${tableCount} 個表格為圖片中...`, 'success');
-    try {
-      content = await convertTablesToImages(content);
-      // Update editor with converted content
-      editor.setContent(content);
-    } catch (err) {
-      console.warn('Table conversion failed, saving as-is:', err);
-    }
-  }
+  const content = editor.getContent();
 
   try {
-    // Ensure "main" page exists, then update content
     try {
       await api.getReportPage(activeChapterId, 'main');
     } catch {

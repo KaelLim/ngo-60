@@ -102,15 +102,19 @@ export class ReportApp extends LitElement {
   private get renderedContent(): string {
     const content = this.currentContent;
     if (!content) return '';
-    let result = content;
-    // Add ids to h1, h2, h3 headings (for sidebar navigation)
-    for (const h of this.sidebarHeadings) {
-      const tag = h.level === 1 ? 'h1' : h.level === 2 ? 'h2' : 'h3';
-      const escaped = h.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const regex = new RegExp(`<${tag}([^>]*)>\\s*${escaped}\\s*</${tag}>`, 'i');
-      result = result.replace(regex, `<${tag}$1 id="${h.id}">${h.text}</${tag}>`);
-    }
-    return result;
+    // Use DOMParser to add ids to headings (handles HTML entities like &mdash; correctly)
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(content, 'text/html');
+    const headings = this.sidebarHeadings;
+    let hIndex = 0;
+    doc.querySelectorAll('h1, h2, h3').forEach((el) => {
+      const text = (el.textContent || '').trim();
+      const match = headings.find(h => h.text === text);
+      if (match) {
+        el.id = match.id;
+      }
+    });
+    return doc.body.innerHTML;
   }
 
 
@@ -165,6 +169,7 @@ export class ReportApp extends LitElement {
 
   private async loadContent() {
     this.loading = true;
+
     this.currentContent = await fetchContent(this.activeChapterId, 'main');
     this.loading = false;
   }
@@ -187,14 +192,41 @@ export class ReportApp extends LitElement {
   private scrollToHeading(id: string) {
     this.activeTocId = id;
     this._scrollingToHeading = true;
-    const content = this.shadowRoot?.querySelector('.content');
-    const el = content?.querySelector(`#${id}`);
-    if (el && content) {
+    const isMobile = window.innerWidth <= 960;
+    const scrollEl = this.shadowRoot?.querySelector('.content');
+    const contentInner = this.shadowRoot?.querySelector('.content-inner');
+    const el = contentInner?.querySelector(`#${id}`);
+    if (el && scrollEl) {
       const rect = (el as HTMLElement).getBoundingClientRect();
-      const containerRect = content.getBoundingClientRect();
-      const top = content.scrollTop + rect.top - containerRect.top - 16;
-      content.scrollTo({ top, behavior: 'smooth' });
+      const containerRect = scrollEl.getBoundingClientRect();
+      const offset = 16;
+      const top = scrollEl.scrollTop + rect.top - containerRect.top - offset;
+      scrollEl.scrollTo({ top, behavior: 'smooth' });
       setTimeout(() => { this._scrollingToHeading = false; }, 600);
+    }
+
+    // Mobile: auto-scroll pills rows to center active pill
+    if (isMobile) {
+      setTimeout(() => {
+        // Center active H2 pill
+        const activeH2 = this.shadowRoot?.querySelector('.pills-row .pill.active') as HTMLElement;
+        if (activeH2) {
+          const row = activeH2.closest('.pills-row') as HTMLElement;
+          if (row) {
+            const pillCenter = activeH2.offsetLeft + activeH2.offsetWidth / 2;
+            row.scrollTo({ left: pillCenter - row.clientWidth / 2, behavior: 'smooth' });
+          }
+        }
+        // Center active H3 pill
+        const activeH3 = this.shadowRoot?.querySelector('.pills-h3-row .pill-h3.active') as HTMLElement;
+        if (activeH3) {
+          const row = activeH3.closest('.pills-h3-row') as HTMLElement;
+          if (row) {
+            const pillCenter = activeH3.offsetLeft + activeH3.offsetWidth / 2;
+            row.scrollTo({ left: pillCenter - row.clientWidth / 2, behavior: 'smooth' });
+          }
+        }
+      }, 150);
     }
   }
 
@@ -205,29 +237,80 @@ export class ReportApp extends LitElement {
     this.setupScrollSpy();
   }
 
+  private _scrollTarget: Element | null = null;
+
   private setupScrollSpy() {
     const content = this.shadowRoot?.querySelector('.content');
-    if (!content) return;
-    if (this._scrollObserver) {
-      content.removeEventListener('scroll', this._scrollObserver);
+    const contentInner = this.shadowRoot?.querySelector('.content-inner');
+    const body = this.shadowRoot?.querySelector('.body');
+    if (!content || !contentInner) return;
+
+    // Remove old listener
+    if (this._scrollObserver && this._scrollTarget) {
+      this._scrollTarget.removeEventListener('scroll', this._scrollObserver);
     }
+
     const headings = this.sidebarHeadings;
     if (headings.length === 0) return;
+
+    // Both mobile and desktop: .content scrolls
+    const isMobile = window.innerWidth <= 960;
+    const scrollEl = content;
+    this._scrollTarget = scrollEl;
+
     this._scrollObserver = () => {
       if (this._scrollingToHeading) return;
-      const scrollTop = content.scrollTop;
+      const offset = isMobile ? 140 : 60;
       let activeId = headings[0]?.id || '';
+
+      // Check each heading position
       for (const h of headings) {
-        const el = content.querySelector(`#${h.id}`) as HTMLElement;
-        if (el && el.offsetTop - 60 <= scrollTop) {
-          activeId = h.id;
+        const el = contentInner.querySelector(`#${h.id}`) as HTMLElement;
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          const containerRect = scrollEl.getBoundingClientRect();
+          if (rect.top - containerRect.top <= offset) {
+            activeId = h.id;
+          }
         }
       }
+
+      // If scrolled to bottom, activate last heading (for short sections like 結論)
+      const isAtBottom = scrollEl.scrollHeight - scrollEl.scrollTop - scrollEl.clientHeight < 100;
+      if (isAtBottom && headings.length > 0) {
+        activeId = headings[headings.length - 1].id;
+      }
+
       if (activeId !== this.activeTocId) {
         this.activeTocId = activeId;
+        // Mobile: auto-scroll active pill into view (both H2 and H3 rows)
+        if (isMobile) {
+          requestAnimationFrame(() => {
+            // Scroll H2 pills row
+            const activeH2Pill = this.shadowRoot?.querySelector('.pills-row .pill.active') as HTMLElement;
+            if (activeH2Pill) {
+              const row = activeH2Pill.closest('.pills-row') as HTMLElement;
+              if (row) {
+                const pillCenter = activeH2Pill.offsetLeft + activeH2Pill.offsetWidth / 2;
+                const rowCenter = row.clientWidth / 2;
+                row.scrollTo({ left: pillCenter - rowCenter, behavior: 'smooth' });
+              }
+            }
+            // Scroll H3 pills row
+            const activeH3Pill = this.shadowRoot?.querySelector('.pills-h3-row .pill-h3.active') as HTMLElement;
+            if (activeH3Pill) {
+              const row = activeH3Pill.closest('.pills-h3-row') as HTMLElement;
+              if (row) {
+                const pillCenter = activeH3Pill.offsetLeft + activeH3Pill.offsetWidth / 2;
+                const rowCenter = row.clientWidth / 2;
+                row.scrollTo({ left: pillCenter - rowCenter, behavior: 'smooth' });
+              }
+            }
+          });
+        }
       }
     };
-    content.addEventListener('scroll', this._scrollObserver, { passive: true });
+    scrollEl.addEventListener('scroll', this._scrollObserver, { passive: true });
   }
 
 
@@ -498,12 +581,11 @@ export class ReportApp extends LitElement {
       .menu-tab:first-of-type { padding-left: 0; padding-right: 14px; }
       .menu-tab.active { font-weight: 500; }
 
-      /* ── Mobile Body: navy bg, vertical scroll ── */
+      /* ── Mobile Body: navy bg, no scroll on body ── */
       .body {
         flex-direction: column;
         padding: 16px; gap: 12px;
-        overflow-y: auto;
-        overflow-x: hidden;
+        overflow: hidden;
       }
 
       /* ── Hide desktop sidebar & overlay ── */
@@ -513,45 +595,81 @@ export class ReportApp extends LitElement {
 
       /* ── Mobile Section Pills ── */
       .section-pills {
-        display: flex; align-items: center;
+        display: flex; flex-direction: column;
         flex-shrink: 0; width: 100%;
-        overflow-x: auto; gap: 8px;
-        border-radius: 14px;
-        padding: 10px 12px;
+        border-radius: 15px;
+        padding: 8px 12px;
         background: #fff;
-        border: 1px solid rgba(255,255,255,0.25);
         scrollbar-width: none;
+        gap: 8px;
       }
       .section-pills::-webkit-scrollbar { display: none; }
+
+      .pills-row {
+        display: flex; align-items: center;
+        overflow-x: auto; gap: 24px;
+        scrollbar-width: none;
+      }
+      .pills-row::-webkit-scrollbar { display: none; }
+
+      .pills-h3-row {
+        display: flex; align-items: center;
+        overflow-x: auto; gap: 8px;
+        padding-top: 8px;
+        border-top: 1px solid var(--border-light);
+        scrollbar-width: none;
+      }
+      .pills-h3-row::-webkit-scrollbar { display: none; }
 
       .pill {
         display: flex; align-items: center;
         flex-shrink: 0;
-        padding: 8px 14px;
-        border-radius: 20px;
+        padding: 4px 0;
         border: none; background: transparent;
         font-family: 'Noto Sans TC', sans-serif;
-        font-size: 13px; font-weight: 400;
+        font-size: 12px; font-weight: 700;
         color: var(--text-sub);
         cursor: pointer; white-space: nowrap;
         transition: background 0.15s, color 0.15s;
+        border-radius: 0;
       }
       .pill.active {
         background: var(--navy);
-        color: #fff; font-weight: 500;
-        padding: 6px 12px;
+        color: #fff; font-weight: 700;
+        padding: 4px 12px;
         border-radius: 8px;
+      }
+
+      .pill-h3 {
+        display: flex; align-items: center;
+        flex-shrink: 0;
+        padding: 4px 12px;
+        border: 1px solid var(--text-sub);
+        border-radius: 8px;
+        background: transparent;
+        font-family: 'Noto Sans TC', sans-serif;
+        font-size: 10px; font-weight: 700;
+        color: var(--text-sub);
+        cursor: pointer; white-space: nowrap;
+        transition: all 0.15s;
+      }
+      .pill-h3.active {
+        background: rgba(159,184,255,0.3);
+        border-color: var(--navy);
+        color: var(--navy);
       }
 
       /* ── Mobile Content Card ── */
       .content-card {
-        flex: 0 0 auto;
+        flex: 1;
         border-radius: 16px;
-        overflow: visible;
+        overflow: hidden;
+        min-height: 0;
       }
       .content {
         padding: 22px 18px 22px;
-        overflow: visible;
+        overflow-y: auto;
+        height: 100%;
       }
 
       /* ── Mobile extras: shown only on phone ── */
@@ -686,6 +804,51 @@ export class ReportApp extends LitElement {
               });
             })()}
           </div>
+
+          <!-- Mobile: Section Pills (H1 title + H2 pills, H3 sub-pills) -->
+          ${(() => {
+            const allH = this.sidebarHeadings;
+            const h1 = allH.find(h => h.level === 1);
+            const h2s = allH.filter(h => h.level === 2);
+            // Find H3 children of active H2
+            const activeH2 = h2s.find(h => {
+              if (this.activeTocId === h.id) return true;
+              const idx = allH.findIndex(x => x.id === h.id);
+              for (let i = idx + 1; i < allH.length; i++) {
+                if (allH[i].level <= 2) break;
+                if (allH[i].id === this.activeTocId) return true;
+              }
+              return false;
+            });
+            const activeH3s: { id: string; text: string; level: number }[] = [];
+            if (activeH2) {
+              const idx = allH.findIndex(x => x.id === activeH2.id);
+              for (let i = idx + 1; i < allH.length; i++) {
+                if (allH[i].level <= 2) break;
+                if (allH[i].level === 3) activeH3s.push(allH[i]);
+              }
+            }
+            return h2s.length > 0 ? html`
+              <div class="section-pills">
+                <div class="pills-row">
+                  ${h2s.map(h => html`
+                    <button class="pill ${this.activeTocId === h.id || (activeH2 && activeH2.id === h.id) ? 'active' : ''}"
+                      @click=${() => this.scrollToHeading(h.id)}
+                    >${h.text}</button>
+                  `)}
+                </div>
+                ${activeH3s.length > 0 ? html`
+                  <div class="pills-h3-row">
+                    ${activeH3s.map(h3 => html`
+                      <button class="pill-h3 ${this.activeTocId === h3.id ? 'active' : ''}"
+                        @click=${() => this.scrollToHeading(h3.id)}
+                      >${h3.text}</button>
+                    `)}
+                  </div>
+                ` : ''}
+              </div>
+            ` : '';
+          })()}
 
           <!-- Content Card -->
           <div class="content-card">
