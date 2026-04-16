@@ -320,15 +320,15 @@ function getReportEditor() {
 
 async function convertTablesToImages(htmlContent) {
   const container = document.createElement('div');
-  container.style.cssText = 'position:fixed;left:-9999px;top:0;background:#fff;padding:0;z-index:-1;width:800px';
+  container.style.cssText = 'position:fixed;left:-9999px;top:0;background:#fff;padding:16px;z-index:-1;width:1200px';
   container.innerHTML = `<style>
-    * { font-family: 'Noto Sans TC', sans-serif; }
-    table { border-collapse: collapse; width: 100%; margin: 0; font-size: 14px; }
-    td, th { border: 1px solid #EEEAE4; padding: 10px 14px; text-align: left; line-height: 1.6; color: #3D3832; }
-    th, thead td { background: #2B3D6B; font-weight: 600; color: white; font-size: 13px; }
+    * { font-family: 'Noto Sans TC', sans-serif; -webkit-font-smoothing: antialiased; }
+    table { border-collapse: collapse; width: 100%; margin: 0; font-size: 15px; }
+    td, th { border: 1px solid #EEEAE4; padding: 12px 16px; text-align: left; line-height: 1.7; color: #3D3832; }
+    th, thead td { background: #2B3D6B; font-weight: 600; color: white; font-size: 14px; }
     th p, th span, thead td p, thead td span { color: white; margin: 0; }
     tr:nth-child(even) td { background: #F7F5F0; }
-    p { margin: 4px 0; }
+    p { margin: 4px 0; font-size: 15px; }
     strong { font-weight: 700; }
   </style>` + htmlContent;
   document.body.appendChild(container);
@@ -340,11 +340,11 @@ async function convertTablesToImages(htmlContent) {
     try {
       const canvas = await html2canvas(table, {
         backgroundColor: '#ffffff',
-        scale: 2,
+        scale: 3,
         logging: false,
-        width: table.offsetWidth,
+        useCORS: true,
       });
-      const dataUrl = canvas.toDataURL('image/png');
+      const dataUrl = canvas.toDataURL('image/png', 1.0);
 
       // Upload to gallery
       const blob = await (await fetch(dataUrl)).blob();
