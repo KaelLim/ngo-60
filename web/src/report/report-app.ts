@@ -443,10 +443,10 @@ export class ReportApp extends LitElement {
       padding: 32px 32px 32px 36px; min-width: 0;
     }
     .content img {
-      max-width: 100%;
+      width: 100%;
       height: auto;
-      border-radius: 8px;
-      margin: 12px auto;
+      border-radius: 0;
+      margin: 0;
       display: block;
     }
 
@@ -669,8 +669,17 @@ export class ReportApp extends LitElement {
       .content {
         padding: 22px 18px 22px;
         overflow-y: auto;
+        overflow-x: hidden;
         height: 100%;
+        /* Visible scrollbar so user knows content is scrollable */
+        scrollbar-width: thin;
+        scrollbar-color: rgba(43,61,107,0.3) transparent;
       }
+      .content::-webkit-scrollbar { width: 4px; }
+      .content::-webkit-scrollbar-track { background: transparent; }
+      .content::-webkit-scrollbar-thumb { background: rgba(43,61,107,0.3); border-radius: 4px; }
+
+      .content-inner { overflow-x: hidden; word-break: break-word; }
 
       /* ── Mobile extras: shown only on phone ── */
       .mobile-extras {
