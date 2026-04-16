@@ -1,7 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
-import { marked } from 'marked';
 
 interface ApiChapter {
   chapter_id: string;
@@ -26,73 +25,115 @@ const chapterMeta: Record<string, { subtitle: string }> = {
 
 const contentCache = new Map<string, string>();
 
-async function fetchMarkdown(chapterId: string, pageId: string): Promise<string> {
+/** Detect if content is markdown (starts with # or has ## patterns) */
+function isMarkdown(content: string): boolean {
+  return /^#{1,4}\s/m.test(content);
+}
+
+async function fetchContent(chapterId: string, pageId: string): Promise<string> {
   const key = `${chapterId}/${pageId}`;
   if (contentCache.has(key)) return contentCache.get(key)!;
+
   try {
+    // Try single "main" page first (new format)
     const res = await fetch(`/api/report-pages/${chapterId}/${pageId}`);
-    if (!res.ok) return '';
-    const data = await res.json();
-    const content = data.content || '';
-    contentCache.set(key, content);
-    return content;
+    if (res.ok) {
+      const data = await res.json();
+      let content = data.content || '';
+      // If content is markdown, convert to HTML using marked
+      if (content && isMarkdown(content)) {
+        const { marked } = await import('marked');
+        content = marked.parse(content, { async: false }) as string;
+      }
+      contentCache.set(key, content);
+      return content;
+    }
+
+    // Fallback: fetch all pages for the chapter and merge (old multi-page format)
+    const allRes = await fetch(`/api/report-pages/${chapterId}`);
+    if (!allRes.ok) return '';
+    const pages = await allRes.json();
+    if (!pages || pages.length === 0) return '';
+
+    let merged = '';
+    for (const pg of pages) {
+      let pgContent = pg.content || '';
+      // Fetch full content if not included
+      if (!pgContent) {
+        try {
+          const pgRes = await fetch(`/api/report-pages/${chapterId}/${pg.page_id}`);
+          if (pgRes.ok) {
+            const pgData = await pgRes.json();
+            pgContent = pgData.content || '';
+          }
+        } catch { /* skip */ }
+      }
+      if (pgContent) merged += pgContent + '\n\n';
+    }
+
+    // Convert markdown to HTML if needed
+    if (merged && isMarkdown(merged)) {
+      const { marked } = await import('marked');
+      merged = marked.parse(merged, { async: false }) as string;
+    }
+
+    contentCache.set(key, merged);
+    return merged;
   } catch {
     return '';
   }
 }
 
-function extractHeadings(md: string): { id: string; text: string }[] {
-  const headings: { id: string; text: string }[] = [];
-  const regex = /^## (.+)$/gm;
-  let match;
-  while ((match = regex.exec(md)) !== null) {
-    const text = match[1].replace(/[*_`]/g, '').trim();
-    const id = 'h-' + text.replace(/\s+/g, '-').replace(/[^\w\u4e00-\u9fff-]/g, '').toLowerCase();
-    headings.push({ id, text });
-  }
-  return headings;
-}
+
 
 @customElement('report-app')
 export class ReportApp extends LitElement {
   @state() private chapters: ApiChapter[] = [];
-  @state() private chapterPages: ApiPage[] = [];
   @state() private activeChapterId = '';
-  @state() private activePageId = '';
   @state() private sidebarOpen = false;
   @state() private activeTocId = '';
-  @state() private currentMarkdown = '';
+  @state() private currentContent = '';
   @state() private loading = true;
 
   private get activeChapter(): ApiChapter | undefined {
     return this.chapters.find(c => c.chapter_id === this.activeChapterId);
   }
 
-  private get activePage(): ApiPage | undefined {
-    return this.chapterPages.find(p => p.page_id === this.activePageId);
-  }
-
   private get renderedContent(): string {
-    const md = this.currentMarkdown;
-    if (!md) return '';
-    let result = marked.parse(md, { async: false }) as string;
-    const headings = extractHeadings(md);
-    for (const h of headings) {
-      result = result.replace(`<h2>${h.text}</h2>`, `<h2 id="${h.id}">${h.text}</h2>`);
+    const content = this.currentContent;
+    if (!content) return '';
+    let result = content;
+    // Add ids to h1 and h2 headings (for sidebar navigation)
+    for (const h of this.sidebarHeadings) {
+      const tag = h.level === 1 ? 'h1' : 'h2';
+      const escaped = h.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`<${tag}([^>]*)>\\s*${escaped}\\s*</${tag}>`, 'i');
+      result = result.replace(regex, `<${tag}$1 id="${h.id}">${h.text}</${tag}>`);
     }
     return result;
   }
 
-  private get tocHeadings() { return extractHeadings(this.currentMarkdown); }
+
+  /** Extract H1 + H2 headings for sidebar navigation */
+  private get sidebarHeadings(): { id: string; text: string; level: number }[] {
+    const headings: { id: string; text: string; level: number }[] = [];
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(this.currentContent, 'text/html');
+    doc.querySelectorAll('h1, h2').forEach((el) => {
+      const text = (el.textContent || '').trim();
+      const level = el.tagName === 'H1' ? 1 : 2;
+      const id = `h${level}-` + text.replace(/\s+/g, '-').replace(/[^\w\u4e00-\u9fff-]/g, '').toLowerCase();
+      headings.push({ id, text, level });
+    });
+    return headings;
+  }
 
   private get topicChapters() {
     return this.chapters.filter(c => c.chapter_id in chapterMeta);
   }
 
   private get isAboutOverview(): boolean {
-    if (this.activeChapterId !== 'about') return false;
-    const firstPage = this.chapterPages[0];
-    return !!firstPage && this.activePageId === firstPage.page_id;
+    return this.activeChapterId === 'about';
   }
 
   async connectedCallback() {
@@ -105,39 +146,18 @@ export class ReportApp extends LitElement {
     }
     if (this.chapters.length > 0) {
       this.activeChapterId = this.chapters[0].chapter_id;
-      await this.loadChapterPages();
       this.loadFromHash();
     }
     this.loading = false;
     window.addEventListener('hashchange', () => this.loadFromHash());
   }
 
-  private async loadChapterPages() {
-    try {
-      const res = await fetch(`/api/report-pages/${this.activeChapterId}`);
-      this.chapterPages = await res.json();
-    } catch {
-      this.chapterPages = [];
-    }
-    if (this.chapterPages.length > 0 && !this.chapterPages.find(p => p.page_id === this.activePageId)) {
-      this.activePageId = this.chapterPages[0].page_id;
-    }
-  }
-
   private async loadFromHash() {
     const hash = location.hash.replace('#', '');
     if (hash) {
-      const [chId, pgId] = hash.split('/');
-      const ch = this.chapters.find(c => c.chapter_id === chId);
+      const ch = this.chapters.find(c => c.chapter_id === hash);
       if (ch) {
-        if (this.activeChapterId !== ch.chapter_id) {
-          this.activeChapterId = ch.chapter_id;
-          await this.loadChapterPages();
-        }
-        if (pgId) {
-          const pg = this.chapterPages.find(p => p.page_id === pgId);
-          if (pg) this.activePageId = pg.page_id;
-        }
+        this.activeChapterId = ch.chapter_id;
       }
     }
     await this.loadContent();
@@ -145,25 +165,13 @@ export class ReportApp extends LitElement {
 
   private async loadContent() {
     this.loading = true;
-    this.currentMarkdown = await fetchMarkdown(this.activeChapterId, this.activePageId);
+    this.currentContent = await fetchContent(this.activeChapterId, 'main');
     this.loading = false;
   }
 
   private async selectChapter(chId: string) {
     this.activeChapterId = chId;
-    await this.loadChapterPages();
-    if (this.chapterPages.length > 0) {
-      this.activePageId = this.chapterPages[0].page_id;
-    }
-    location.hash = `${chId}/${this.activePageId}`;
-    this.sidebarOpen = false;
-    this.scrollContentTop();
-    await this.loadContent();
-  }
-
-  private async selectPage(pgId: string) {
-    this.activePageId = pgId;
-    location.hash = `${this.activeChapterId}/${pgId}`;
+    location.hash = chId;
     this.sidebarOpen = false;
     this.scrollContentTop();
     await this.loadContent();
@@ -203,7 +211,7 @@ export class ReportApp extends LitElement {
     if (this._scrollObserver) {
       content.removeEventListener('scroll', this._scrollObserver);
     }
-    const headings = this.tocHeadings;
+    const headings = this.sidebarHeadings;
     if (headings.length === 0) return;
     this._scrollObserver = () => {
       if (this._scrollingToHeading) return;
@@ -221,6 +229,7 @@ export class ReportApp extends LitElement {
     };
     content.addEventListener('scroll', this._scrollObserver, { passive: true });
   }
+
 
   private toggleSidebar() { this.sidebarOpen = !this.sidebarOpen; }
 
@@ -311,9 +320,10 @@ export class ReportApp extends LitElement {
       padding: 20px; overflow-y: auto;
     }
     .sidebar-heading {
-      font-size: 13px; font-weight: 600;
-      color: var(--navy); text-transform: uppercase;
-      letter-spacing: 0.1em; margin-bottom: 6px;
+      font-size: 15px; font-weight: 700;
+      color: var(--navy); margin-bottom: 12px;
+      padding-bottom: 10px; border-bottom: 1px solid var(--border-light);
+      line-height: 22px;
     }
     .sidebar-link {
       display: flex; align-items: center;
@@ -327,6 +337,8 @@ export class ReportApp extends LitElement {
     }
     .sidebar-link:hover { background: var(--beige-bg); }
     .sidebar-link.active { background: var(--navy); color: #fff; font-weight: 500; }
+    .sidebar-link.sub { padding-left: 20px; font-size: 13px; color: var(--text-muted); }
+    .sidebar-link.sub.active { color: #fff; }
 
     /* ── Mobile: Section Pills (hidden on desktop) ── */
     .section-pills { display: none; }
@@ -345,7 +357,8 @@ export class ReportApp extends LitElement {
       max-width: 100%;
       height: auto;
       border-radius: 8px;
-      margin: 12px 0;
+      margin: 12px auto;
+      display: block;
     }
 
     /* ── Desktop: Right TOC ── */
@@ -399,10 +412,10 @@ export class ReportApp extends LitElement {
     .meta-divider { width: 100%; height: 1px; background: var(--border-light); flex-shrink: 0; }
     .meta-cols { display: flex; gap: 24px; }
 
-    /* Mobile-only extras (topic cards + meta) after markdown */
+    /* Mobile-only extras (topic cards + meta) after content */
     .mobile-extras { display: none; }
 
-    /* ── Desktop: Markdown ── */
+    /* ── Desktop: Content Styles ── */
     .md h1 {
       font-family: 'Noto Serif TC', serif;
       font-size: 28px; font-weight: 700; line-height: 38px; color: var(--navy);
@@ -426,7 +439,8 @@ export class ReportApp extends LitElement {
     .md blockquote p { color: var(--text-body); margin-bottom: 4px; font-size: 14px; line-height: 26px; }
     .md table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 14px; }
     .md th, .md td { border: 1px solid var(--border-light); padding: 10px 14px; text-align: left; line-height: 1.6; }
-    .md th { background: var(--navy); font-weight: 600; color: white; font-size: 13px; }
+    .md th, .md thead td { background: var(--navy); font-weight: 600; color: white; font-size: 13px; }
+    .md th p, .md th span, .md thead td p, .md thead td span { color: white; margin: 0; }
     .md td { color: var(--text-dark); font-size: 14px; }
     .md tr:nth-child(even) td { background: var(--beige-bg); }
     .md a { color: var(--navy); text-decoration: none; }
@@ -532,7 +546,7 @@ export class ReportApp extends LitElement {
         gap: 16px; margin-top: 16px;
       }
 
-      /* ── Mobile Markdown ── */
+      /* ── Mobile Content Styles ── */
       .md h1 { font-size: 24px; line-height: 34px; padding-bottom: 12px; border-bottom-width: 1px; }
       .md h2 { font-size: 20px; line-height: 28px; margin: 28px 0 12px; padding-left: 10px; border-left-width: 3px; }
       .md h3 { font-size: 18px; margin: 24px 0 10px; }
@@ -583,7 +597,6 @@ export class ReportApp extends LitElement {
 
   render() {
     const chapter = this.activeChapter;
-    const headings = this.tocHeadings;
 
     return html`
       <div style="display:flex;flex-direction:column;height:100vh;">
@@ -627,28 +640,16 @@ export class ReportApp extends LitElement {
         <div class="body">
           <div class="sidebar-overlay ${this.sidebarOpen ? 'open' : ''}" @click=${() => { this.sidebarOpen = false; }}></div>
 
-          <!-- Desktop: Sidebar -->
+          <!-- Desktop: Sidebar (H1 + H2 headings from content) -->
           <div class="sidebar-card ${this.sidebarOpen ? 'open' : ''}">
-            <div class="sidebar-heading">${chapter?.title || ''}</div>
-            ${this.chapterPages.map((pg, i) => html`
+            <div class="sidebar-heading">${this.sidebarHeadings.find(h => h.level === 1)?.text || chapter?.title || ''}</div>
+            ${this.sidebarHeadings.filter(h => h.level === 2).map(h => html`
               <button
-                class="sidebar-link ${pg.page_id === this.activePageId ? 'active' : ''}"
-                @click=${() => this.selectPage(pg.page_id)}
-              >${['一', '二', '三', '四', '五', '六', '七', '八', '九', '十'][i] || i + 1}、${pg.title}</button>
+                class="sidebar-link ${this.activeTocId === h.id ? 'active' : ''}"
+                @click=${() => this.scrollToHeading(h.id)}
+              >${h.text}</button>
             `)}
           </div>
-
-          <!-- Mobile: Section Pills -->
-          ${this.chapterPages.length > 1 ? html`
-            <div class="section-pills">
-              ${this.chapterPages.map(pg => html`
-                <button
-                  class="pill ${pg.page_id === this.activePageId ? 'active' : ''}"
-                  @click=${() => this.selectPage(pg.page_id)}
-                >${pg.title}</button>
-              `)}
-            </div>
-          ` : ''}
 
           <!-- Content Card -->
           <div class="content-card">
@@ -659,17 +660,6 @@ export class ReportApp extends LitElement {
                   : html`${unsafeHTML(this.renderedContent)}${this.isAboutOverview ? this.renderMobileExtras() : ''}`}
               </div>
             </div>
-            ${headings.length > 0 ? html`
-              <div class="right-toc">
-                <div class="toc-label">本頁內容</div>
-                ${headings.map(h => html`
-                  <button
-                    class="toc-link ${this.activeTocId === h.id ? 'active' : ''}"
-                    @click=${() => this.scrollToHeading(h.id)}
-                  >${h.text}</button>
-                `)}
-              </div>
-            ` : ''}
           </div>
         </div>
       </div>

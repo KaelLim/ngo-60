@@ -7,8 +7,12 @@
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=1.2">
+  <link rel="stylesheet" href="css/styles.css?v=1.3">
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tinymce@7.6.1/tinymce.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html-docx-js@0.4.7/dist/html-docx.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </head>
 <body>
   <div class="layout">
@@ -361,10 +365,10 @@
         </div>
       </section>
 
-      <!-- Report Pages Section -->
+      <!-- Report Section -->
       <section id="section-report" class="section">
         <div class="page-header">
-          <h2>報告書管理</h2>
+          <h2>影響力報告設定</h2>
           <div style="display:flex;gap:8px">
             <button class="btn btn-primary" onclick="openReportChapterModal()">+ 新增章節</button>
             <a href="/report/" target="_blank" class="btn btn-outline" style="font-size:14px">
@@ -373,55 +377,37 @@
             </a>
           </div>
         </div>
-        <!-- Chapter Tabs -->
-        <div class="report-tabs" id="report-tabs"></div>
-        <!-- Pages Table for active chapter -->
-        <div class="card" id="report-pages-card" style="display:none">
-          <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid #27272a">
-            <div style="display:flex;align-items:center;gap:12px">
-              <h3 id="report-active-chapter-title" style="font-size:16px;font-weight:600"></h3>
-              <button class="btn btn-sm btn-secondary" onclick="editReportChapter()" title="編輯章節名稱">
-                <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle">edit</span>
-              </button>
-              <button class="btn btn-sm btn-danger" onclick="deleteReportChapter()" title="刪除章節">
-                <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle">delete</span>
-              </button>
-            </div>
-            <button class="btn btn-primary btn-sm" onclick="openReportPageModal()">+ 新增頁面</button>
-          </div>
-          <div class="table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>頁面標題</th>
-                  <th style="width:90px;text-align:center">狀態</th>
-                  <th style="width:110px;text-align:center">更新時間</th>
-                  <th style="width:260px;text-align:center">操作</th>
-                </tr>
-              </thead>
-              <tbody id="report-pages-table"></tbody>
-            </table>
+
+        <!-- Chapter Tabs + Actions -->
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+          <div class="report-tabs" id="report-tabs" style="flex:1"></div>
+          <div id="report-chapter-actions" style="display:none;flex-shrink:0;display:flex;gap:6px">
+            <button class="btn btn-sm btn-secondary" onclick="editReportChapter()" title="重新命名">
+              <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle">edit</span>
+            </button>
+            <button class="btn btn-sm btn-danger" onclick="deleteReportChapter()" title="刪除章節">
+              <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle">delete</span>
+            </button>
           </div>
         </div>
-        <!-- MD Editor (hidden by default) -->
+
+        <!-- Editor (shows when chapter selected) -->
         <div class="card" id="report-editor-card" style="display:none">
           <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px;border-bottom:1px solid #27272a">
-            <div style="display:flex;align-items:center;gap:12px">
-              <button class="btn btn-sm btn-secondary" onclick="closeReportEditor()">
-                <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle">arrow_back</span>
-                返回
-              </button>
-              <h3 id="report-editor-title" style="font-size:15px;font-weight:600;margin:0"></h3>
-            </div>
+            <h3 id="report-editor-title" style="font-size:15px;font-weight:600;margin:0"></h3>
             <div style="display:flex;gap:8px">
-              <button class="btn btn-sm btn-secondary" onclick="downloadReportMd()">
+              <button class="btn btn-sm btn-secondary" id="editor-theme-toggle" onclick="toggleEditorTheme()">
+                <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle">dark_mode</span>
+                <span class="theme-label">深色</span>
+              </button>
+              <button class="btn btn-sm btn-secondary" onclick="exportReportDocx()">
                 <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle">download</span>
-                下載 .md
+                匯出 .docx
               </button>
               <label class="btn btn-sm btn-secondary" style="cursor:pointer">
                 <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle">upload_file</span>
-                上傳 .md
-                <input type="file" accept=".md,.markdown,.txt" style="display:none" id="report-editor-upload">
+                匯入 .docx
+                <input type="file" accept=".docx" style="display:none" id="report-editor-docx-import" onchange="importReportDocx(this)">
               </label>
               <button class="btn btn-sm btn-primary" onclick="saveReportEditor()">
                 <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle">save</span>
@@ -429,39 +415,8 @@
               </button>
             </div>
           </div>
-          <!-- MD Toolbar -->
-          <div id="report-md-toolbar" style="display:flex;gap:4px;padding:8px 20px;border-bottom:1px solid #27272a;flex-wrap:wrap">
-            <button class="btn btn-sm btn-secondary" onclick="insertMd('bold')" title="粗體">B</button>
-            <button class="btn btn-sm btn-secondary" onclick="insertMd('italic')" title="斜體"><em>I</em></button>
-            <button class="btn btn-sm btn-secondary" onclick="insertMd('h1')" title="標題 1">H1</button>
-            <button class="btn btn-sm btn-secondary" onclick="insertMd('h2')" title="標題 2">H2</button>
-            <button class="btn btn-sm btn-secondary" onclick="insertMd('h3')" title="標題 3">H3</button>
-            <button class="btn btn-sm btn-secondary" onclick="insertMd('ul')" title="無序列表">•</button>
-            <button class="btn btn-sm btn-secondary" onclick="insertMd('ol')" title="有序列表">1.</button>
-            <button class="btn btn-sm btn-secondary" onclick="insertMd('link')" title="連結">🔗</button>
-            <button class="btn btn-sm btn-secondary" onclick="insertMd('image')" title="圖片網址">🖼</button>
-            <label class="btn btn-sm btn-secondary" style="cursor:pointer" title="上傳圖片">
-              📤 上傳圖片
-              <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none" onchange="uploadEditorImage(this)">
-            </label>
-            <button class="btn btn-sm btn-secondary" onclick="insertMd('quote')" title="引用">❝</button>
-            <button class="btn btn-sm btn-secondary" onclick="insertMd('code')" title="程式碼">{ }</button>
-            <button class="btn btn-sm btn-secondary" onclick="insertMd('hr')" title="分隔線">―</button>
-          </div>
-          <!-- Split Pane -->
-          <div style="display:flex;height:65vh;overflow:hidden">
-            <div style="flex:1;display:flex;flex-direction:column;border-right:1px solid #e5e5e5">
-              <div style="padding:6px 20px;background:#f3f4f6;border-bottom:1px solid #e5e5e5;font-size:12px;font-weight:600;color:#6b7280;letter-spacing:1px">✏️ 編輯區</div>
-              <textarea id="report-editor-textarea"
-                style="flex:1;background:#ffffff;color:#1a1a1a;border:none;padding:20px;font-family:'Noto Sans TC',monospace;font-size:14px;line-height:1.8;resize:none;outline:none"
-                placeholder="在此輸入 Markdown 內容..."
-                oninput="updateReportPreview()"></textarea>
-            </div>
-            <div style="flex:1;display:flex;flex-direction:column">
-              <div style="padding:6px 20px;background:#f3f4f6;border-bottom:1px solid #e5e5e5;font-size:12px;font-weight:600;color:#6b7280;letter-spacing:1px">👁️ 預覽區</div>
-              <div id="report-editor-preview"
-                style="flex:1;padding:20px;overflow-y:auto;background:#fafafa;color:#1a1a1a;font-family:'Noto Sans TC',sans-serif;font-size:14px;line-height:1.8"></div>
-            </div>
+          <div style="height:65vh">
+            <textarea id="report-tinymce-editor"></textarea>
           </div>
         </div>
 
@@ -489,59 +444,23 @@
                 <label>章節名稱</label>
                 <input type="text" id="report-chapter-title" placeholder="關於本報告書" required>
               </div>
+              <div class="form-group" id="report-chapter-docx-group">
+                <label>匯入 .docx（選填）</label>
+                <div id="report-chapter-docx-drop"
+                  style="border:2px dashed #3f3f46;border-radius:8px;padding:20px 16px;text-align:center;cursor:pointer;transition:all 0.2s"
+                  onclick="document.getElementById('report-chapter-docx-input').click()">
+                  <span class="material-symbols-outlined" style="font-size:28px;color:#71717a;display:block;margin-bottom:4px">upload_file</span>
+                  <p style="font-size:13px;color:#a1a1aa;margin:0">拖曳 .docx 檔案到此處，或點擊選擇</p>
+                  <input type="file" accept=".docx" id="report-chapter-docx-input" style="display:none" onchange="handleChapterDocxSelect(this)">
+                </div>
+                <div id="report-chapter-docx-name" style="display:none"></div>
+              </div>
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" onclick="closeReportChapterModal()">取消</button>
               <button type="submit" class="btn btn-primary">儲存</button>
             </div>
           </form>
-        </div>
-      </div>
-
-      <!-- Report Page Modal -->
-      <div class="modal-overlay" id="report-page-modal">
-        <div class="modal">
-          <div class="modal-header">
-            <h3 id="report-page-modal-title">新增頁面</h3>
-            <button class="modal-close" onclick="closeReportPageModal()">&times;</button>
-          </div>
-          <form id="report-page-form">
-            <div class="modal-body">
-              <input type="hidden" id="report-page-edit-id">
-              <div class="form-group">
-                <label>頁面 ID（英文，例如：methodology）</label>
-                <input type="text" id="report-page-slug" placeholder="methodology" pattern="[a-z0-9\-]+" required>
-              </div>
-              <div class="form-group">
-                <label>頁面標題</label>
-                <input type="text" id="report-page-title" placeholder="報告書記錄方法" required>
-              </div>
-              <div class="form-group">
-                <label>上傳 .md 檔案（選填）</label>
-                <input type="file" id="report-page-file" accept=".md,.markdown,.txt">
-              </div>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" onclick="closeReportPageModal()">取消</button>
-              <button type="submit" class="btn btn-primary">儲存</button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- Report Preview Modal -->
-      <div class="modal-overlay" id="report-preview-modal">
-        <div class="modal modal-lg">
-          <div class="modal-header">
-            <h3>內容預覽</h3>
-            <button class="modal-close" onclick="closeReportPreview()">&times;</button>
-          </div>
-          <div class="modal-body" style="max-height:70vh;overflow-y:auto">
-            <div id="report-preview-content"></div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" onclick="closeReportPreview()">關閉</button>
-          </div>
         </div>
       </div>
 
@@ -957,9 +876,42 @@
     </div>
   </div>
 
+  <!-- Report Image Picker Modal -->
+  <div class="modal-overlay" id="report-image-picker-modal">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h3>選擇圖片</h3>
+        <button class="modal-close" onclick="closeReportImagePicker()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="picker-category-tabs">
+          <button type="button" class="picker-category-tab active" data-report-picker-cat="" onclick="switchReportPickerCategory(this)">全部</button>
+          <button type="button" class="picker-category-tab" data-report-picker-cat="report" onclick="switchReportPickerCategory(this)">報告書</button>
+          <button type="button" class="picker-category-tab" data-report-picker-cat="homepage" onclick="switchReportPickerCategory(this)">首頁</button>
+          <button type="button" class="picker-category-tab" data-report-picker-cat="events" onclick="switchReportPickerCategory(this)">活動</button>
+          <button type="button" class="picker-category-tab" data-report-picker-cat="general" onclick="switchReportPickerCategory(this)">一般</button>
+        </div>
+        <div class="picker-gallery-grid" id="report-picker-grid"></div>
+      </div>
+      <div class="modal-footer">
+        <div class="picker-upload-area">
+          <input type="file" id="report-picker-upload-input" accept="image/*" style="display:none">
+          <button type="button" class="btn btn-outline" id="report-picker-upload-btn">
+            <span class="material-symbols-outlined" style="font-size:18px;vertical-align:middle;margin-right:4px">upload</span>從電腦上傳圖片
+          </button>
+          <span id="report-picker-upload-status" style="font-size:13px;color:#a1a1aa;margin-left:8px"></span>
+        </div>
+        <div>
+          <button type="button" class="btn btn-secondary" onclick="closeReportImagePicker()">取消</button>
+          <button type="button" class="btn btn-primary" onclick="confirmReportImageSelection()">確認選擇</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast -->
   <div class="toast" id="toast"></div>
 
-  <script type="module" src="js/main.js?v=1.2"></script>
+  <script type="module" src="js/main.js?v=1.3"></script>
 </body>
 </html>
