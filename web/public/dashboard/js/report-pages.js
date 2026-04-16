@@ -195,9 +195,10 @@ const THEME_CONFIG = {
     content_css: 'dark',
     content_style: `
       body { font-family: 'Noto Sans TC', sans-serif; font-size: 15px; line-height: 1.8; padding: 20px 28px; color: #e0e0e0; background: #1e2028; }
-      h1 { font-size: 1.8em; margin: 0.6em 0 0.3em; color: #f4f4f5; border-bottom: 2px solid #333; padding-bottom: 8px; }
-      h2 { font-size: 1.4em; margin: 0.5em 0 0.3em; color: #e4e4e7; }
-      h3 { font-size: 1.2em; margin: 0.4em 0 0.2em; color: #d4d4d8; }
+      h1 { font-size: 1.8em; margin: 0.6em 0 0.3em; color: #f4f4f5; display: flex; align-items: center; gap: 16px; }
+      h1::after { content: ''; flex: 1; height: 1px; background: #555; opacity: 0.5; }
+      h2 { font-size: 1.4em; margin: 0.5em 0 0.3em; color: #e4e4e7; padding-left: 12px; border-left: 4px solid #5b8def; }
+      h3 { font-size: 1.1em; margin: 0.4em 0 0.2em; color: #d4d4d8; padding: 8px 14px; border-left: 3px solid #333; background: #22252f; border-radius: 0 8px 8px 0; }
       table { border-collapse: collapse; width: 100%; margin: 12px 0; }
       table td, table th { border: 1px solid #555; padding: 8px 12px; }
       table th, thead td { background: #2a2d3a; font-weight: 600; color: #e0e0e0; }
@@ -215,9 +216,10 @@ const THEME_CONFIG = {
     content_css: 'default',
     content_style: `
       body { font-family: 'Noto Sans TC', sans-serif; font-size: 15px; line-height: 1.8; padding: 20px 28px; color: #3D3832; background: #ffffff; }
-      h1 { font-family: 'Noto Serif TC', serif; font-size: 28px; font-weight: 700; line-height: 38px; color: #2B3D6B; margin: 0 0 12px; padding-bottom: 14px; border-bottom: 2px solid #2B3D6B; }
-      h2 { font-size: 20px; font-weight: 700; line-height: 30px; color: #2B3D6B; margin: 32px 0 12px; padding-left: 12px; border-left: 3px solid #2B3D6B; }
-      h3 { font-size: 17px; font-weight: 700; color: #3D3832; margin: 24px 0 10px; }
+      h1 { font-family: 'Noto Serif TC', serif; font-size: 28px; font-weight: 700; line-height: 38px; color: #2B3D6B; margin: 0 0 20px; display: flex; align-items: center; gap: 16px; }
+      h1::after { content: ''; flex: 1; height: 1px; background: #2B3D6B; opacity: 0.3; }
+      h2 { font-size: 20px; font-weight: 700; line-height: 30px; color: #2B3D6B; margin: 32px 0 12px; padding-left: 12px; border-left: 4px solid #2B3D6B; }
+      h3 { font-size: 16px; font-weight: 600; color: #3D3832; margin: 20px 0 10px; padding: 10px 14px; border-left: 3px solid #EEEAE4; background: #F7F5F0; border-radius: 0 8px 8px 0; }
       h4 { font-size: 16px; font-weight: 700; color: #3D3832; margin: 20px 0 8px; }
       p { font-size: 15px; line-height: 28px; color: #3D3832; margin: 0 0 14px; }
       table { border-collapse: collapse; width: 100%; margin: 20px 0; font-size: 14px; }

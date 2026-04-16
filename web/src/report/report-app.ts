@@ -103,9 +103,9 @@ export class ReportApp extends LitElement {
     const content = this.currentContent;
     if (!content) return '';
     let result = content;
-    // Add ids to h1 and h2 headings (for sidebar navigation)
+    // Add ids to h1, h2, h3 headings (for sidebar navigation)
     for (const h of this.sidebarHeadings) {
-      const tag = h.level === 1 ? 'h1' : 'h2';
+      const tag = h.level === 1 ? 'h1' : h.level === 2 ? 'h2' : 'h3';
       const escaped = h.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const regex = new RegExp(`<${tag}([^>]*)>\\s*${escaped}\\s*</${tag}>`, 'i');
       result = result.replace(regex, `<${tag}$1 id="${h.id}">${h.text}</${tag}>`);
@@ -114,14 +114,14 @@ export class ReportApp extends LitElement {
   }
 
 
-  /** Extract H1 + H2 headings for sidebar navigation */
+  /** Extract H1 + H2 + H3 headings for sidebar navigation */
   private get sidebarHeadings(): { id: string; text: string; level: number }[] {
     const headings: { id: string; text: string; level: number }[] = [];
     const parser = new DOMParser();
     const doc = parser.parseFromString(this.currentContent, 'text/html');
-    doc.querySelectorAll('h1, h2').forEach((el) => {
+    doc.querySelectorAll('h1, h2, h3').forEach((el) => {
       const text = (el.textContent || '').trim();
-      const level = el.tagName === 'H1' ? 1 : 2;
+      const level = el.tagName === 'H1' ? 1 : el.tagName === 'H2' ? 2 : 3;
       const id = `h${level}-` + text.replace(/\s+/g, '-').replace(/[^\w\u4e00-\u9fff-]/g, '').toLowerCase();
       headings.push({ id, text, level });
     });
@@ -327,7 +327,7 @@ export class ReportApp extends LitElement {
     }
     .sidebar-link {
       display: flex; align-items: center;
-      width: 100%; padding: 8px 10px;
+      width: 100%; padding: 8px 10px; margin-top: 8px;
       border: none; background: transparent; border-radius: 8px;
       font-family: 'Noto Sans TC', sans-serif;
       font-size: 14px; font-weight: 400;
@@ -337,8 +337,14 @@ export class ReportApp extends LitElement {
     }
     .sidebar-link:hover { background: var(--beige-bg); }
     .sidebar-link.active { background: var(--navy); color: #fff; font-weight: 500; }
-    .sidebar-link.sub { padding-left: 20px; font-size: 13px; color: var(--text-muted); }
-    .sidebar-link.sub.active { color: #fff; }
+    .sidebar-link.sub {
+      padding: 6px 12px; font-size: 12px; color: var(--text-sub);
+      border: 1px solid var(--text-sub); margin-left: 10px; margin-top: 4px;
+      border-radius: 8px; line-height: 1.5; font-weight: 700;
+      width: calc(100% - 10px);
+    }
+    .sidebar-link.sub:hover { color: var(--navy); border-color: var(--navy); background: rgba(159,184,255,0.15); }
+    .sidebar-link.sub.active { color: var(--navy); border-color: var(--navy); background: rgba(159,184,255,0.3); font-weight: 700; }
 
     /* ── Mobile: Section Pills (hidden on desktop) ── */
     .section-pills { display: none; }
@@ -419,13 +425,21 @@ export class ReportApp extends LitElement {
     .md h1 {
       font-family: 'Noto Serif TC', serif;
       font-size: 28px; font-weight: 700; line-height: 38px; color: var(--navy);
-      margin: 0 0 12px; padding-bottom: 14px; border-bottom: 2px solid var(--navy);
+      margin: 0 0 20px;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .md h1::after {
+      content: ''; flex: 1; height: 1px; background: var(--navy); opacity: 0.3;
     }
     .md h2 {
       font-size: 20px; font-weight: 700; line-height: 30px; color: var(--navy);
-      margin: 32px 0 12px; padding-left: 12px; border-left: 3px solid var(--navy);
+      margin: 32px 0 12px; padding-left: 12px; border-left: 4px solid var(--navy);
     }
-    .md h3 { font-size: 17px; font-weight: 700; color: var(--text-dark); margin: 24px 0 10px; }
+    .md h3 {
+      font-size: 16px; font-weight: 600; color: var(--text-dark); margin: 20px 0 10px;
+      padding: 10px 14px; border-left: 3px solid var(--border-light);
+      background: var(--beige-bg); border-radius: 0 8px 8px 0;
+    }
     .md h4 { font-size: 16px; font-weight: 700; color: var(--text-dark); margin: 20px 0 8px; }
     .md p { font-size: 15px; line-height: 28px; color: var(--text-dark); margin: 0 0 14px; }
     .md ul, .md ol { padding-left: 24px; margin: 0 0 14px; }
@@ -547,7 +561,7 @@ export class ReportApp extends LitElement {
       }
 
       /* ── Mobile Content Styles ── */
-      .md h1 { font-size: 24px; line-height: 34px; padding-bottom: 12px; border-bottom-width: 1px; }
+      .md h1 { font-size: 22px; line-height: 32px; gap: 12px; }
       .md h2 { font-size: 20px; line-height: 28px; margin: 28px 0 12px; padding-left: 10px; border-left-width: 3px; }
       .md h3 { font-size: 18px; margin: 24px 0 10px; }
       .md p, .md li { font-size: 14px; line-height: 24px; }
@@ -643,12 +657,34 @@ export class ReportApp extends LitElement {
           <!-- Desktop: Sidebar (H1 + H2 headings from content) -->
           <div class="sidebar-card ${this.sidebarOpen ? 'open' : ''}">
             <div class="sidebar-heading">${this.sidebarHeadings.find(h => h.level === 1)?.text || chapter?.title || ''}</div>
-            ${this.sidebarHeadings.filter(h => h.level === 2).map(h => html`
-              <button
-                class="sidebar-link ${this.activeTocId === h.id ? 'active' : ''}"
-                @click=${() => this.scrollToHeading(h.id)}
-              >${h.text}</button>
-            `)}
+            ${(() => {
+              const allHeadings = this.sidebarHeadings;
+              const h2Items = allHeadings.filter(h => h.level === 2);
+              return h2Items.map(h2 => {
+                // Find H3 children between this H2 and the next H2
+                const h2Idx = allHeadings.findIndex(x => x.id === h2.id);
+                const h3Children: { id: string; text: string; level: number }[] = [];
+                for (let i = h2Idx + 1; i < allHeadings.length; i++) {
+                  if (allHeadings[i].level <= 2) break;
+                  if (allHeadings[i].level === 3) h3Children.push(allHeadings[i]);
+                }
+                const isH2Active = this.activeTocId === h2.id;
+                const isChildActive = h3Children.some(c => this.activeTocId === c.id);
+
+                return html`
+                  <button
+                    class="sidebar-link ${isH2Active || isChildActive ? 'active' : ''}"
+                    @click=${() => this.scrollToHeading(h2.id)}
+                  >${h2.text}</button>
+                  ${h3Children.map(h3 => html`
+                    <button
+                      class="sidebar-link sub ${this.activeTocId === h3.id ? 'active' : ''}"
+                      @click=${() => this.scrollToHeading(h3.id)}
+                    >${h3.text}</button>
+                  `)}
+                `;
+              });
+            })()}
           </div>
 
           <!-- Content Card -->
