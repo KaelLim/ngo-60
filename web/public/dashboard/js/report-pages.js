@@ -488,6 +488,10 @@ function postProcessMammothHtml(html) {
  * Extract base64 images from HTML, upload to /api/gallery, replace with server URLs.
  * Mammoth embeds docx images as data:image/... base64 strings.
  */
+/**
+ * Extract base64 images from HTML, upload to gallery (same as 圖庫管理),
+ * replace with /uploads/gallery/ URLs.
+ */
 async function uploadEmbeddedImages(html) {
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, 'text/html');
@@ -501,40 +505,25 @@ async function uploadEmbeddedImages(html) {
   for (const img of images) {
     try {
       const src = img.getAttribute('src');
-      // Convert base64 to blob
       const res = await fetch(src);
       const blob = await res.blob();
       const ext = blob.type.split('/')[1] || 'png';
       const file = new File([blob], `docx-img-${Date.now()}-${uploaded}.${ext}`, { type: blob.type });
 
-      // Upload to gallery
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('category', 'report');
-
-      const token = localStorage.getItem('token');
-      const uploadRes = await fetch('/api/gallery', {
-        method: 'POST',
-        headers: token ? { 'Authorization': 'Bearer ' + token } : {},
-        body: formData
-      });
-
-      if (uploadRes.ok) {
-        const data = await uploadRes.json();
-        img.setAttribute('src', '/uploads/gallery/' + data.filename);
-        img.style.display = 'block';
-        img.style.margin = '16px auto';
-        img.style.maxWidth = '100%';
-        uploaded++;
-      }
+      // Use same api.uploadGalleryImage as 圖庫管理
+      const data = await api.uploadGalleryImage(file, 'report');
+      img.setAttribute('src', '/uploads/gallery/' + data.filename);
+      img.style.display = 'block';
+      img.style.margin = '16px auto';
+      img.style.maxWidth = '100%';
+      uploaded++;
     } catch (err) {
       console.warn('Image upload failed:', err);
-      // Keep base64 if upload fails
     }
   }
 
   if (uploaded > 0) {
-    showToast(`已上傳 ${uploaded} 張圖片`, 'success');
+    showToast(`已上傳 ${uploaded} 張圖片到圖庫`, 'success');
   }
 
   return doc.body.innerHTML;
