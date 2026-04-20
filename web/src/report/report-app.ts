@@ -345,6 +345,7 @@ export class ReportApp extends LitElement {
       height: 56px; padding: 0 32px;
     }
     .topbar-left { display: flex; align-items: center; gap: 16px; }
+    .logo-ci { height: 28px; width: auto; display: block; }
 
     .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
     .logo-icon {
@@ -561,6 +562,7 @@ export class ReportApp extends LitElement {
       .logo { gap: 8px; }
       .logo-icon { width: 26px; height: 26px; border-radius: 6px; }
       .logo-text { font-size: 14px; font-weight: 600; }
+      .logo-ci { height: 22px; }
 
       /* ── Mobile Menu Tabs: 40px, horizontal scroll, no hamburger ── */
       .menubar {
@@ -746,11 +748,8 @@ export class ReportApp extends LitElement {
           <div class="topbar">
             <div class="topbar-left">
               <a class="logo" href="/">
-                <div class="logo-icon"><img src="/favicon.svg" alt="慈濟"></div>
-                <span class="logo-text">影響力報告書</span>
+                <img class="logo-ci" src="/report-logo.png" alt="慈濟影響力報告書">
               </a>
-              <div class="topbar-divider"></div>
-              <span class="topbar-org">慈濟慈善基金會</span>
             </div>
             <div class="topbar-right">
               <a class="topbar-link" href="/">返回官網</a>
