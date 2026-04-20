@@ -20,10 +20,71 @@ async function loadImpactConfig() {
     if (config.video_playlist_id) {
       loadVideoPreview(config.video_playlist_id);
     }
+
+    // Load report PDF status
+    updateReportPdfUI(config.report_pdf_url);
   } catch (e) {
     console.error('Failed to load impact config:', e);
   }
 }
+
+function updateReportPdfUI(pdfUrl) {
+  const statusEl = document.getElementById('report-pdf-status');
+  const downloadEl = document.getElementById('report-pdf-download');
+  const deleteEl = document.getElementById('report-pdf-delete');
+  if (pdfUrl) {
+    statusEl.innerHTML = '<span style="color:#22c55e">✓ 已上傳</span>';
+    downloadEl.href = pdfUrl;
+    downloadEl.style.display = 'inline-flex';
+    deleteEl.style.display = 'inline-flex';
+  } else {
+    statusEl.innerHTML = '<span style="color:#71717a">尚未上傳 PDF</span>';
+    downloadEl.style.display = 'none';
+    deleteEl.style.display = 'none';
+  }
+}
+
+window.uploadReportPdf = async function(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const statusEl = document.getElementById('report-pdf-status');
+  statusEl.innerHTML = '<span style="color:#a1a1aa">上傳中...</span>';
+
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    const token = localStorage.getItem('token');
+    const res = await fetch('/api/impact-config/pdf', {
+      method: 'POST',
+      headers: token ? { 'Authorization': 'Bearer ' + token } : {},
+      body: formData
+    });
+    if (!res.ok) throw new Error('上傳失敗');
+    const data = await res.json();
+    updateReportPdfUI(data.url);
+    showToast('PDF 上傳成功', 'success');
+  } catch (err) {
+    statusEl.innerHTML = '<span style="color:#ef4444">上傳失敗</span>';
+    showToast('PDF 上傳失敗：' + err.message, 'error');
+  }
+  input.value = '';
+};
+
+window.deleteReportPdf = async function() {
+  if (!confirm('確定要刪除報告書 PDF 嗎？')) return;
+  try {
+    const token = localStorage.getItem('token');
+    await fetch('/api/impact-config/pdf', {
+      method: 'DELETE',
+      headers: token ? { 'Authorization': 'Bearer ' + token } : {}
+    });
+    updateReportPdfUI('');
+    showToast('PDF 已刪除', 'success');
+  } catch (err) {
+    showToast('刪除失敗：' + err.message, 'error');
+  }
+};
 
 async function loadVideoPreview(playlistId) {
   const previewEl = document.getElementById('video-preview');

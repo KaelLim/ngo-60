@@ -293,6 +293,7 @@ CREATE TABLE public.impact_config (
     video_playlist_id character varying(100),
     video_section_title character varying(200) DEFAULT '來自全球的祝福',
     video_published integer DEFAULT 1,
+    report_pdf_url text DEFAULT '',
     updated_at timestamp without time zone DEFAULT now()
 );
 

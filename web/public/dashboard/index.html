@@ -181,6 +181,26 @@
               <button type="submit" class="btn btn-primary">儲存設定</button>
             </form>
 
+            <!-- 報告書 PDF -->
+            <div style="margin-top: 24px; border-top: 1px solid #27272a; padding-top: 20px;">
+              <h3 style="margin: 0 0 12px; font-size: 16px; font-weight: 600;">報告書 PDF 下載檔案</h3>
+              <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+                <div id="report-pdf-status" style="font-size:13px;color:#a1a1aa">載入中...</div>
+                <label class="btn btn-primary btn-sm" style="cursor:pointer">
+                  <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle">upload_file</span>
+                  上傳 PDF
+                  <input type="file" accept=".pdf" style="display:none" id="report-pdf-upload" onchange="uploadReportPdf(this)">
+                </label>
+                <a id="report-pdf-download" href="#" class="btn btn-secondary btn-sm" style="display:none" download>
+                  <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle">download</span>
+                  下載預覽
+                </a>
+                <button id="report-pdf-delete" class="btn btn-danger btn-sm" style="display:none" onclick="deleteReportPdf()">
+                  <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle">delete</span>
+                </button>
+              </div>
+            </div>
+
             <!-- 影響力節點 -->
             <div style="margin-top: 24px; display: flex; justify-content: space-between; align-items: center;">
               <h3 style="margin: 0; font-size: 16px; font-weight: 600;">影響力節點</h3>
@@ -418,9 +438,15 @@
               </button>
             </div>
           </div>
-          <div style="height:65vh">
+          <div style="height:65vh;position:relative">
             <textarea id="report-tinymce-editor"></textarea>
+            <!-- Loading overlay -->
+            <div id="report-editor-loading" style="display:none;position:absolute;inset:0;background:rgba(24,24,27,0.85);z-index:100;justify-content:center;align-items:center;flex-direction:column;gap:12px;border-radius:0 0 12px 12px">
+              <div style="width:32px;height:32px;border:3px solid #3f3f46;border-top-color:#3b82f6;border-radius:50%;animation:spin 0.8s linear infinite"></div>
+              <span style="color:#a1a1aa;font-size:13px">載入章節內容中...</span>
+            </div>
           </div>
+          <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
         </div>
 
         <div id="report-empty-state" class="card" style="padding:40px;text-align:center;color:#71717a">

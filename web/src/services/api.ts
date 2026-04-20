@@ -57,6 +57,7 @@ export interface ImpactConfig {
   video_playlist_id: string | null;
   video_section_title: string | null;
   video_published: number;
+  report_pdf_url: string | null;
   updated_at: string | null;
 }
 

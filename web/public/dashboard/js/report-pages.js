@@ -48,32 +48,56 @@ function renderTabs() {
 
 // ── Select Chapter → Load Editor ──
 
+let isEditorLoading = false;
+
 window.selectReportChapter = async function(chapterId) {
+  if (isEditorLoading) return; // Prevent switching while loading
   if (chapterId === activeChapterId && tinymce.get('report-tinymce-editor')) return;
   activeChapterId = chapterId;
   renderTabs();
   await loadChapterEditor(chapterId);
 };
 
+function showEditorLoading(show) {
+  const overlay = document.getElementById('report-editor-loading');
+  if (overlay) overlay.style.display = show ? 'flex' : 'none';
+}
+
 async function loadChapterEditor(chapterId) {
   const chapter = chaptersData.find(c => c.chapter_id === chapterId);
   if (!chapter) return;
 
+  isEditorLoading = true;
   document.getElementById('report-empty-state').style.display = 'none';
   document.getElementById('report-chapter-actions').style.display = 'flex';
+  document.getElementById('report-editor-card').style.display = 'block';
+  document.getElementById('report-editor-title').textContent = chapter.title;
 
-  // Fetch the "main" page - load content_raw for editing (fallback to content)
+  // Show loading overlay
+  showEditorLoading(true);
+
+  // Destroy old editor first
+  destroyEditor();
+
+  // Fetch content
   let content = '';
   try {
     const data = await api.getReportPage(chapterId, 'main');
     content = data.content_raw || data.content || '';
   } catch {
-    // Page might not exist yet - that's fine, start with empty
+    // Page might not exist yet
   }
 
-  document.getElementById('report-editor-title').textContent = chapter.title;
-  document.getElementById('report-editor-card').style.display = 'block';
-  initReportTinyMCE(content);
+  // Double-check chapter hasn't changed during fetch
+  if (activeChapterId !== chapterId) {
+    isEditorLoading = false;
+    return;
+  }
+
+  // Init editor and wait until fully ready
+  await initReportTinyMCE(content);
+  showEditorLoading(false);
+  isEditorLoading = false;
 }
 
 // ── Chapter CRUD ──
@@ -244,14 +268,15 @@ const THEME_CONFIG = {
 function destroyEditor() {
   const editor = tinymce.get('report-tinymce-editor');
   if (editor) {
-    editorContent = editor.getContent();
     editor.remove();
   }
+  editorContent = '';
 }
 
 function initReportTinyMCE(content) {
+  return new Promise((resolve) => {
   destroyEditor();
-  if (content !== undefined) editorContent = content;
+  editorContent = content || '';
   const theme = THEME_CONFIG[editorTheme] || THEME_CONFIG.light;
 
   updateThemeToggleBtn();
@@ -291,15 +316,22 @@ function initReportTinyMCE(content) {
 
       editor.on('init', () => {
         if (editorContent) editor.setContent(editorContent);
+        resolve();
       });
     }
   });
+  }); // end Promise
 }
 
-window.toggleEditorTheme = function() {
+window.toggleEditorTheme = async function() {
   editorTheme = editorTheme === 'dark' ? 'light' : 'dark';
   localStorage.setItem('report-editor-theme', editorTheme);
-  initReportTinyMCE();
+  // Save current content before theme switch
+  const editor = getReportEditor();
+  const currentContent = editor ? editor.getContent() : editorContent;
+  showEditorLoading(true);
+  await initReportTinyMCE(currentContent);
+  showEditorLoading(false);
 };
 
 function updateThemeToggleBtn() {
