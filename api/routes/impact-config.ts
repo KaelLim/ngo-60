@@ -89,7 +89,8 @@ impactConfigRoutes.post("/pdf", async (c) => {
 
     await query("UPDATE impact_config SET report_pdf_url = $1, updated_at = now() WHERE id = 1", [pdfUrl]);
 
-    return c.json({ url: pdfUrl, filename });
+    const config = await query<ImpactConfig>("SELECT report_pdf_name FROM impact_config WHERE id = 1");
+    return c.json({ url: pdfUrl, filename, name: config[0]?.report_pdf_name || '慈濟60週年影響力報告書' });
   } catch (error) {
     console.error("PDF upload error:", error);
     return c.json({ error: "上傳失敗" }, 500);

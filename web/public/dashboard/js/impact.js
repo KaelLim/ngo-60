@@ -52,24 +52,64 @@ window.uploadReportPdf = async function(input) {
   const file = input.files[0];
   if (!file) return;
 
-  const statusEl = document.getElementById('report-pdf-status');
-  statusEl.innerHTML = '<span style="color:#a1a1aa">上傳中...</span>';
+  const emptyEl = document.getElementById('report-pdf-empty');
+  const infoEl = document.getElementById('report-pdf-info');
+
+  // Show loading state
+  emptyEl.style.display = 'none';
+  infoEl.style.display = 'none';
+
+  // Create loading overlay
+  let loadingEl = document.getElementById('report-pdf-loading');
+  if (!loadingEl) {
+    loadingEl = document.createElement('div');
+    loadingEl.id = 'report-pdf-loading';
+    emptyEl.parentNode.insertBefore(loadingEl, emptyEl);
+  }
+  const sizeMB = (file.size / 1024 / 1024).toFixed(1);
+  loadingEl.style.cssText = 'border:1px solid #27272a;border-radius:12px;padding:28px 20px;text-align:center;background:#09090b';
+  loadingEl.innerHTML = `
+    <div style="display:inline-block;width:32px;height:32px;border:3px solid #27272a;border-top-color:#3b82f6;border-radius:50%;animation:spin 0.8s linear infinite;margin-bottom:10px"></div>
+    <p style="color:#a1a1aa;font-size:13px;margin:0">上傳中... <strong>${file.name}</strong> (${sizeMB} MB)</p>
+    <div style="margin-top:12px;background:#27272a;border-radius:4px;height:6px;overflow:hidden">
+      <div id="report-pdf-progress" style="height:100%;background:#3b82f6;border-radius:4px;width:0%;transition:width 0.3s"></div>
+    </div>
+  `;
 
   try {
     const formData = new FormData();
     formData.append('file', file);
     const token = localStorage.getItem('token');
-    const res = await fetch('/api/impact-config/pdf', {
-      method: 'POST',
-      headers: token ? { 'Authorization': 'Bearer ' + token } : {},
-      body: formData
+
+    // Use XMLHttpRequest for progress tracking
+    const data = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          const percent = Math.round((e.loaded / e.total) * 100);
+          const bar = document.getElementById('report-pdf-progress');
+          if (bar) bar.style.width = percent + '%';
+        }
+      });
+      xhr.addEventListener('load', () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve(JSON.parse(xhr.responseText));
+        } else {
+          reject(new Error('上傳失敗'));
+        }
+      });
+      xhr.addEventListener('error', () => reject(new Error('網路錯誤')));
+      xhr.open('POST', '/api/impact-config/pdf');
+      if (token) xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+      xhr.send(formData);
     });
-    if (!res.ok) throw new Error('上傳失敗');
-    const data = await res.json();
-    updateReportPdfUI(data.url);
+
+    loadingEl.style.display = 'none';
+    updateReportPdfUI(data.url, data.name);
     showToast('PDF 上傳成功', 'success');
   } catch (err) {
-    statusEl.innerHTML = '<span style="color:#ef4444">上傳失敗</span>';
+    loadingEl.style.display = 'none';
+    emptyEl.style.display = 'block';
     showToast('PDF 上傳失敗：' + err.message, 'error');
   }
   input.value = '';
