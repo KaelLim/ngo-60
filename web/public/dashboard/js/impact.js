@@ -22,25 +22,29 @@ async function loadImpactConfig() {
     }
 
     // Load report PDF status
-    updateReportPdfUI(config.report_pdf_url);
+    updateReportPdfUI(config.report_pdf_url, config.report_pdf_name);
   } catch (e) {
     console.error('Failed to load impact config:', e);
   }
 }
 
-function updateReportPdfUI(pdfUrl) {
-  const statusEl = document.getElementById('report-pdf-status');
+function updateReportPdfUI(pdfUrl, pdfName) {
+  const emptyEl = document.getElementById('report-pdf-empty');
+  const infoEl = document.getElementById('report-pdf-info');
   const downloadEl = document.getElementById('report-pdf-download');
-  const deleteEl = document.getElementById('report-pdf-delete');
+  const filenameEl = document.getElementById('report-pdf-filename');
+  const nameInput = document.getElementById('report-pdf-name');
+
   if (pdfUrl) {
-    statusEl.innerHTML = '<span style="color:#22c55e">✓ 已上傳</span>';
+    emptyEl.style.display = 'none';
+    infoEl.style.display = 'block';
     downloadEl.href = pdfUrl;
-    downloadEl.style.display = 'inline-flex';
-    deleteEl.style.display = 'inline-flex';
+    downloadEl.download = (pdfName || '慈濟60週年影響力報告書') + '.pdf';
+    filenameEl.textContent = (pdfName || '慈濟60週年影響力報告書') + '.pdf';
+    nameInput.value = pdfName || '慈濟60週年影響力報告書';
   } else {
-    statusEl.innerHTML = '<span style="color:#71717a">尚未上傳 PDF</span>';
-    downloadEl.style.display = 'none';
-    deleteEl.style.display = 'none';
+    emptyEl.style.display = 'block';
+    infoEl.style.display = 'none';
   }
 }
 
@@ -69,6 +73,25 @@ window.uploadReportPdf = async function(input) {
     showToast('PDF 上傳失敗：' + err.message, 'error');
   }
   input.value = '';
+};
+
+window.saveReportPdfName = async function() {
+  const name = document.getElementById('report-pdf-name').value.trim();
+  if (!name) { showToast('請輸入檔名', 'error'); return; }
+  try {
+    const token = localStorage.getItem('token');
+    await fetch('/api/impact-config', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': 'Bearer ' + token } : {}) },
+      body: JSON.stringify({ report_pdf_name: name })
+    });
+    // Update download link
+    const downloadEl = document.getElementById('report-pdf-download');
+    downloadEl.download = name + '.pdf';
+    showToast('檔名已儲存', 'success');
+  } catch (err) {
+    showToast('儲存失敗', 'error');
+  }
 };
 
 window.deleteReportPdf = async function() {

@@ -294,6 +294,7 @@ CREATE TABLE public.impact_config (
     video_section_title character varying(200) DEFAULT '來自全球的祝福',
     video_published integer DEFAULT 1,
     report_pdf_url text DEFAULT '',
+    report_pdf_name text DEFAULT '慈濟60週年影響力報告書',
     updated_at timestamp without time zone DEFAULT now()
 );
 

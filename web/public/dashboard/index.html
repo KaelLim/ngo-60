@@ -183,22 +183,50 @@
 
             <!-- 報告書 PDF -->
             <div style="margin-top: 24px; border-top: 1px solid #27272a; padding-top: 20px;">
-              <h3 style="margin: 0 0 12px; font-size: 16px; font-weight: 600;">報告書 PDF 下載檔案</h3>
-              <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-                <div id="report-pdf-status" style="font-size:13px;color:#a1a1aa">載入中...</div>
-                <label class="btn btn-primary btn-sm" style="cursor:pointer">
-                  <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle">upload_file</span>
-                  上傳 PDF
+              <h3 style="margin: 0 0 16px; font-size: 16px; font-weight: 600;">報告書 PDF 下載檔案</h3>
+
+              <!-- No PDF uploaded state -->
+              <div id="report-pdf-empty" style="border:2px dashed #27272a;border-radius:12px;padding:28px 20px;text-align:center">
+                <span class="material-symbols-outlined" style="font-size:40px;color:#3f3f46;display:block;margin-bottom:8px">picture_as_pdf</span>
+                <p style="color:#71717a;font-size:13px;margin:0 0 12px">尚未上傳報告書 PDF，上傳後前端將顯示下載按鈕</p>
+                <label class="btn btn-primary" style="cursor:pointer">
+                  <span class="material-symbols-outlined" style="font-size:18px;vertical-align:middle">upload_file</span>
+                  選擇 PDF 檔案
                   <input type="file" accept=".pdf" style="display:none" id="report-pdf-upload" onchange="uploadReportPdf(this)">
                 </label>
-                <a id="report-pdf-download" href="#" class="btn btn-secondary btn-sm" style="display:none" download>
-                  <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle">download</span>
-                  下載預覽
-                </a>
-                <button id="report-pdf-delete" class="btn btn-danger btn-sm" style="display:none" onclick="deleteReportPdf()">
-                  <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle">delete</span>
-                </button>
               </div>
+
+              <!-- PDF uploaded state -->
+              <div id="report-pdf-info" style="display:none;background:#09090b;border:1px solid #27272a;border-radius:12px;padding:16px 20px">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+                  <div style="width:44px;height:44px;background:linear-gradient(135deg,#dc2626,#b91c1c);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                    <span style="color:#fff;font-size:12px;font-weight:700;letter-spacing:0.5px">PDF</span>
+                  </div>
+                  <div style="flex:1;min-width:0">
+                    <div id="report-pdf-filename" style="font-size:14px;font-weight:500;color:#e4e4e7;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
+                    <div style="font-size:12px;color:#22c55e;margin-top:2px">
+                      <span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle">check_circle</span>
+                      已上傳
+                    </div>
+                  </div>
+                  <div style="display:flex;gap:6px;flex-shrink:0">
+                    <a id="report-pdf-download" href="#" class="btn btn-sm btn-secondary" download title="下載預覽">
+                      <span class="material-symbols-outlined" style="font-size:16px">download</span>
+                    </a>
+                    <button class="btn btn-sm btn-danger" onclick="deleteReportPdf()" title="刪除">
+                      <span class="material-symbols-outlined" style="font-size:16px">delete</span>
+                    </button>
+                  </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;padding-top:12px;border-top:1px solid #1f1f23">
+                  <label style="font-size:12px;color:#71717a;white-space:nowrap">使用者下載檔名</label>
+                  <input type="text" id="report-pdf-name" placeholder="慈濟60週年影響力報告書" value="慈濟60週年影響力報告書" style="flex:1;padding:7px 12px;background:#18181b;border:1px solid #27272a;border-radius:8px;color:#e4e4e7;font-size:13px;outline:none" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#27272a'">
+                  <span style="font-size:13px;color:#3f3f46">.pdf</span>
+                  <button class="btn btn-sm btn-primary" onclick="saveReportPdfName()">儲存檔名</button>
+                </div>
+              </div>
+
+              <div id="report-pdf-status" style="display:none"></div>
             </div>
 
             <!-- 影響力節點 -->

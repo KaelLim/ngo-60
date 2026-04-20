@@ -13,6 +13,7 @@ interface ImpactConfig {
   video_section_title: string | null;
   video_published: number;
   report_pdf_url: string | null;
+  report_pdf_name: string | null;
   updated_at: string | null;
 }
 
@@ -50,12 +51,13 @@ impactConfigRoutes.put("/", async (c) => {
     blessing_published = existing[0].blessing_published,
     video_playlist_id = existing[0].video_playlist_id,
     video_section_title = existing[0].video_section_title,
-    video_published = existing[0].video_published
+    video_published = existing[0].video_published,
+    report_pdf_name = existing[0].report_pdf_name
   } = body;
 
   const rows = await query<ImpactConfig>(
-    `UPDATE impact_config SET main_title = $1, subtitle = $2, published = $3, blessing_title = $4, blessing_section_name = $5, blessing_published = $6, video_playlist_id = $7, video_section_title = $8, video_published = $9, updated_at = now() WHERE id = 1 RETURNING *`,
-    [main_title, subtitle, published, blessing_title, blessing_section_name, blessing_published, video_playlist_id, video_section_title, video_published]
+    `UPDATE impact_config SET main_title = $1, subtitle = $2, published = $3, blessing_title = $4, blessing_section_name = $5, blessing_published = $6, video_playlist_id = $7, video_section_title = $8, video_published = $9, report_pdf_name = $10, updated_at = now() WHERE id = 1 RETURNING *`,
+    [main_title, subtitle, published, blessing_title, blessing_section_name, blessing_published, video_playlist_id, video_section_title, video_published, report_pdf_name]
   );
 
   return c.json(rows[0]);

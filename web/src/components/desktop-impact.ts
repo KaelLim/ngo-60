@@ -1030,7 +1030,7 @@ export class DesktopImpact extends LitElement {
                 ${arrowIcon}
               </button>
               ${this.config?.report_pdf_url ? html`
-                <a class="link-btn" href="${this.config.report_pdf_url}" download="慈濟60週年影響力報告書.pdf" title="下載報告書 PDF">
+                <a class="link-btn" href="${this.config.report_pdf_url}" download="${(this.config.report_pdf_name || '慈濟60週年影響力報告書') + '.pdf'}" title="下載報告書 PDF">
                   <svg viewBox="0 0 24 24" fill="none">
                     <path d="M12 3V15M12 15L7 10M12 15L17 10" stroke="#121212" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     <path d="M5 19H19" stroke="#121212" stroke-width="2" stroke-linecap="round"/>
