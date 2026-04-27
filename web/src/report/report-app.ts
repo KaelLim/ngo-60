@@ -359,11 +359,9 @@ export class ReportApp extends LitElement {
     .topbar-divider { width: 1px; height: 20px; background: #ddd; }
     .topbar-org { font-size: 16px; color: var(--text-sub); }
     .topbar-right { display: flex; align-items: center; gap: 16px; }
-    .topbar-link { font-size: 16px; color: var(--text-sub); text-decoration: none; transition: color 0.2s; }
-    .topbar-link:hover { color: var(--navy); }
-
-    /* Search button – mobile only */
-    .search-btn { display: none; background: none; border: none; cursor: pointer; padding: 0; line-height: 0; }
+    .topbar-link { display: flex; align-items: center; line-height: 0; transition: opacity 0.2s; }
+    .topbar-link:hover { opacity: 0.7; }
+    .topbar-link-img { height: 32px; width: auto; display: block; }
 
     /* ── Desktop: Menu Bar ── */
     .menubar {
@@ -554,10 +552,10 @@ export class ReportApp extends LitElement {
      * ════════════════════════════════════════════ */
     @media (max-width: 960px) {
 
-      /* ── Mobile Header: 52px, compact logo, search icon ── */
+      /* ── Mobile Header: 52px, compact logo, back-to-main image ── */
       .topbar { height: 52px; padding: 0 16px; }
-      .topbar-org, .topbar-divider, .topbar-link { display: none; }
-      .search-btn { display: flex; align-items: center; }
+      .topbar-org, .topbar-divider { display: none; }
+      .topbar-link-img { height: 26px; }
 
       .logo { gap: 8px; }
       .logo-icon { width: 26px; height: 26px; border-radius: 6px; }
@@ -747,18 +745,24 @@ export class ReportApp extends LitElement {
         <div class="header">
           <div class="topbar">
             <div class="topbar-left">
-              <a class="logo" href="/">
+              <a
+                class="logo"
+                href="#${this.chapters[0]?.chapter_id || ''}"
+                @click=${(e: Event) => {
+                  const first = this.chapters[0];
+                  if (first) {
+                    e.preventDefault();
+                    this.selectChapter(first.chapter_id);
+                  }
+                }}
+              >
                 <img class="logo-ci" src="/report-logo.png" alt="慈濟影響力報告書">
               </a>
             </div>
             <div class="topbar-right">
-              <a class="topbar-link" href="/">返回官網</a>
-              <button class="search-btn" aria-label="搜尋">
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                  <circle cx="7.5" cy="7.5" r="6" stroke="#2B3D6B" stroke-width="1.8"/>
-                  <line x1="12" y1="12" x2="16.5" y2="16.5" stroke="#2B3D6B" stroke-width="1.8" stroke-linecap="round"/>
-                </svg>
-              </button>
+              <a class="topbar-link" href="/" aria-label="返回慈濟60">
+                <img class="topbar-link-img" src="/back-to-main.png" alt="返回慈濟60">
+              </a>
             </div>
           </div>
           <div class="menubar">

@@ -49,8 +49,13 @@ function renderTabs() {
 // ── Select Chapter → Load Editor ──
 
 let isEditorLoading = false;
+let isSaving = false;
 
 window.selectReportChapter = async function(chapterId) {
+  if (isSaving) {
+    showToast('儲存中…請稍候', 'error');
+    return;
+  }
   if (isEditorLoading) return; // Prevent switching while loading
   if (chapterId === activeChapterId && tinymce.get('report-tinymce-editor')) return;
   activeChapterId = chapterId;
@@ -61,6 +66,16 @@ window.selectReportChapter = async function(chapterId) {
 function showEditorLoading(show) {
   const overlay = document.getElementById('report-editor-loading');
   if (overlay) overlay.style.display = show ? 'flex' : 'none';
+}
+
+function showSavingOverlay(show, message) {
+  const overlay = document.getElementById('report-saving-overlay');
+  if (!overlay) return;
+  if (message) {
+    const titleEl = document.getElementById('report-saving-title');
+    if (titleEl) titleEl.textContent = message;
+  }
+  overlay.style.display = show ? 'flex' : 'none';
 }
 
 async function loadChapterEditor(chapterId) {
@@ -405,21 +420,28 @@ window.saveReportEditor = async function() {
   if (!activeChapterId) return;
   const editor = getReportEditor();
   if (!editor) return;
+  if (isSaving) return;
 
+  // Snapshot chapter id at save start — must NOT use the global activeChapterId
+  // anywhere below, because the user can click another tab while we're awaiting,
+  // which would mutate activeChapterId and cause the PUT to overwrite the wrong row.
+  const chapterId = activeChapterId;
   const contentRaw = editor.getContent(); // Tables as HTML (for editor)
 
+  isSaving = true;
+  showSavingOverlay(true, '儲存中…');
   try {
     // Ensure "main" page exists
     try {
-      await api.getReportPage(activeChapterId, 'main');
+      await api.getReportPage(chapterId, 'main');
     } catch {
-      const chapter = chaptersData.find(c => c.chapter_id === activeChapterId);
-      await api.createReportPage(activeChapterId, { page_id: 'main', title: chapter?.title || activeChapterId });
+      const chapter = chaptersData.find(c => c.chapter_id === chapterId);
+      await api.createReportPage(chapterId, { page_id: 'main', title: chapter?.title || chapterId });
     }
 
     // Delete old table images from gallery before regenerating
     try {
-      const existingData = await api.getReportPage(activeChapterId, 'main');
+      const existingData = await api.getReportPage(chapterId, 'main');
       const oldContent = existingData.content || '';
       const oldTableImgs = oldContent.match(/uploads\/gallery\/([a-zA-Z0-9._-]+)/g) || [];
       const rawImgs = (contentRaw.match(/uploads\/gallery\/([a-zA-Z0-9._-]+)/g) || []);
@@ -448,17 +470,18 @@ window.saveReportEditor = async function() {
     let contentForFrontend = contentRaw;
     const tableCount = (contentRaw.match(/<table/g) || []).length;
     if (tableCount > 0) {
-      showToast(`轉換 ${tableCount} 個表格為圖片中...`, 'success');
+      showSavingOverlay(true, `轉換 ${tableCount} 個表格為圖片中…`);
       try {
         contentForFrontend = await convertTablesToImages(contentRaw);
       } catch (err) {
         console.warn('Table conversion failed, using raw:', err);
       }
+      showSavingOverlay(true, '儲存中…');
     }
 
     // Save both versions
     const token = localStorage.getItem('token');
-    const res = await fetch('/api/report-pages/' + activeChapterId + '/main', {
+    const res = await fetch('/api/report-pages/' + chapterId + '/main', {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -473,6 +496,9 @@ window.saveReportEditor = async function() {
     showToast('儲存成功！', 'success');
   } catch (err) {
     showToast('儲存失敗：' + err.message, 'error');
+  } finally {
+    isSaving = false;
+    showSavingOverlay(false);
   }
 };
 
@@ -620,25 +646,81 @@ window.importReportDocx = async function(input) {
   input.value = '';
 };
 
-window.exportReportDocx = function() {
+// Fetch <img> URLs and inline them as base64 data: URIs, so Word can read the
+// .docx offline (Word can't follow /uploads/... server-relative paths).
+async function inlineImagesAsBase64(html) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  const imgs = Array.from(doc.querySelectorAll('img'));
+  for (const img of imgs) {
+    const src = img.getAttribute('src') || '';
+    if (!src || src.startsWith('data:')) continue;
+    try {
+      const res = await fetch(src);
+      if (!res.ok) continue;
+      const blob = await res.blob();
+      const dataUrl = await new Promise((resolve, reject) => {
+        const r = new FileReader();
+        r.onload = () => resolve(r.result);
+        r.onerror = reject;
+        r.readAsDataURL(blob);
+      });
+      img.setAttribute('src', dataUrl);
+    } catch (err) {
+      console.warn('inline image failed:', src, err);
+    }
+  }
+  return doc.body.innerHTML;
+}
+
+// html-docx-js v0.3 renders tables more reliably with explicit HTML attributes
+// (border, cellspacing, cellpadding) and per-cell inline styles than with CSS
+// alone. Patch the HTML so the exported tables have visible borders.
+function reinforceTableMarkup(html) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  doc.querySelectorAll('table').forEach(tbl => {
+    tbl.setAttribute('border', '1');
+    tbl.setAttribute('cellspacing', '0');
+    tbl.setAttribute('cellpadding', '6');
+    const existing = tbl.getAttribute('style') || '';
+    tbl.setAttribute('style', existing + ';border-collapse:collapse;width:100%;');
+  });
+  doc.querySelectorAll('table td, table th').forEach(cell => {
+    const existing = cell.getAttribute('style') || '';
+    cell.setAttribute('style', existing + ';border:1px solid #999;padding:6pt 10pt;vertical-align:top;');
+  });
+  doc.querySelectorAll('table th').forEach(cell => {
+    const existing = cell.getAttribute('style') || '';
+    cell.setAttribute('style', existing + ';background:#2B3D6B;color:#ffffff;font-weight:bold;');
+  });
+  return doc.body.innerHTML;
+}
+
+window.exportReportDocx = async function() {
   const editor = getReportEditor();
   if (!editor) return;
 
   const chapter = chaptersData.find(c => c.chapter_id === activeChapterId);
   const fileName = (chapter?.title || 'report') + '.docx';
 
-  const fullHtml = `<!DOCTYPE html><html><head><meta charset="utf-8">
-    <style>
-      body { font-family: '微軟正黑體','Noto Sans TC',sans-serif; font-size: 12pt; line-height: 1.6; color: #222; }
-      h1 { font-size: 22pt; } h2 { font-size: 18pt; } h3 { font-size: 14pt; }
-      table { border-collapse: collapse; width: 100%; margin: 8pt 0; }
-      table td, table th { border: 1px solid #999; padding: 6pt 10pt; }
-      table th { background: #e8e8e8; font-weight: bold; }
-      blockquote { border-left: 3px solid #ccc; padding-left: 12px; color: #555; }
-      img { max-width: 100%; }
-    </style></head><body>${editor.getContent()}</body></html>`;
-
+  showSavingOverlay(true, '匯出中…內嵌圖片');
   try {
+    let body = editor.getContent();
+    body = await inlineImagesAsBase64(body);
+    body = reinforceTableMarkup(body);
+
+    const fullHtml = `<!DOCTYPE html><html><head><meta charset="utf-8">
+      <style>
+        body { font-family: '微軟正黑體','Noto Sans TC',sans-serif; font-size: 12pt; line-height: 1.6; color: #222; }
+        h1 { font-size: 22pt; } h2 { font-size: 18pt; } h3 { font-size: 14pt; }
+        table { border-collapse: collapse; width: 100%; margin: 8pt 0; }
+        table td, table th { border: 1px solid #999; padding: 6pt 10pt; }
+        table th { background: #e8e8e8; font-weight: bold; }
+        blockquote { border-left: 3px solid #ccc; padding-left: 12px; color: #555; }
+        img { max-width: 100%; }
+      </style></head><body>${body}</body></html>`;
+
     const docxLib = window.htmlDocx || window.HTMLDocx;
     if (!docxLib) { showToast('匯出元件未載入，請重新整理頁面', 'error'); return; }
     const blob = docxLib.asBlob(fullHtml, {
@@ -653,6 +735,8 @@ window.exportReportDocx = function() {
     showToast('已匯出 ' + fileName, 'success');
   } catch (err) {
     showToast('匯出失敗: ' + err.message, 'error');
+  } finally {
+    showSavingOverlay(false);
   }
 };
 
