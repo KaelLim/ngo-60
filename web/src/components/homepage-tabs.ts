@@ -144,7 +144,7 @@ export class HomepageTabs extends LitElement {
           class="tab ${this.activeTab === 'impact' ? 'active' : ''}"
           @click=${() => this.handleClick('impact')}
         >
-          與善同行
+          ${this.impactPublished ? '看影響' : '與善同行'}
         </button>
       </div>
     `;

@@ -960,7 +960,7 @@ export class DesktopImpact extends LitElement {
     return html`
       <div class="section-container">
         <!-- Section Title (always visible) -->
-        <div class="section-title">與善同行</div>
+        <div class="section-title">${this.config?.published === 1 ? '看影響' : '與善同行'}</div>
 
         <!-- Report Section -->
         ${this.config?.published === 1 ? html`
