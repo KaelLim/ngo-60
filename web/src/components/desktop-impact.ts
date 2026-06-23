@@ -23,6 +23,9 @@ export class DesktopImpact extends LitElement {
   private blessSubmitting = false;
 
   @state()
+  private blessRejectReason = '';
+
+  @state()
   private videos: PlaylistVideo[] = [];
 
   @state()
@@ -778,7 +781,7 @@ export class DesktopImpact extends LitElement {
       font-size: 18px;
       font-weight: 700;
       color: black;
-      line-height: 1.25;
+      line-height: 1.5;
       outline: none;
       background: white;
     }
@@ -816,6 +819,15 @@ export class DesktopImpact extends LitElement {
       font-size: 13px;
       font-weight: 500;
       color: rgba(0, 0, 0, 0.6);
+      line-height: 1.28;
+      margin: 0;
+    }
+
+    .bless-reject {
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      color: #d9362b;
       line-height: 1.28;
       margin: 0;
     }
@@ -925,12 +937,22 @@ export class DesktopImpact extends LitElement {
     const msg = this.blessInput.trim();
     if (!msg || this.blessSubmitting) return;
     this.blessSubmitting = true;
+    this.blessRejectReason = '';
     try {
-      await api.createBlessingTag(msg);
-      this.blessSubmitted = true;
-      this.blessInput = '';
+      const result = await api.createBlessingTag(msg);
+      if (result.ok) {
+        this.blessSubmitted = true;
+        // 立即把通過的祝福加進泡泡牆（維持最新 10 筆，舊的擠掉）
+        if (result.tag) {
+          this.blessingTags = [result.tag, ...this.blessingTags].slice(0, 10);
+        }
+        this.blessInput = '';
+      } else {
+        this.blessRejectReason = result.reason || '未通過審查';
+      }
     } catch (e) {
       console.error('Failed to submit blessing:', e);
+      this.blessRejectReason = '送出失敗，請稍後再試';
     } finally {
       this.blessSubmitting = false;
     }
@@ -1279,7 +1301,7 @@ export class DesktopImpact extends LitElement {
                 type="text"
                 placeholder="輸入祝福語"
                 .value=${this.blessInput}
-                @input=${(e: InputEvent) => { this.blessInput = (e.target as HTMLInputElement).value; }}
+                @input=${(e: InputEvent) => { this.blessInput = (e.target as HTMLInputElement).value; this.blessRejectReason = ''; }}
                 @keydown=${(e: KeyboardEvent) => { if (e.key === 'Enter') this.handleBlessSubmit(); }}
               />
               ${this.blessSubmitted ? html`
@@ -1289,9 +1311,10 @@ export class DesktopImpact extends LitElement {
                   class="bless-submit-btn ${this.blessInput.trim() ? 'active' : ''}"
                   ?disabled=${!this.blessInput.trim() || this.blessSubmitting}
                   @click=${this.handleBlessSubmit}
-                >送出</button>
+                >${this.blessSubmitting ? '審查中…' : '送出'}</button>
               `}
             </div>
+            ${this.blessRejectReason ? html`<p class="bless-reject">⚠ ${this.blessRejectReason}</p>` : ''}
             <p class="bless-disclaimer">* AI執勤中，唯有溫暖、正向語彙可通關。</p>
           </div>
         </div>

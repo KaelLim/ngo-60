@@ -1344,6 +1344,15 @@ export class SheetContent extends LitElement {
       margin: 0;
     }
 
+    .bless-modal-reject {
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      color: #d9362b;
+      line-height: 1.28;
+      margin: 0;
+    }
+
     /* ========== Schedule Tab Styles ========== */
     .schedule-container {
       display: flex;
@@ -1613,6 +1622,12 @@ export class SheetContent extends LitElement {
   @state()
   private blessSubmitted = false;
 
+  @state()
+  private blessSubmitting = false;
+
+  @state()
+  private blessRejectReason = '';
+
   connectedCallback() {
     super.connectedCallback();
     this.storeController = new StoreController(this, this.appStore);
@@ -1689,7 +1704,7 @@ export class SheetContent extends LitElement {
         api.getImpactSections(),
         api.getImpactConfig(),
         api.getBlessings(true), // Get featured blessings
-        api.getBlessingTags()
+        api.getBlessingTags(10)
       ]);
 
       this.topics = topics;
@@ -1769,13 +1784,23 @@ export class SheetContent extends LitElement {
 
   private async submitBlessing() {
     const msg = this.blessInputValue.trim();
-    if (!msg) return;
+    if (!msg || this.blessSubmitting) return;
+    this.blessSubmitting = true;
+    this.blessRejectReason = '';
     try {
-      await api.createBlessingTag(msg);
-      this.blessMessages = [...this.blessMessages, msg];
-      this.blessSubmitted = true;
+      const result = await api.createBlessingTag(msg);
+      if (result.ok) {
+        // 立即顯示通過的祝福（維持最新 10 筆，舊的擠掉）
+        this.blessMessages = [msg, ...this.blessMessages].slice(0, 10);
+        this.blessSubmitted = true;
+      } else {
+        this.blessRejectReason = result.reason || '未通過審查';
+      }
     } catch (e) {
       console.error('Failed to submit blessing:', e);
+      this.blessRejectReason = '送出失敗，請稍後再試';
+    } finally {
+      this.blessSubmitting = false;
     }
   }
 
@@ -2249,15 +2274,16 @@ export class SheetContent extends LitElement {
                   type="text"
                   placeholder="輸入祝福語"
                   .value=${this.blessInputValue}
-                  @input=${(e: InputEvent) => { this.blessInputValue = (e.target as HTMLInputElement).value; }}
+                  @input=${(e: InputEvent) => { this.blessInputValue = (e.target as HTMLInputElement).value; this.blessRejectReason = ''; }}
                   @keydown=${(e: KeyboardEvent) => { if (e.key === 'Enter') this.submitBlessing(); }}
                 />
                 ${this.blessSubmitted ? html`
                   <button class="bless-modal-submit done" @click=${() => this.closeBlessModal()}>完成</button>
                 ` : html`
-                  <button class="bless-modal-submit" @click=${() => this.submitBlessing()}>送出</button>
+                  <button class="bless-modal-submit" ?disabled=${this.blessSubmitting} @click=${() => this.submitBlessing()}>${this.blessSubmitting ? '審查中…' : '送出'}</button>
                 `}
               </div>
+              ${this.blessRejectReason ? html`<p class="bless-modal-reject">⚠ ${this.blessRejectReason}</p>` : ''}
               <p class="bless-modal-disclaimer">* AI執勤中，唯有溫暖、正向語彙可通關。</p>
             </div>
           </div>

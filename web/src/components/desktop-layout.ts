@@ -121,7 +121,7 @@ export class DesktopLayout extends LitElement {
         api.getImpactSections(),
         api.getImpactConfig(),
         api.getBlessings(true),
-        api.getBlessingTags()
+        api.getBlessingTags(10)
       ]);
 
       this.homepage = homepage;

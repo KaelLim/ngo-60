@@ -174,18 +174,25 @@ export const api = {
   },
 
   // Blessing Tags (祝福語標籤)
-  async getBlessingTags(): Promise<BlessingTag[]> {
-    const res = await fetch(`${API_BASE}/blessing-tags`);
+  async getBlessingTags(limit?: number): Promise<BlessingTag[]> {
+    const url = limit
+      ? `${API_BASE}/blessing-tags?limit=${limit}`
+      : `${API_BASE}/blessing-tags`;
+    const res = await fetch(url);
     return res.json();
   },
 
-  async createBlessingTag(message: string): Promise<BlessingTag> {
+  async createBlessingTag(message: string): Promise<{ ok: boolean; reason?: string; elapsed?: number; tag?: BlessingTag }> {
     const res = await fetch(`${API_BASE}/blessing-tags`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message })
     });
-    return res.json();
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      return { ok: true, elapsed: data.elapsed, tag: data.tag };
+    }
+    return { ok: false, reason: data.reason || '送出失敗，請稍後再試', elapsed: data.elapsed };
   },
 
   // Gallery (圖庫)
