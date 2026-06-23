@@ -278,6 +278,17 @@ export const api = {
     return res.json();
   },
 
+  async getReviewWords() {
+    const res = await authFetch(`${API_BASE}/blocked-words/review`);
+    return res.json();
+  },
+  async keepBlockedWord(id) {
+    await authFetch(`${API_BASE}/blocked-words/${id}`, { method: 'PATCH' });
+  },
+  async allowBlockedWord(id) {
+    await authFetch(`${API_BASE}/blocked-words/${id}/allow`, { method: 'POST' });
+  },
+
   async updateBlessingTag(id, data) {
     const res = await authFetch(`${API_BASE}/blessing-tags/${id}`, {
       method: 'PUT',

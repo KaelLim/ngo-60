@@ -7,7 +7,7 @@
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=1.5">
+  <link rel="stylesheet" href="css/styles.css?v=1.6">
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tinymce@7.6.1/tinymce.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
@@ -46,6 +46,7 @@
         <div class="nav-item" data-section="blessing-tags">
           <span class="material-symbols-outlined">chat_bubble</span>
           <span>祝福標籤管理</span>
+          <span id="review-nav-badge" class="nav-badge" style="display:none;"></span>
         </div>
         <div class="nav-item" data-section="report">
           <span class="material-symbols-outlined">description</span>
@@ -310,6 +311,18 @@
               </div>
               <button type="submit" class="btn btn-primary">儲存設定</button>
             </form>
+          </div>
+        </div>
+        <div class="card" id="review-words-card" style="margin-bottom: 20px; display: none;">
+          <div class="card-body">
+            <h3 style="margin-top:0;">敏感詞待審核 <span id="review-count-inline" style="color:#d9362b;"></span></h3>
+            <p style="color:#666; font-size:14px;">以下字詞由 AI 判定為不當，目前已列為敏感詞並即時生效。若未經審核，將自動維持為敏感詞；請確認要「保留」或標記為「正常」。</p>
+            <div class="table-container">
+              <table>
+                <thead><tr><th>字詞</th><th>語言</th><th>操作</th></tr></thead>
+                <tbody id="review-words-table"></tbody>
+              </table>
+            </div>
           </div>
         </div>
         <div class="card">
@@ -979,6 +992,6 @@
   <!-- Toast -->
   <div class="toast" id="toast"></div>
 
-  <script type="module" src="js/main.js?v=1.5"></script>
+  <script type="module" src="js/main.js?v=1.6"></script>
 </body>
 </html>

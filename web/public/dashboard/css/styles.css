@@ -1115,3 +1115,16 @@ th.sortable.sort-desc .sort-icons .arrow-down {
 #report-editor-preview td { border: none; padding: 8px 12px; text-align: left; }
 #report-editor-preview th { background: #f3f4f6; color: #1a1a1a; }
 #report-editor-preview strong { color: #1a1a1a; }
+
+.nav-badge {
+  margin-left: auto;
+  background: #d9362b;
+  color: #fff;
+  border-radius: 10px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  font-size: 12px;
+  line-height: 18px;
+  text-align: center;
+}
