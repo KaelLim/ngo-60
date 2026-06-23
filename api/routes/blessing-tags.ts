@@ -22,11 +22,15 @@ const MODERATION_SYSTEM_PROMPT = `你是慈濟 60 週年活動網站的祝福語
 2. 對慈濟或其志工的攻擊、貶損、嘲諷或不實負面言論。
 3. 廣告、垃圾訊息、政治宣傳、色情或暴力內容。
 溫暖、正向、中性、祝福性質的內容判定通過 (ok:true)。
-只輸出 JSON，不要其他文字：{"ok":true} 或 {"ok":false,"reason":"簡短中文原因"}`;
+不通過時，於 badWords 陣列列出訊息中「本質上即屬髒話/侮辱/歧視的獨立字詞」
+（例如「幹」「婊子」），不要列入需要上下文才算不當的一般詞語。
+只輸出 JSON，不要其他文字：
+{"ok":true} 或 {"ok":false,"reason":"簡短中文原因","badWords":["..."]}`;
 
 interface Verdict {
   ok: boolean;
   reason?: string;
+  badWords?: string[];
 }
 
 // 呼叫 LLM Gateway 審查祝福語。失敗一律 fail-closed（不通過），避免漏審。
@@ -61,9 +65,12 @@ async function moderate(message: string): Promise<Verdict> {
 
   try {
     const parsed = JSON.parse(cleaned);
-    return { ok: parsed.ok === true, reason: parsed.reason };
+    return {
+      ok: parsed.ok === true,
+      reason: parsed.reason,
+      badWords: Array.isArray(parsed.badWords) ? parsed.badWords : [],
+    };
   } catch {
-    // 模型回傳非預期格式 → fail-closed
     return { ok: false, reason: "審查結果無法解析" };
   }
 }
@@ -124,7 +131,13 @@ blessingTagRoutes.post("/", async (c) => {
     console.log(`[審查] "${text}" → ${verdict.ok ? "通過" : "未通過"} (${secs}s)` + (verdict.reason ? ` 原因:${verdict.reason}` : ""));
 
     if (!verdict.ok) {
-      // (Task 4 will add auto-learn here)
+      if (verdict.badWords && verdict.badWords.length > 0) {
+        try {
+          await learnBadWords(verdict.badWords);
+        } catch (e) {
+          console.error(`[敏感詞] 自動學習失敗: ${(e as Error).message}`);
+        }
+      }
       return c.json({ ok: false, reason: verdict.reason ?? "未通過審查", elapsed: Number(secs) }, 422);
     }
   }
