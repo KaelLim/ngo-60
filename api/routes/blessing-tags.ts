@@ -24,13 +24,16 @@ const MODERATION_SYSTEM_PROMPT = `你是慈濟 60 週年活動網站的祝福語
 溫暖、正向、中性、祝福性質的內容判定通過 (ok:true)。
 不通過時，於 badWords 陣列列出訊息中「本質上即屬髒話/侮辱/歧視的獨立字詞」
 （例如「幹」「婊子」），不要列入需要上下文才算不當的一般詞語。
+每個 badWords 項目為物件，含 word 與 certain：
+- certain=true：無論語境都明確不當（如髒話、明確侮辱），可直接封鎖、免人工複審
+- certain=false：可能需視語境、有誤判風險，須交由人工複審
 只輸出 JSON，不要其他文字：
-{"ok":true} 或 {"ok":false,"reason":"簡短中文原因","badWords":["..."]}`;
+{"ok":true} 或 {"ok":false,"reason":"簡短中文原因","badWords":[{"word":"...","certain":true}]}`;
 
 interface Verdict {
   ok: boolean;
   reason?: string;
-  badWords?: string[];
+  badWords?: { word: string; certain: boolean }[];
 }
 
 // 呼叫 LLM Gateway 審查祝福語。失敗一律 fail-closed（不通過），避免漏審。
@@ -65,10 +68,18 @@ async function moderate(message: string): Promise<Verdict> {
 
   try {
     const parsed = JSON.parse(cleaned);
+    const rawBad = Array.isArray(parsed.badWords) ? parsed.badWords : [];
+    const badWords = rawBad
+      .map((b: unknown) =>
+        typeof b === "string"
+          ? { word: b, certain: false }
+          : { word: (b as { word?: string }).word, certain: (b as { certain?: boolean }).certain === true }
+      )
+      .filter((b: { word?: string }) => typeof b.word === "string" && b.word.trim() !== "");
     return {
       ok: parsed.ok === true,
       reason: parsed.reason,
-      badWords: Array.isArray(parsed.badWords) ? parsed.badWords : [],
+      badWords,
     };
   } catch {
     return { ok: false, reason: "審查結果無法解析" };
