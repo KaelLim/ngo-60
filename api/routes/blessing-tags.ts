@@ -1,5 +1,7 @@
 import { Hono } from "hono";
 import { query } from "../db.ts";
+import { verifyToken } from "./auth.ts";
+import { checkBlocked, learnBadWords } from "../services/blocked-words.ts";
 
 interface BlessingTag {
   id: number;
@@ -91,38 +93,47 @@ blessingTagRoutes.get("/", async (c) => {
 blessingTagRoutes.post("/", async (c) => {
   const body = await c.req.json();
   const { message } = body;
-
   if (!message || !String(message).trim()) {
     return c.json({ error: "message is required" }, 400);
   }
   const text = String(message).trim();
 
-  // ── AI 審查 + 計時 ──
-  const start = Date.now();
-  let verdict: Verdict;
-  try {
-    verdict = await moderate(text);
-  } catch (e) {
-    const secs = ((Date.now() - start) / 1000).toFixed(2);
-    console.error(`[審查] "${text}" → 錯誤 (${secs}s): ${(e as Error).message}`);
-    return c.json({ ok: false, reason: "審查服務暫時無法使用，請稍後再試", elapsed: Number(secs) }, 503);
-  }
-  const secs = ((Date.now() - start) / 1000).toFixed(2);
-  console.log(
-    `[審查] "${text}" → ${verdict.ok ? "通過" : "未通過"} (${secs}s)` +
-    (verdict.reason ? ` 原因:${verdict.reason}` : ""),
-  );
+  // 後台管理員（帶有效 admin token）直接略過審查
+  const payload = await verifyToken(c.req.header("Authorization"));
+  const isAdmin = !!payload && payload.role === "admin";
 
-  if (!verdict.ok) {
-    return c.json({ ok: false, reason: verdict.reason ?? "未通過審查", elapsed: Number(secs) }, 422);
+  if (!isAdmin) {
+    // ── Stage 1: 敏感詞清單（免 token） ──
+    const hit = checkBlocked(text);
+    if (hit) {
+      console.log(`[審查] "${text}" → Stage1 擋下 (0.00s)`);
+      return c.json({ ok: false, reason: "包含不當字詞，請修改後再送出", elapsed: 0 }, 422);
+    }
+
+    // ── Stage 2: AI 審查 ──
+    const start = Date.now();
+    let verdict: Verdict;
+    try {
+      verdict = await moderate(text);
+    } catch (e) {
+      const secs = ((Date.now() - start) / 1000).toFixed(2);
+      console.error(`[審查] "${text}" → 錯誤 (${secs}s): ${(e as Error).message}`);
+      return c.json({ ok: false, reason: "審查服務暫時無法使用，請稍後再試", elapsed: Number(secs) }, 503);
+    }
+    const secs = ((Date.now() - start) / 1000).toFixed(2);
+    console.log(`[審查] "${text}" → ${verdict.ok ? "通過" : "未通過"} (${secs}s)` + (verdict.reason ? ` 原因:${verdict.reason}` : ""));
+
+    if (!verdict.ok) {
+      // (Task 4 will add auto-learn here)
+      return c.json({ ok: false, reason: verdict.reason ?? "未通過審查", elapsed: Number(secs) }, 422);
+    }
   }
 
   const rows = await query<BlessingTag>(
     `INSERT INTO blessing_tags (message) VALUES ($1) RETURNING *`,
     [text],
   );
-
-  return c.json({ ok: true, tag: rows[0], elapsed: Number(secs) }, 201);
+  return c.json({ ok: true, tag: rows[0], elapsed: 0 }, 201);
 });
 
 // PUT /api/blessing-tags/:id - 更新祝福語標籤
