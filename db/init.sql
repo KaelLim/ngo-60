@@ -836,6 +836,29 @@ CREATE TABLE public.report_pages (
 
 ALTER TABLE public.report_pages OWNER TO postgres;
 
+--
+-- Name: blocked_words; Type: TABLE
+--
+CREATE TABLE IF NOT EXISTS public.blocked_words (
+    id        SERIAL PRIMARY KEY,
+    word      TEXT NOT NULL UNIQUE,
+    lang      VARCHAR(10) DEFAULT '',
+    source    VARCHAR(10) DEFAULT 'manual',
+    reviewed  BOOLEAN DEFAULT true
+);
+
+ALTER TABLE public.blocked_words OWNER TO postgres;
+
+--
+-- Name: allowed_words; Type: TABLE
+--
+CREATE TABLE IF NOT EXISTS public.allowed_words (
+    id   SERIAL PRIMARY KEY,
+    word TEXT NOT NULL UNIQUE
+);
+
+ALTER TABLE public.allowed_words OWNER TO postgres;
+
 
 \unrestrict kYyuLV9fF0UcsSzBPIdElSjCE6cZdgwyQfXYVCm1lwbwcrHS5kV3r3kZwKgxVYd
 
