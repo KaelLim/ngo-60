@@ -1301,7 +1301,7 @@ export class DesktopImpact extends LitElement {
                 type="text"
                 placeholder="輸入祝福語"
                 .value=${this.blessInput}
-                @input=${(e: InputEvent) => { this.blessInput = (e.target as HTMLInputElement).value; this.blessRejectReason = ''; }}
+                @input=${(e: InputEvent) => { this.blessInput = (e.target as HTMLInputElement).value; this.blessRejectReason = ''; this.blessSubmitted = false; }}
                 @keydown=${(e: KeyboardEvent) => { if (e.key === 'Enter') this.handleBlessSubmit(); }}
               />
               ${this.blessSubmitted ? html`
