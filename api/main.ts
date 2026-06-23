@@ -13,8 +13,10 @@ import { blessingTagRoutes } from "./routes/blessing-tags.ts";
 import { agentRoutes } from "./routes/agent.ts";
 import { authRoutes } from "./routes/auth.ts";
 import { usersRoutes } from "./routes/users.ts";
+import { blockedWordsRoutes } from "./routes/blocked-words.ts";
 import { tcToolRoutes } from "./routes/tc-tool.ts";
 import { reportPagesRoutes } from "./routes/report-pages.ts";
+import { loadBlockedWords } from "./services/blocked-words.ts";
 
 const app = new Hono();
 
@@ -31,6 +33,7 @@ app.route("/api/impact", impactRoutes);
 app.route("/api/impact-config", impactConfigRoutes);
 app.route("/api/blessings", blessingsRoutes);
 app.route("/api/blessing-tags", blessingTagRoutes);
+app.route("/api/blocked-words", blockedWordsRoutes);
 
 // Gallery 路由 - 上傳大小限制 100MB
 const galleryBodyLimit = bodyLimit({
@@ -58,5 +61,6 @@ app.route("/api/tc-tool", tcToolRoutes);
 // Health check
 app.get("/health", (c) => c.json({ status: "ok" }));
 
+await loadBlockedWords();
 console.log("Server running on http://localhost:8000");
 Deno.serve({ port: 8000 }, app.fetch);

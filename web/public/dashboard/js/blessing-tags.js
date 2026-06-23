@@ -33,10 +33,58 @@ async function handleBlessingConfigSubmit(e) {
   }
 }
 
+export async function updateReviewBadge() {
+  try {
+    const { count } = await api.getReviewWords();
+    const badge = document.getElementById('review-nav-badge');
+    if (badge) {
+      badge.textContent = count;
+      badge.style.display = count > 0 ? '' : 'none';
+    }
+  } catch (e) { /* not admin / not logged in: ignore */ }
+}
+
+async function loadReviewWords() {
+  const card = document.getElementById('review-words-card');
+  const tbody = document.getElementById('review-words-table');
+  if (!card || !tbody) return;
+  try {
+    const { words, count } = await api.getReviewWords();
+    const badge = document.getElementById('review-nav-badge');
+    if (badge) { badge.textContent = count; badge.style.display = count > 0 ? '' : 'none'; }
+    document.getElementById('review-count-inline').textContent = count > 0 ? `(${count})` : '';
+    if (count === 0) { card.style.display = 'none'; return; }
+    card.style.display = '';
+    tbody.innerHTML = words.map(w => `
+      <tr>
+        <td>${w.word}</td>
+        <td>${w.lang || ''}</td>
+        <td class="actions">
+          <button class="btn btn-danger btn-sm" data-action="keep" data-id="${w.id}">確實不當</button>
+          <button class="btn btn-secondary btn-sm" data-action="allow" data-id="${w.id}">其實正常</button>
+        </td>
+      </tr>`).join('');
+    tbody.querySelectorAll('[data-action="keep"]').forEach(b =>
+      b.addEventListener('click', () => keepWord(parseInt(b.dataset.id))));
+    tbody.querySelectorAll('[data-action="allow"]').forEach(b =>
+      b.addEventListener('click', () => allowWord(parseInt(b.dataset.id))));
+  } catch (e) { console.error('load review words failed', e); }
+}
+
+async function keepWord(id) {
+  try { await api.keepBlockedWord(id); showToast('已保留為敏感詞'); loadReviewWords(); }
+  catch { showToast('操作失敗', 'error'); }
+}
+async function allowWord(id) {
+  try { await api.allowBlockedWord(id); showToast('已標記為正常'); loadReviewWords(); }
+  catch { showToast('操作失敗', 'error'); }
+}
+
 export async function loadBlessingTags() {
   try {
     tagsCache = await api.getBlessingTags();
     renderTagsTable();
+    loadReviewWords();
     loadBlessingConfig();
   } catch (e) {
     console.error('Failed to load blessing tags:', e);

@@ -5,7 +5,7 @@ import { loadTopics, initTopics, openTopicModal, closeTopicModal } from './topic
 import { loadEvents, initEvents, openEventModal, closeEventModal } from './events.js';
 import { loadBlessings, initBlessings, openBlessingModal, closeBlessingModal } from './blessings.js';
 import { loadGallery, initGallery, closeGalleryModal } from './gallery.js';
-import { loadBlessingTags, initBlessingTags, openBlessingTagModal, closeBlessingTagModal } from './blessing-tags.js';
+import { loadBlessingTags, initBlessingTags, openBlessingTagModal, closeBlessingTagModal, updateReviewBadge } from './blessing-tags.js';
 import { initImagePicker, openImagePicker, closeImagePicker, confirmImageSelection, clearImageField } from './image-picker.js';
 import { loadImpact, initImpact, openImpactModal, closeImpactModal } from './impact.js';
 import { loadUsers, initUsers, openUserModal, closeUserModal } from './users.js';
@@ -112,4 +112,5 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Load initial section
   loadHomepage();
+  updateReviewBadge();
 });

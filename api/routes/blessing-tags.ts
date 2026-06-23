@@ -1,5 +1,7 @@
 import { Hono } from "hono";
 import { query } from "../db.ts";
+import { verifyToken } from "./auth.ts";
+import { checkBlocked, learnBadWords } from "../services/blocked-words.ts";
 
 interface BlessingTag {
   id: number;
@@ -20,11 +22,18 @@ const MODERATION_SYSTEM_PROMPT = `你是慈濟 60 週年活動網站的祝福語
 2. 對慈濟或其志工的攻擊、貶損、嘲諷或不實負面言論。
 3. 廣告、垃圾訊息、政治宣傳、色情或暴力內容。
 溫暖、正向、中性、祝福性質的內容判定通過 (ok:true)。
-只輸出 JSON，不要其他文字：{"ok":true} 或 {"ok":false,"reason":"簡短中文原因"}`;
+不通過時，於 badWords 陣列列出訊息中「本質上即屬髒話/侮辱/歧視的獨立字詞」
+（例如「幹」「婊子」），不要列入需要上下文才算不當的一般詞語。
+每個 badWords 項目為物件，含 word 與 certain：
+- certain=true：無論語境都明確不當（如髒話、明確侮辱），可直接封鎖、免人工複審
+- certain=false：可能需視語境、有誤判風險，須交由人工複審
+只輸出 JSON，不要其他文字：
+{"ok":true} 或 {"ok":false,"reason":"簡短中文原因","badWords":[{"word":"...","certain":true}]}`;
 
 interface Verdict {
   ok: boolean;
   reason?: string;
+  badWords?: { word: string; certain: boolean }[];
 }
 
 // 呼叫 LLM Gateway 審查祝福語。失敗一律 fail-closed（不通過），避免漏審。
@@ -59,9 +68,20 @@ async function moderate(message: string): Promise<Verdict> {
 
   try {
     const parsed = JSON.parse(cleaned);
-    return { ok: parsed.ok === true, reason: parsed.reason };
+    const rawBad = Array.isArray(parsed.badWords) ? parsed.badWords : [];
+    const badWords = rawBad
+      .map((b: unknown) =>
+        typeof b === "string"
+          ? { word: b, certain: false }
+          : { word: (b as { word?: string }).word, certain: (b as { certain?: boolean }).certain === true }
+      )
+      .filter((b: { word?: string }) => typeof b.word === "string" && b.word.trim() !== "");
+    return {
+      ok: parsed.ok === true,
+      reason: parsed.reason,
+      badWords,
+    };
   } catch {
-    // 模型回傳非預期格式 → fail-closed
     return { ok: false, reason: "審查結果無法解析" };
   }
 }
@@ -91,38 +111,53 @@ blessingTagRoutes.get("/", async (c) => {
 blessingTagRoutes.post("/", async (c) => {
   const body = await c.req.json();
   const { message } = body;
-
   if (!message || !String(message).trim()) {
     return c.json({ error: "message is required" }, 400);
   }
   const text = String(message).trim();
 
-  // ── AI 審查 + 計時 ──
-  const start = Date.now();
-  let verdict: Verdict;
-  try {
-    verdict = await moderate(text);
-  } catch (e) {
-    const secs = ((Date.now() - start) / 1000).toFixed(2);
-    console.error(`[審查] "${text}" → 錯誤 (${secs}s): ${(e as Error).message}`);
-    return c.json({ ok: false, reason: "審查服務暫時無法使用，請稍後再試", elapsed: Number(secs) }, 503);
-  }
-  const secs = ((Date.now() - start) / 1000).toFixed(2);
-  console.log(
-    `[審查] "${text}" → ${verdict.ok ? "通過" : "未通過"} (${secs}s)` +
-    (verdict.reason ? ` 原因:${verdict.reason}` : ""),
-  );
+  // 後台管理員（帶有效 admin token）直接略過審查
+  const payload = await verifyToken(c.req.header("Authorization"));
+  const isAdmin = !!payload && payload.role === "admin";
 
-  if (!verdict.ok) {
-    return c.json({ ok: false, reason: verdict.reason ?? "未通過審查", elapsed: Number(secs) }, 422);
+  if (!isAdmin) {
+    // ── Stage 1: 敏感詞清單（免 token） ──
+    const hit = checkBlocked(text);
+    if (hit) {
+      console.log(`[審查] "${text}" → Stage1 擋下 (0.00s)`);
+      return c.json({ ok: false, reason: "包含不當字詞，請修改後再送出", elapsed: 0 }, 422);
+    }
+
+    // ── Stage 2: AI 審查 ──
+    const start = Date.now();
+    let verdict: Verdict;
+    try {
+      verdict = await moderate(text);
+    } catch (e) {
+      const secs = ((Date.now() - start) / 1000).toFixed(2);
+      console.error(`[審查] "${text}" → 錯誤 (${secs}s): ${(e as Error).message}`);
+      return c.json({ ok: false, reason: "審查服務暫時無法使用，請稍後再試", elapsed: Number(secs) }, 503);
+    }
+    const secs = ((Date.now() - start) / 1000).toFixed(2);
+    console.log(`[審查] "${text}" → ${verdict.ok ? "通過" : "未通過"} (${secs}s)` + (verdict.reason ? ` 原因:${verdict.reason}` : ""));
+
+    if (!verdict.ok) {
+      if (verdict.badWords && verdict.badWords.length > 0) {
+        try {
+          await learnBadWords(verdict.badWords);
+        } catch (e) {
+          console.error(`[敏感詞] 自動學習失敗: ${(e as Error).message}`);
+        }
+      }
+      return c.json({ ok: false, reason: verdict.reason ?? "未通過審查", elapsed: Number(secs) }, 422);
+    }
   }
 
   const rows = await query<BlessingTag>(
     `INSERT INTO blessing_tags (message) VALUES ($1) RETURNING *`,
     [text],
   );
-
-  return c.json({ ok: true, tag: rows[0], elapsed: Number(secs) }, 201);
+  return c.json({ ok: true, tag: rows[0], elapsed: 0 }, 201);
 });
 
 // PUT /api/blessing-tags/:id - 更新祝福語標籤
