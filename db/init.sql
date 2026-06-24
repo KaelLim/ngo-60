@@ -637,56 +637,56 @@ COPY public.topics (id, name, subtitle, description, icon, background_image, sor
 -- Name: agent_sessions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.agent_sessions_id_seq', 1, false);
+SELECT pg_catalog.setval('public.agent_sessions_id_seq', (SELECT COALESCE(MAX(id),0)+1 FROM public.agent_sessions), false);
 
 
 --
 -- Name: blessing_tags_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.blessing_tags_id_seq', 12, true);
+SELECT pg_catalog.setval('public.blessing_tags_id_seq', (SELECT COALESCE(MAX(id),0)+1 FROM public.blessing_tags), false);
 
 
 --
 -- Name: blessings_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.blessings_id_seq', 4, true);
+SELECT pg_catalog.setval('public.blessings_id_seq', (SELECT COALESCE(MAX(id),0)+1 FROM public.blessings), false);
 
 
 --
 -- Name: events_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.events_id_seq', 26, true);
+SELECT pg_catalog.setval('public.events_id_seq', (SELECT COALESCE(MAX(id),0)+1 FROM public.events), false);
 
 
 --
 -- Name: gallery_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.gallery_id_seq', 102, true);
+SELECT pg_catalog.setval('public.gallery_id_seq', (SELECT COALESCE(MAX(id),0)+1 FROM public.gallery), false);
 
 
 --
 -- Name: homepage_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.homepage_id_seq', 1, true);
+SELECT pg_catalog.setval('public.homepage_id_seq', (SELECT COALESCE(MAX(id),0)+1 FROM public.homepage), false);
 
 
 --
 -- Name: impact_sections_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.impact_sections_id_seq', 3, true);
+SELECT pg_catalog.setval('public.impact_sections_id_seq', (SELECT COALESCE(MAX(id),0)+1 FROM public.impact_sections), false);
 
 
 --
 -- Name: topics_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.topics_id_seq', 3, true);
+SELECT pg_catalog.setval('public.topics_id_seq', (SELECT COALESCE(MAX(id),0)+1 FROM public.topics), false);
 
 
 --

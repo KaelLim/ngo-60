@@ -27,7 +27,7 @@ const MODERATION_SYSTEM_PROMPT = `你是慈濟 60 週年活動網站的祝福語
 每個 badWords 項目為物件，含 word 與 certain：
 - certain=true：無論語境都明確不當（如髒話、明確侮辱），可直接封鎖、免人工複審
 - certain=false：可能需視語境、有誤判風險，須交由人工複審
-只輸出 JSON，不要其他文字：
+直接輸出結果，禁止輸出思考過程、解釋或任何多餘文字，只輸出 JSON：
 {"ok":true} 或 {"ok":false,"reason":"簡短中文原因","badWords":[{"word":"...","certain":true}]}`;
 
 interface Verdict {
@@ -64,7 +64,10 @@ async function moderate(message: string): Promise<Verdict> {
 
   const data = await res.json();
   const content: string = data.choices?.[0]?.message?.content ?? "";
-  const cleaned = content.replace(/```json|```/g, "").trim();
+  // 容忍 AI 多餘輸出：移除 Qwen 思考區塊與程式碼框，再抽取第一個 JSON 物件
+  const stripped = content.replace(/<think>[\s\S]*?<\/think>/gi, "").replace(/```json|```/g, "");
+  const jsonMatch = stripped.match(/\{[\s\S]*\}/);
+  const cleaned = (jsonMatch ? jsonMatch[0] : stripped).trim();
 
   try {
     const parsed = JSON.parse(cleaned);
