@@ -5,6 +5,7 @@ import { appContext } from '../contexts/app-context.js';
 import { AppStore } from '../stores/app-store.js';
 import { StoreController } from '../controllers/store-controller.js';
 import { api, Topic, Event, ImpactSection, ImpactConfig, Blessing, BlessingTag, PlaylistVideo } from '../services/api.js';
+import { hasSentBlessing, recordSentBlessing } from '../services/sent-blessings.js';
 
 import './homepage-tabs.js';
 
@@ -1785,11 +1786,16 @@ export class SheetContent extends LitElement {
   private async submitBlessing() {
     const msg = this.blessInputValue.trim();
     if (!msg || this.blessSubmitting) return;
+    if (hasSentBlessing(msg)) {
+      this.blessRejectReason = '您已送出過這則祝福了';
+      return;
+    }
     this.blessSubmitting = true;
     this.blessRejectReason = '';
     try {
       const result = await api.createBlessingTag(msg);
       if (result.ok) {
+        recordSentBlessing(msg);
         // 立即顯示通過的祝福（維持最新 10 筆，舊的擠掉）
         this.blessMessages = [msg, ...this.blessMessages].slice(0, 10);
         this.blessSubmitted = true;

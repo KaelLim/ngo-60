@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { api, ImpactSection, ImpactConfig, BlessingTag, PlaylistVideo } from '../services/api.js';
+import { hasSentBlessing, recordSentBlessing } from '../services/sent-blessings.js';
 
 @customElement('desktop-impact')
 export class DesktopImpact extends LitElement {
@@ -936,11 +937,16 @@ export class DesktopImpact extends LitElement {
   private async handleBlessSubmit() {
     const msg = this.blessInput.trim();
     if (!msg || this.blessSubmitting) return;
+    if (hasSentBlessing(msg)) {
+      this.blessRejectReason = '您已送出過這則祝福了';
+      return;
+    }
     this.blessSubmitting = true;
     this.blessRejectReason = '';
     try {
       const result = await api.createBlessingTag(msg);
       if (result.ok) {
+        recordSentBlessing(msg);
         this.blessSubmitted = true;
         // 立即把通過的祝福加進泡泡牆（維持最新 10 筆，舊的擠掉）
         if (result.tag) {
